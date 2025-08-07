@@ -34,10 +34,7 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      return apiRequest('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      return apiRequest('/api/auth/login', 'POST', data);
     },
     onSuccess: (user) => {
       queryClient.setQueryData(['/api/auth/user'], user);
@@ -69,6 +66,13 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
           <p className="text-neutral-600">Admin Panel Access</p>
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Admin Login:</strong><br />
+              Email: admin@company.com<br />
+              Password: admin123
+            </p>
+          </div>
         </div>
 
         <Card className="shadow-lg border-0">
