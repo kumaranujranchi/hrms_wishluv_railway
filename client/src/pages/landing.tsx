@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Clock, Calendar, Receipt, BarChart3 } from "lucide-react";
+import { Building2, Users, Clock, Calendar, Receipt, BarChart3, LogIn, UserPlus } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Landing() {
   const features = [
@@ -47,19 +48,26 @@ export default function Landing() {
             </div>
           </div>
           <h1 className="text-5xl font-bold text-neutral-900 mb-4">
-            HRMS Pro
+            Synergy HRMS Pro
           </h1>
           <p className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
             Complete Human Resource Management System with attendance tracking, 
             leave management, expense claims, and comprehensive reporting.
           </p>
-          <Button 
-            size="lg"
-            className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3"
-            onClick={() => window.location.href = "/api/login"}
-          >
-            Sign In to Continue
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/login">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <LogIn className="h-5 w-5 mr-2" />
+                Sign In
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
+                <UserPlus className="h-5 w-5 mr-2" />
+                Create Account
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Features Grid */}
@@ -94,13 +102,11 @@ export default function Landing() {
             Get started today and experience the difference.
           </p>
           <div className="flex justify-center space-x-4">
-            <Button 
-              size="lg"
-              className="bg-primary-500 hover:bg-primary-600 text-white"
-              onClick={() => window.location.href = "/api/login"}
-            >
-              Get Started Now
-            </Button>
+            <Link href="/register">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                Get Started Now
+              </Button>
+            </Link>
             <Button 
               size="lg"
               variant="outline"

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, registerUser, loginUser } from "./auth";
 import { ObjectStorageService } from "./objectStorage";
 import { 
   insertAttendanceSchema,
@@ -9,6 +9,8 @@ import {
   insertExpenseClaimSchema,
   insertAnnouncementSchema,
   insertEmployeeProfileSchema,
+  registerUserSchema,
+  loginUserSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -16,10 +18,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const userData = registerUserSchema.parse(req.body);
+      const user = await registerUser(userData);
+      
+      // Log user in automatically after registration
+      (req.session as any).user = user;
+      
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Registration failed" 
+      });
+    }
+  });
+
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const credentials = loginUserSchema.parse(req.body);
+      const user = await loginUser(credentials);
+      
+      // Store user in session
+      (req.session as any).user = user;
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(401).json({ 
+        message: error instanceof Error ? error.message : "Login failed" 
+      });
+    }
+  });
+
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logged out successfully" });
+    });
+  });
+
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = req.user;
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -30,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard routes
   app.get('/api/dashboard/stats', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       const today = new Date();
@@ -79,7 +125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Attendance routes
   app.post('/api/attendance/check-in', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { location } = req.body;
 
       // Check if already checked in today
@@ -105,7 +151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/attendance/check-out', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
 
       const todayAttendance = await storage.getTodayAttendance(userId);
       if (!todayAttendance) {
@@ -127,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/attendance/my', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { startDate, endDate } = req.query;
       
       const attendance = await storage.getAttendanceByUser(
@@ -145,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/attendance/today', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const todayAttendance = await storage.getTodayAttendance(userId);
       res.json(todayAttendance || null);
     } catch (error) {
@@ -157,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leave management routes
   app.post('/api/leaves', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const leaveData = insertLeaveRequestSchema.parse({ ...req.body, userId });
       
       const leave = await storage.createLeaveRequest(leaveData);
@@ -170,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/leaves/my', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const leaves = await storage.getLeaveRequestsByUser(userId);
       res.json(leaves);
     } catch (error) {
@@ -181,7 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/leaves/pending', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (user?.role !== 'manager' && user?.role !== 'admin') {
@@ -200,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/leaves/:id/status', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { id } = req.params;
       const { status, notes } = req.body;
       
@@ -220,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Expense management routes
   app.post('/api/expenses', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const expenseData = insertExpenseClaimSchema.parse({ ...req.body, userId });
       
       const expense = await storage.createExpenseClaim(expenseData);
@@ -233,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/expenses/my', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const expenses = await storage.getExpenseClaimsByUser(userId);
       res.json(expenses);
     } catch (error) {
@@ -244,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/expenses/pending', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       
       if (user?.role !== 'manager' && user?.role !== 'admin') {
@@ -263,7 +309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/expenses/:id/status', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const { id } = req.params;
       const { status, notes } = req.body;
       
@@ -305,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payroll routes
   app.get('/api/payroll/my', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const payroll = await storage.getPayrollByUser(userId);
       res.json(payroll);
     } catch (error) {
@@ -431,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Employee onboarding routes
   app.get('/api/employee/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const profile = await storage.getEmployeeProfile(userId);
       
       res.json(profile);
@@ -443,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/employee/onboarding', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       // Check if profile already exists
       const existingProfile = await storage.getEmployeeProfile(userId);
@@ -466,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/employee/profile', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const updates = req.body;
       
       const profile = await storage.updateEmployeeProfile(userId, updates);
@@ -491,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/objects/bank-proof', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       
       if (!req.body.documentURL) {
         return res.status(400).json({ error: 'documentURL is required' });

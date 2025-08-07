@@ -26,9 +26,11 @@ import { db } from "./db";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (required for Replit Auth)
+  // User operations 
   getUser(id: string): Promise<User | undefined>;
-  upsertUser(id: string, user: UpsertUser): Promise<User>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string; }): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User>;
   
   // Employee operations
   getAllEmployees(): Promise<User[]>;
@@ -78,17 +80,24 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async upsertUser(id: string, userData: UpsertUser): Promise<User> {
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string; }): Promise<User> {
     const [user] = await db
       .insert(users)
-      .values({ ...userData, id })
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
+      .values(userData)
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
       .returning();
     return user;
   }

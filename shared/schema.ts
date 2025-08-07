@@ -33,12 +33,13 @@ export const leaveTypeEnum = pgEnum('leave_type', ['sick', 'vacation', 'personal
 export const expenseStatusEnum = pgEnum('expense_status', ['submitted', 'approved', 'rejected', 'reimbursed']);
 export const attendanceStatusEnum = pgEnum('attendance_status', ['present', 'absent', 'late', 'half_day']);
 
-// Users table (required for Replit Auth)
+// Users table 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
+  email: varchar("email").unique().notNull(),
+  passwordHash: varchar("password_hash").notNull(),
+  firstName: varchar("first_name").notNull(),
+  lastName: varchar("last_name").notNull(),
   profileImageUrl: varchar("profile_image_url"),
   role: userRoleEnum("role").default('employee'),
   department: varchar("department"),
@@ -245,10 +246,23 @@ export const announcementsRelations = relations(announcements, ({ one }) => ({
 }));
 
 // Insert schemas
-export const upsertUserSchema = createInsertSchema(users).omit({
+export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  passwordHash: true,
+});
+
+export const registerUserSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().min(2, "Last name is required"),
+});
+
+export const loginUserSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export const insertAttendanceSchema = createInsertSchema(attendance).omit({
@@ -282,7 +296,9 @@ export const insertEmployeeProfileSchema = createInsertSchema(employeeProfiles).
 });
 
 // Types
-export type UpsertUser = z.infer<typeof upsertUserSchema>;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type RegisterUser = z.infer<typeof registerUserSchema>;
+export type LoginUser = z.infer<typeof loginUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;

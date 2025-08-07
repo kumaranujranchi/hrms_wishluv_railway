@@ -214,7 +214,10 @@ export default function Layout({ children }: LayoutProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => window.location.href = "/api/logout"}
+                onClick={async () => {
+                  await fetch('/api/auth/logout', { method: 'POST' });
+                  window.location.href = "/";
+                }}
               >
                 <User className="h-5 w-5" />
               </Button>
