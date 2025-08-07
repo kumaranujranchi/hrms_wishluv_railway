@@ -42,6 +42,8 @@ export const users = pgTable("users", {
   lastName: varchar("last_name").notNull(),
   profileImageUrl: varchar("profile_image_url"),
   role: userRoleEnum("role").default('employee'),
+  isOnboardingComplete: boolean("is_onboarding_complete").default(false),
+  needsPasswordReset: boolean("needs_password_reset").default(true),
   department: varchar("department"),
   position: varchar("position"),
   managerId: varchar("manager_id"),
@@ -253,6 +255,16 @@ export const insertUserSchema = createInsertSchema(users).omit({
   passwordHash: true,
 });
 
+// Admin creates employee account
+export const createEmployeeSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().min(2, "Last name is required"),
+  department: z.string().optional(),
+  position: z.string().optional(),
+  tempPassword: z.string().min(8, "Temporary password must be at least 8 characters"),
+});
+
 export const registerUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
@@ -297,6 +309,7 @@ export const insertEmployeeProfileSchema = createInsertSchema(employeeProfiles).
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type CreateEmployee = z.infer<typeof createEmployeeSchema>;
 export type RegisterUser = z.infer<typeof registerUserSchema>;
 export type LoginUser = z.infer<typeof loginUserSchema>;
 export type User = typeof users.$inferSelect;

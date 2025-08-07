@@ -46,10 +46,10 @@ export default function RegisterPage() {
     onSuccess: (user) => {
       queryClient.setQueryData(['/api/auth/user'], user);
       toast({
-        title: 'Account Created!',
-        description: 'Welcome to Synergy HRMS Pro. Please complete your onboarding.',
+        title: 'Admin Account Created!',
+        description: 'Welcome to Synergy HRMS Pro Admin Panel.',
       });
-      setLocation('/onboarding');
+      setLocation('/');
     },
     onError: (error: any) => {
       toast({
@@ -72,7 +72,7 @@ export default function RegisterPage() {
             <Building2 className="h-10 w-10 text-blue-600 mr-3" />
             <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
-          <p className="text-neutral-600">Create your employee account</p>
+          <p className="text-neutral-600">Create your admin account</p>
         </div>
 
         <Card className="shadow-lg border-0">

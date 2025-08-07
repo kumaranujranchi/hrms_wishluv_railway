@@ -73,6 +73,13 @@ export default function Layout({ children }: LayoutProps) {
       icon: UserPlus,
       current: location === "/onboarding" 
     },
+    { 
+      name: "Create Employee", 
+      href: "/admin/create-employee", 
+      icon: Plus,
+      current: location === "/admin/create-employee",
+      adminOnly: true
+    },
   ];
 
   const managementNavigation = [
@@ -132,6 +139,10 @@ export default function Layout({ children }: LayoutProps) {
         <nav className="flex-1 px-4 py-6 space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
+            // Hide admin-only items for non-admins
+            if ((item as any).adminOnly && user?.role !== 'admin') {
+              return null;
+            }
             return (
               <Link 
                 key={item.name} 

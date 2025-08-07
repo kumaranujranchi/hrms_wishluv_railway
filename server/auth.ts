@@ -80,12 +80,38 @@ export async function registerUser(userData: RegisterUser) {
   // Hash password
   const passwordHash = await hashPassword(userData.password);
 
-  // Create user
+  // Create user (only admins can register directly)
   const user = await storage.createUser({
     email: userData.email,
     passwordHash,
     firstName: userData.firstName,
     lastName: userData.lastName,
+  });
+
+  // Return user without password hash
+  const { passwordHash: _, ...userWithoutPassword } = user;
+  return userWithoutPassword;
+}
+
+export async function createEmployeeByAdmin(employeeData: { email: string; firstName: string; lastName: string; department?: string; position?: string; tempPassword: string; }) {
+  // Check if user already exists
+  const existingUser = await storage.getUserByEmail(employeeData.email);
+  if (existingUser) {
+    throw new Error('Employee with this email already exists');
+  }
+
+  // Hash temporary password
+  const passwordHash = await hashPassword(employeeData.tempPassword);
+
+  // Create employee
+  const user = await storage.createEmployeeByAdmin({
+    email: employeeData.email,
+    passwordHash,
+    firstName: employeeData.firstName,
+    lastName: employeeData.lastName,
+    department: employeeData.department,
+    position: employeeData.position,
+    needsPasswordReset: true,
   });
 
   // Return user without password hash

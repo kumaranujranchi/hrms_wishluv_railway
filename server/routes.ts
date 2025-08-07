@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, registerUser, loginUser } from "./auth";
+import { setupAuth, isAuthenticated, registerUser, loginUser, createEmployeeByAdmin } from "./auth";
 import { ObjectStorageService } from "./objectStorage";
 import { 
   insertAttendanceSchema,
@@ -11,6 +11,7 @@ import {
   insertEmployeeProfileSchema,
   registerUserSchema,
   loginUserSchema,
+  createEmployeeSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -70,6 +71,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Admin creates employee account
+  app.post('/api/admin/create-employee', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can create employee accounts' });
+      }
+
+      const employeeData = createEmployeeSchema.parse(req.body);
+      const employee = await createEmployeeByAdmin(employeeData);
+      
+      res.status(201).json({
+        ...employee,
+        tempPassword: employeeData.tempPassword // Return temp password for admin to share
+      });
+    } catch (error) {
+      console.error("Create employee error:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to create employee" 
+      });
     }
   });
 

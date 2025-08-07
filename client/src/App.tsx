@@ -14,6 +14,7 @@ import LeaveManagement from "@/pages/leave-management";
 import Expenses from "@/pages/expenses";
 import EmployeeDirectory from "@/pages/employee-directory";
 import Onboarding from "@/pages/onboarding";
+import AdminCreateEmployee from "@/pages/admin-create-employee";
 import Payroll from "@/pages/payroll";
 import Reports from "@/pages/reports";
 
@@ -42,6 +43,7 @@ function Router() {
           <Route path="/expenses" component={Expenses} />
           <Route path="/employees" component={EmployeeDirectory} />
           <Route path="/onboarding" component={Onboarding} />
+          <Route path="/admin/create-employee" component={AdminCreateEmployee} />
           <Route path="/payroll" component={Payroll} />
           <Route path="/reports" component={Reports} />
         </>
