@@ -107,12 +107,16 @@ export const payroll = pgTable("payroll", {
   month: integer("month").notNull(),
   year: integer("year").notNull(),
   basicSalary: decimal("basic_salary", { precision: 10, scale: 2 }).notNull(),
-  hra: decimal("hra", { precision: 10, scale: 2 }).default('0'),
-  bonus: decimal("bonus", { precision: 10, scale: 2 }).default('0'),
+  allowances: decimal("allowances", { precision: 10, scale: 2 }).default('0'),
   deductions: decimal("deductions", { precision: 10, scale: 2 }).default('0'),
+  grossSalary: decimal("gross_salary", { precision: 10, scale: 2 }).notNull(),
   netSalary: decimal("net_salary", { precision: 10, scale: 2 }).notNull(),
+  salaryBreakup: jsonb("salary_breakup"), // Store detailed salary breakdown
+  status: varchar("status").default("draft"), // draft, processed, paid
+  processedAt: timestamp("processed_at"),
   payslipUrl: varchar("payslip_url"),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Announcements table
@@ -307,6 +311,13 @@ export const insertEmployeeProfileSchema = createInsertSchema(employeeProfiles).
   approvedAt: true,
 });
 
+export const insertPayrollSchema = createInsertSchema(payroll).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  processedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type CreateEmployee = z.infer<typeof createEmployeeSchema>;
@@ -320,6 +331,7 @@ export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
 export type ExpenseClaim = typeof expenseClaims.$inferSelect;
 export type InsertExpenseClaim = z.infer<typeof insertExpenseClaimSchema>;
 export type Payroll = typeof payroll.$inferSelect;
+export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
 export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type CompanySettings = typeof companySettings.$inferSelect;

@@ -532,6 +532,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin payroll management routes
+  app.post("/api/admin/payroll", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const payrollRecord = await storage.createPayrollRecord(req.body);
+      res.status(201).json(payrollRecord);
+    } catch (error) {
+      console.error("Error creating payroll record:", error);
+      res.status(500).json({ message: "Failed to create payroll record" });
+    }
+  });
+
+  app.get("/api/admin/payroll", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { month, year } = req.query;
+      const records = await storage.getPayrollRecords(
+        month ? parseInt(month) : undefined,
+        year ? parseInt(year) : undefined
+      );
+      res.json(records);
+    } catch (error) {
+      console.error("Error fetching payroll records:", error);
+      res.status(500).json({ message: "Failed to fetch payroll records" });
+    }
+  });
+
+  app.put("/api/admin/payroll/:id/process", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const record = await storage.processPayrollRecord(id);
+      res.json(record);
+    } catch (error) {
+      console.error("Error processing payroll record:", error);
+      res.status(500).json({ message: "Failed to process payroll record" });
+    }
+  });
+
+  app.get("/api/admin/payroll/:id/payslip", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const record = await storage.getPayrollRecordById(id);
+      
+      if (!record) {
+        return res.status(404).json({ message: "Payroll record not found" });
+      }
+
+      // Generate and return payslip PDF
+      // For now, return a placeholder response
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="payslip-${id}.pdf"`);
+      res.status(200).send("PDF generation not implemented yet");
+    } catch (error) {
+      console.error("Error generating payslip:", error);
+      res.status(500).json({ message: "Failed to generate payslip" });
+    }
+  });
+
   // Employee onboarding routes
   app.get('/api/employee/profile', isAuthenticated, async (req: any, res) => {
     try {

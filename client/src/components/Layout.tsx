@@ -63,12 +63,17 @@ export default function Layout({ children }: LayoutProps) {
       badge: "2",
       current: location === "/expenses" 
     },
-    { 
+    ...(user?.role === 'admin' ? [{
+      name: "Payroll Management", 
+      href: "/admin/payroll", 
+      icon: DollarSign,
+      current: location === "/admin/payroll" 
+    }] : [{
       name: "Payroll", 
       href: "/payroll", 
       icon: DollarSign,
       current: location === "/payroll" 
-    },
+    }]),
     { 
       name: "Employee Directory", 
       href: "/employee-directory", 

@@ -54,6 +54,12 @@ export interface IStorage {
   getTodayAttendanceForAll(): Promise<any[]>;
   getAttendanceRangeForAll(startDate: string, endDate: string): Promise<any[]>;
   
+  // Admin payroll operations
+  createPayrollRecord(payrollData: InsertPayroll): Promise<Payroll>;
+  getPayrollRecords(month?: number, year?: number): Promise<any[]>;
+  processPayrollRecord(recordId: string): Promise<Payroll>;
+  getPayrollRecordById(recordId: string): Promise<Payroll | undefined>;
+  
   // Leave operations
   createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest>;
   getLeaveRequestsByUser(userId: string): Promise<LeaveRequest[]>;
@@ -635,6 +641,77 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(attendance.date), attendance.checkIn);
+  }
+
+  // Admin payroll operations
+  async createPayrollRecord(payrollData: InsertPayroll): Promise<Payroll> {
+    const [record] = await db
+      .insert(payroll)
+      .values({
+        ...payrollData,
+        updatedAt: new Date(),
+      })
+      .returning();
+    return record;
+  }
+
+  async getPayrollRecords(month?: number, year?: number): Promise<any[]> {
+    let query = db
+      .select({
+        id: payroll.id,
+        userId: payroll.userId,
+        month: payroll.month,
+        year: payroll.year,
+        basicSalary: payroll.basicSalary,
+        allowances: payroll.allowances,
+        deductions: payroll.deductions,
+        grossSalary: payroll.grossSalary,
+        netSalary: payroll.netSalary,
+        salaryBreakup: payroll.salaryBreakup,
+        status: payroll.status,
+        processedAt: payroll.processedAt,
+        createdAt: payroll.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          department: users.department,
+        },
+      })
+      .from(payroll)
+      .innerJoin(users, eq(payroll.userId, users.id));
+
+    if (month && year) {
+      query = query.where(
+        and(
+          eq(payroll.month, month),
+          eq(payroll.year, year)
+        )
+      );
+    }
+
+    return await query.orderBy(desc(payroll.createdAt));
+  }
+
+  async processPayrollRecord(recordId: string): Promise<Payroll> {
+    const [record] = await db
+      .update(payroll)
+      .set({
+        status: 'processed',
+        processedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(payroll.id, recordId))
+      .returning();
+    return record;
+  }
+
+  async getPayrollRecordById(recordId: string): Promise<Payroll | undefined> {
+    const [record] = await db
+      .select()
+      .from(payroll)
+      .where(eq(payroll.id, recordId));
+    return record;
   }
 }
 

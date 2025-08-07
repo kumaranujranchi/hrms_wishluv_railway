@@ -61,8 +61,8 @@ export default function Dashboard() {
       color: "text-success-600 bg-success-50",
     },
     {
-      title: "Departments",
-      href: "/admin/departments",
+      title: "Payroll Management",
+      href: "/admin/payroll",
       icon: Receipt,
       color: "text-warning-600 bg-warning-50",
     },
