@@ -47,7 +47,32 @@ export default function Dashboard() {
     queryKey: ["/api/announcements"],
   });
 
-  const quickActions = [
+  const quickActions = user?.role === 'admin' ? [
+    {
+      title: "Attendance Management",
+      href: "/admin/attendance",
+      icon: Clock,
+      color: "text-primary-600 bg-primary-50",
+    },
+    {
+      title: "Create Employee",
+      href: "/admin/create-employee",
+      icon: Users,
+      color: "text-success-600 bg-success-50",
+    },
+    {
+      title: "Departments",
+      href: "/admin/departments",
+      icon: Receipt,
+      color: "text-warning-600 bg-warning-50",
+    },
+    {
+      title: "Employee Directory",
+      href: "/employee-directory",
+      icon: Users,
+      color: "text-neutral-600 bg-neutral-50",
+    },
+  ] : [
     {
       title: "Mark Attendance",
       href: "/attendance",
@@ -68,7 +93,7 @@ export default function Dashboard() {
     },
     {
       title: "Employee Directory",
-      href: "/employees",
+      href: "/employee-directory",
       icon: Users,
       color: "text-neutral-600 bg-neutral-50",
     },

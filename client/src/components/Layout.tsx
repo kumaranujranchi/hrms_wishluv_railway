@@ -37,13 +37,18 @@ export default function Layout({ children }: LayoutProps) {
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard, current: location === "/" },
-    { 
+    ...(user?.role === 'admin' ? [{
+      name: "Attendance Management", 
+      href: "/admin/attendance", 
+      icon: Clock, 
+      current: location === "/admin/attendance" 
+    }] : [{
       name: "Attendance", 
       href: "/attendance", 
       icon: Clock, 
       badge: "3",
       current: location === "/attendance" 
-    },
+    }]),
     { 
       name: "Leave Management", 
       href: "/leave-management", 

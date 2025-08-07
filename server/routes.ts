@@ -500,6 +500,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin attendance management routes
+  app.get("/api/admin/attendance/today", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const attendanceRecords = await storage.getTodayAttendanceForAll();
+      res.json(attendanceRecords);
+    } catch (error) {
+      console.error("Error fetching today's attendance for all employees:", error);
+      res.status(500).json({ message: "Failed to fetch attendance data" });
+    }
+  });
+
+  app.get("/api/admin/attendance/range/:startDate/:endDate", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { startDate, endDate } = req.params;
+      const attendanceRecords = await storage.getAttendanceRangeForAll(startDate, endDate);
+      res.json(attendanceRecords);
+    } catch (error) {
+      console.error("Error fetching attendance range for all employees:", error);
+      res.status(500).json({ message: "Failed to fetch attendance data" });
+    }
+  });
+
+  app.get("/api/admin/attendance/stats", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const stats = await storage.getAttendanceStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching attendance stats:", error);
+      res.status(500).json({ message: "Failed to fetch attendance statistics" });
+    }
+  });
+
   // Employee onboarding routes
   app.get('/api/employee/profile', isAuthenticated, async (req: any, res) => {
     try {

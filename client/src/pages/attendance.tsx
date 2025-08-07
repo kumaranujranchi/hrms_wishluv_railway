@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useAuth } from "@/hooks/useAuth";
 import AttendanceCard from "@/components/AttendanceCard";
 import { 
   Clock, 
@@ -33,11 +34,18 @@ interface AttendanceRecord {
 export default function AttendancePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dateRange, setDateRange] = useState({
     startDate: startOfMonth(new Date()),
     endDate: endOfMonth(new Date())
   });
+
+  // Redirect admin users to admin attendance view
+  if (user?.role === 'admin') {
+    window.location.href = '/admin/attendance';
+    return null;
+  }
 
   const { data: attendanceRecords, isLoading } = useQuery<AttendanceRecord[]>({
     queryKey: ["/api/attendance/my", dateRange.startDate.toISOString(), dateRange.endDate.toISOString()],

@@ -7,7 +7,7 @@ import {
   announcements,
   companySettings,
   type User,
-  type UpsertUser,
+  type InsertUser,
   type Attendance,
   type InsertAttendance,
   type LeaveRequest,
@@ -48,7 +48,11 @@ export interface IStorage {
   markAttendance(attendance: InsertAttendance): Promise<Attendance>;
   getAttendanceByUser(userId: string, startDate?: Date, endDate?: Date): Promise<Attendance[]>;
   getTodayAttendance(userId: string): Promise<Attendance | undefined>;
-  getAttendanceStats(startDate: Date, endDate: Date): Promise<any>;
+  getAttendanceStats(startDate?: Date, endDate?: Date): Promise<any>;
+  
+  // Admin attendance operations
+  getTodayAttendanceForAll(): Promise<any[]>;
+  getAttendanceRangeForAll(startDate: string, endDate: string): Promise<any[]>;
   
   // Leave operations
   createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest>;
@@ -197,8 +201,19 @@ export class DatabaseStorage implements IStorage {
     return todayAttendance;
   }
 
-  async getAttendanceStats(startDate: Date, endDate: Date): Promise<any> {
-    const stats = await db
+  async getAttendanceStats(startDate?: Date, endDate?: Date): Promise<any> {
+    // Default to current month if no dates provided
+    const today = new Date();
+    const defaultStart = startDate || new Date(today.getFullYear(), today.getMonth(), 1);
+    const defaultEnd = endDate || new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    
+    // Get today's stats
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    
+    const [monthlyStats] = await db
       .select({
         totalEmployees: sql<number>`count(distinct ${users.id})`,
         presentCount: sql<number>`count(${attendance.id})`,
@@ -208,14 +223,46 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(attendance, 
         and(
           eq(users.id, attendance.userId),
-          gte(attendance.date, startDate),
-          lte(attendance.date, endDate),
+          gte(attendance.date, defaultStart),
+          lte(attendance.date, defaultEnd),
           eq(attendance.status, 'present')
         )
       )
       .where(eq(users.isActive, true));
 
-    return stats[0];
+    const [todayStats] = await db
+      .select({
+        presentToday: sql<number>`count(case when ${attendance.status} = 'present' then 1 end)`,
+        lateToday: sql<number>`count(case when ${attendance.status} = 'late' then 1 end)`,
+        absentToday: sql<number>`count(distinct ${users.id}) - count(${attendance.id})`,
+        averageWorkingHours: sql<number>`
+          round(avg(
+            case 
+              when ${attendance.checkOut} is not null 
+              then extract(epoch from (${attendance.checkOut} - ${attendance.checkIn})) / 3600
+              else null
+            end
+          ), 2)
+        `,
+      })
+      .from(users)
+      .leftJoin(attendance, 
+        and(
+          eq(users.id, attendance.userId),
+          gte(attendance.date, todayStart),
+          lte(attendance.date, todayEnd)
+        )
+      )
+      .where(eq(users.isActive, true));
+
+    return {
+      totalEmployees: monthlyStats.totalEmployees || 0,
+      presentToday: todayStats.presentToday || 0,
+      lateToday: todayStats.lateToday || 0,
+      absentToday: todayStats.absentToday || 0,
+      averageWorkingHours: todayStats.averageWorkingHours || 0,
+      attendanceRate: monthlyStats.attendanceRate || 0,
+    };
   }
 
   // Leave operations
@@ -515,6 +562,79 @@ export class DatabaseStorage implements IStorage {
   async deleteDesignation(id: string): Promise<boolean> {
     const result = await db.delete(designations).where(eq(designations.id, id));
     return result.rowCount > 0;
+  }
+
+  // Admin attendance operations
+  async getTodayAttendanceForAll(): Promise<any[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return await db
+      .select({
+        id: attendance.id,
+        userId: attendance.userId,
+        userName: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
+        userEmail: users.email,
+        date: attendance.date,
+        checkIn: attendance.checkIn,
+        checkOut: attendance.checkOut,
+        status: attendance.status,
+        location: attendance.location,
+        workingHours: sql<number>`
+          case 
+            when ${attendance.checkOut} is not null 
+            then extract(epoch from (${attendance.checkOut} - ${attendance.checkIn})) / 3600
+            else null
+          end
+        `,
+      })
+      .from(attendance)
+      .innerJoin(users, eq(attendance.userId, users.id))
+      .where(
+        and(
+          gte(attendance.date, today),
+          lte(attendance.date, tomorrow),
+          eq(users.isActive, true)
+        )
+      )
+      .orderBy(attendance.checkIn);
+  }
+
+  async getAttendanceRangeForAll(startDate: string, endDate: string): Promise<any[]> {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return await db
+      .select({
+        id: attendance.id,
+        userId: attendance.userId,
+        userName: sql<string>`concat(${users.firstName}, ' ', ${users.lastName})`,
+        userEmail: users.email,
+        date: attendance.date,
+        checkIn: attendance.checkIn,
+        checkOut: attendance.checkOut,
+        status: attendance.status,
+        location: attendance.location,
+        workingHours: sql<number>`
+          case 
+            when ${attendance.checkOut} is not null 
+            then extract(epoch from (${attendance.checkOut} - ${attendance.checkIn})) / 3600
+            else null
+          end
+        `,
+      })
+      .from(attendance)
+      .innerJoin(users, eq(attendance.userId, users.id))
+      .where(
+        and(
+          gte(attendance.date, start),
+          lte(attendance.date, end),
+          eq(users.isActive, true)
+        )
+      )
+      .orderBy(desc(attendance.date), attendance.checkIn);
   }
 }
 
