@@ -100,6 +100,27 @@ export const expenseClaims = pgTable("expense_claims", {
   reimbursementDate: timestamp("reimbursement_date"),
 });
 
+// Employee salary structure (saved once per employee)
+export const employeeSalaryStructure = pgTable("employee_salary_structure", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  basicSalary: decimal("basic_salary", { precision: 10, scale: 2 }).notNull(),
+  hra: decimal("hra", { precision: 10, scale: 2 }).default("0.00"),
+  conveyanceAllowance: decimal("conveyance_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  medicalAllowance: decimal("medical_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  specialAllowance: decimal("special_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  grossSalary: decimal("gross_salary", { precision: 10, scale: 2 }).notNull(),
+  providentFund: decimal("provident_fund", { precision: 10, scale: 2 }).default("0.00"),
+  professionalTax: decimal("professional_tax", { precision: 10, scale: 2 }).default("0.00"),
+  incomeTax: decimal("income_tax", { precision: 10, scale: 2 }).default("0.00"),
+  otherDeductions: decimal("other_deductions", { precision: 10, scale: 2 }).default("0.00"),
+  totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }).notNull(),
+  netSalary: decimal("net_salary", { precision: 10, scale: 2 }).notNull(),
+  effectiveDate: timestamp("effective_date").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Payroll table
 export const payroll = pgTable("payroll", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -311,6 +332,12 @@ export const insertEmployeeProfileSchema = createInsertSchema(employeeProfiles).
   approvedAt: true,
 });
 
+export const insertEmployeeSalaryStructureSchema = createInsertSchema(employeeSalaryStructure).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertPayrollSchema = createInsertSchema(payroll).omit({
   id: true,
   createdAt: true,
@@ -362,6 +389,8 @@ export type ExpenseClaim = typeof expenseClaims.$inferSelect;
 export type InsertExpenseClaim = z.infer<typeof insertExpenseClaimSchema>;
 export type Payroll = typeof payroll.$inferSelect;
 export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
+export type EmployeeSalaryStructure = typeof employeeSalaryStructure.$inferSelect;
+export type InsertEmployeeSalaryStructure = z.infer<typeof insertEmployeeSalaryStructureSchema>;
 export type LeaveAssignment = typeof leaveAssignments.$inferSelect;
 export type InsertLeaveAssignment = z.infer<typeof insertLeaveAssignmentSchema>;
 export type Announcement = typeof announcements.$inferSelect;

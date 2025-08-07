@@ -633,6 +633,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Employee salary structure routes
+  app.get("/api/admin/employees-with-salary", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const employees = await storage.getAllEmployeesWithSalaryStructure();
+      res.json(employees);
+    } catch (error) {
+      console.error("Error fetching employees with salary structure:", error);
+      res.status(500).json({ message: "Failed to fetch employees" });
+    }
+  });
+
+  app.post("/api/admin/salary-structure", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const structure = await storage.createOrUpdateSalaryStructure(req.body);
+      res.status(201).json(structure);
+    } catch (error) {
+      console.error("Error creating/updating salary structure:", error);
+      res.status(500).json({ message: "Failed to save salary structure" });
+    }
+  });
+
+  app.get("/api/admin/salary-structure/:userId", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const structure = await storage.getEmployeeSalaryStructure(userId);
+      res.json(structure);
+    } catch (error) {
+      console.error("Error fetching salary structure:", error);
+      res.status(500).json({ message: "Failed to fetch salary structure" });
+    }
+  });
+
   // Employee onboarding routes
   app.get('/api/employee/profile', isAuthenticated, async (req: any, res) => {
     try {

@@ -6,6 +6,11 @@ import {
   payroll,
   announcements,
   companySettings,
+  employeeProfiles,
+  departments,
+  designations,
+  leaveAssignments,
+  employeeSalaryStructure,
   type User,
   type InsertUser,
   type Attendance,
@@ -15,18 +20,20 @@ import {
   type ExpenseClaim,
   type InsertExpenseClaim,
   type Payroll,
+  type InsertPayroll,
   type Announcement,
   type InsertAnnouncement,
   type CompanySettings,
-  employeeProfiles,
   type EmployeeProfile,
   type InsertEmployeeProfile,
-  departments,
-  designations,
   type Department,
   type InsertDepartment,
   type Designation,
   type InsertDesignation,
+  type LeaveAssignment,
+  type InsertLeaveAssignment,
+  type EmployeeSalaryStructure,
+  type InsertEmployeeSalaryStructure,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
@@ -59,6 +66,11 @@ export interface IStorage {
   getPayrollRecords(month?: number, year?: number): Promise<any[]>;
   processPayrollRecord(recordId: string): Promise<Payroll>;
   getPayrollRecordById(recordId: string): Promise<Payroll | undefined>;
+  
+  // Employee salary structure operations
+  createOrUpdateSalaryStructure(structureData: InsertEmployeeSalaryStructure): Promise<EmployeeSalaryStructure>;
+  getEmployeeSalaryStructure(userId: string): Promise<EmployeeSalaryStructure | undefined>;
+  getAllEmployeesWithSalaryStructure(): Promise<any[]>;
   
   // Admin leave management operations
   createLeaveAssignment(assignmentData: InsertLeaveAssignment): Promise<LeaveAssignment>;
@@ -846,6 +858,71 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(leaveAssignments.id, currentAssignment.id));
     }
+  }
+
+  // Employee salary structure operations
+  async createOrUpdateSalaryStructure(structureData: InsertEmployeeSalaryStructure): Promise<EmployeeSalaryStructure> {
+    const [structure] = await db
+      .insert(employeeSalaryStructure)
+      .values({
+        ...structureData,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: employeeSalaryStructure.userId,
+        set: {
+          ...structureData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return structure;
+  }
+
+  async getEmployeeSalaryStructure(userId: string): Promise<EmployeeSalaryStructure | undefined> {
+    const [structure] = await db
+      .select()
+      .from(employeeSalaryStructure)
+      .where(eq(employeeSalaryStructure.userId, userId));
+    return structure;
+  }
+
+  async getAllEmployeesWithSalaryStructure(): Promise<any[]> {
+    // Get all employees with their salary structure (if exists)
+    return await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        department: users.department,
+        position: users.position,
+        isOnboardingComplete: users.isOnboardingComplete,
+        salaryStructure: {
+          id: employeeSalaryStructure.id,
+          basicSalary: employeeSalaryStructure.basicSalary,
+          hra: employeeSalaryStructure.hra,
+          conveyanceAllowance: employeeSalaryStructure.conveyanceAllowance,
+          medicalAllowance: employeeSalaryStructure.medicalAllowance,
+          specialAllowance: employeeSalaryStructure.specialAllowance,
+          grossSalary: employeeSalaryStructure.grossSalary,
+          providentFund: employeeSalaryStructure.providentFund,
+          professionalTax: employeeSalaryStructure.professionalTax,
+          incomeTax: employeeSalaryStructure.incomeTax,
+          otherDeductions: employeeSalaryStructure.otherDeductions,
+          totalDeductions: employeeSalaryStructure.totalDeductions,
+          netSalary: employeeSalaryStructure.netSalary,
+          effectiveDate: employeeSalaryStructure.effectiveDate,
+        },
+      })
+      .from(users)
+      .leftJoin(employeeSalaryStructure, eq(users.id, employeeSalaryStructure.userId))
+      .where(and(
+        eq(users.role, 'employee'),
+        eq(users.isActive, true),
+        eq(users.isOnboardingComplete, true)
+      ))
+      .orderBy(users.firstName, users.lastName);
   }
 }
 

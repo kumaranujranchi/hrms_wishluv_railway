@@ -6,91 +6,113 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { DollarSign, Calendar, User, FileText, Download, Plus } from "lucide-react";
+import { DollarSign, User, Settings, Plus, Save, Edit } from "lucide-react";
 import Layout from "@/components/Layout";
 
-interface Employee {
+interface EmployeeWithSalary {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   department: string;
-  designation: string;
-  isOnboarded: boolean;
-  isActive: boolean;
+  position: string;
+  isOnboardingComplete: boolean;
+  salaryStructure: {
+    id: string;
+    basicSalary: string;
+    hra: string;
+    conveyanceAllowance: string;
+    medicalAllowance: string;
+    specialAllowance: string;
+    grossSalary: string;
+    providentFund: string;
+    professionalTax: string;
+    incomeTax: string;
+    otherDeductions: string;
+    totalDeductions: string;
+    netSalary: string;
+    effectiveDate: string;
+  } | null;
 }
 
-interface PayrollRecord {
-  id: string;
+interface SalaryStructureForm {
   userId: string;
-  month: string;
-  year: number;
-  basicSalary: number;
-  allowances: number;
-  deductions: number;
-  grossSalary: number;
-  netSalary: number;
-  status: 'draft' | 'processed' | 'paid';
-  processedAt: string;
-  user: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    department: string;
-  };
-}
-
-interface SalaryBreakup {
-  basicSalary: number;
-  houseRentAllowance: number;
-  medicalAllowance: number;
-  transportAllowance: number;
-  specialAllowance: number;
-  providentFund: number;
-  professionalTax: number;
-  incomeTax: number;
+  basicSalary: string;
+  hra: string;
+  conveyanceAllowance: string;
+  medicalAllowance: string;
+  specialAllowance: string;
+  providentFund: string;
+  professionalTax: string;
+  incomeTax: string;
+  otherDeductions: string;
 }
 
 export default function AdminPayroll() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [salaryBreakup, setSalaryBreakup] = useState<SalaryBreakup>({
-    basicSalary: 0,
-    houseRentAllowance: 0,
-    medicalAllowance: 0,
-    transportAllowance: 0,
-    specialAllowance: 0,
-    providentFund: 0,
-    professionalTax: 0,
-    incomeTax: 0,
-  });
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeWithSalary | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const { data: employees, isLoading: employeesLoading } = useQuery<Employee[]>({
-    queryKey: ["/api/employees", { onboarded: true }],
+  const [formData, setFormData] = useState<SalaryStructureForm>({
+    userId: "",
+    basicSalary: "",
+    hra: "",
+    conveyanceAllowance: "",
+    medicalAllowance: "",
+    specialAllowance: "",
+    providentFund: "",
+    professionalTax: "",
+    incomeTax: "",
+    otherDeductions: "",
   });
 
-  const { data: payrollRecords, isLoading: payrollLoading } = useQuery<PayrollRecord[]>({
-    queryKey: ["/api/admin/payroll", selectedMonth, selectedYear],
+  const { data: employees, isLoading: employeesLoading } = useQuery<EmployeeWithSalary[]>({
+    queryKey: ["/api/admin/employees-with-salary"],
   });
 
-  const createPayrollMutation = useMutation({
-    mutationFn: async (payrollData: any) => {
-      await apiRequest("POST", "/api/admin/payroll", payrollData);
+  const saveSalaryMutation = useMutation({
+    mutationFn: async (data: SalaryStructureForm) => {
+      // Calculate totals
+      const basicSalary = parseFloat(data.basicSalary) || 0;
+      const hra = parseFloat(data.hra) || 0;
+      const conveyanceAllowance = parseFloat(data.conveyanceAllowance) || 0;
+      const medicalAllowance = parseFloat(data.medicalAllowance) || 0;
+      const specialAllowance = parseFloat(data.specialAllowance) || 0;
+      
+      const providentFund = parseFloat(data.providentFund) || 0;
+      const professionalTax = parseFloat(data.professionalTax) || 0;
+      const incomeTax = parseFloat(data.incomeTax) || 0;
+      const otherDeductions = parseFloat(data.otherDeductions) || 0;
+
+      const grossSalary = basicSalary + hra + conveyanceAllowance + medicalAllowance + specialAllowance;
+      const totalDeductions = providentFund + professionalTax + incomeTax + otherDeductions;
+      const netSalary = grossSalary - totalDeductions;
+
+      await apiRequest("POST", "/api/admin/salary-structure", {
+        ...data,
+        basicSalary: basicSalary.toString(),
+        hra: hra.toString(),
+        conveyanceAllowance: conveyanceAllowance.toString(),
+        medicalAllowance: medicalAllowance.toString(),
+        specialAllowance: specialAllowance.toString(),
+        grossSalary: grossSalary.toString(),
+        providentFund: providentFund.toString(),
+        professionalTax: professionalTax.toString(),
+        incomeTax: incomeTax.toString(),
+        otherDeductions: otherDeductions.toString(),
+        totalDeductions: totalDeductions.toString(),
+        netSalary: netSalary.toString(),
+      });
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Payroll record created successfully!",
+        description: "Salary structure saved successfully!",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/payroll"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/employees-with-salary"] });
       setIsDialogOpen(false);
       resetForm();
     },
@@ -103,135 +125,85 @@ export default function AdminPayroll() {
     },
   });
 
-  const processPayrollMutation = useMutation({
-    mutationFn: async (recordId: string) => {
-      await apiRequest("PUT", `/api/admin/payroll/${recordId}/process`, {});
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Payroll processed successfully!",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/payroll"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const generatePayslipMutation = useMutation({
-    mutationFn: async (recordId: string) => {
-      const response = await fetch(`/api/admin/payroll/${recordId}/payslip`);
-      if (!response.ok) throw new Error("Failed to generate payslip");
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `payslip-${recordId}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Payslip downloaded successfully!",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const resetForm = () => {
     setSelectedEmployee(null);
-    setSalaryBreakup({
-      basicSalary: 0,
-      houseRentAllowance: 0,
-      medicalAllowance: 0,
-      transportAllowance: 0,
-      specialAllowance: 0,
-      providentFund: 0,
-      professionalTax: 0,
-      incomeTax: 0,
+    setFormData({
+      userId: "",
+      basicSalary: "",
+      hra: "",
+      conveyanceAllowance: "",
+      medicalAllowance: "",
+      specialAllowance: "",
+      providentFund: "",
+      professionalTax: "",
+      incomeTax: "",
+      otherDeductions: "",
     });
   };
 
-  const calculateGrossSalary = () => {
-    return salaryBreakup.basicSalary + 
-           salaryBreakup.houseRentAllowance + 
-           salaryBreakup.medicalAllowance + 
-           salaryBreakup.transportAllowance + 
-           salaryBreakup.specialAllowance;
-  };
-
-  const calculateNetSalary = () => {
-    const gross = calculateGrossSalary();
-    const totalDeductions = salaryBreakup.providentFund + 
-                           salaryBreakup.professionalTax + 
-                           salaryBreakup.incomeTax;
-    return gross - totalDeductions;
-  };
-
-  const handleCreatePayroll = () => {
-    if (!selectedEmployee) return;
-
-    const grossSalary = calculateGrossSalary();
-    const totalDeductions = salaryBreakup.providentFund + 
-                           salaryBreakup.professionalTax + 
-                           salaryBreakup.incomeTax;
-    const netSalary = calculateNetSalary();
-
-    createPayrollMutation.mutate({
-      userId: selectedEmployee.id,
-      month: selectedMonth,
-      year: selectedYear,
-      basicSalary: salaryBreakup.basicSalary,
-      allowances: salaryBreakup.houseRentAllowance + 
-                  salaryBreakup.medicalAllowance + 
-                  salaryBreakup.transportAllowance + 
-                  salaryBreakup.specialAllowance,
-      deductions: totalDeductions,
-      grossSalary,
-      netSalary,
-      salaryBreakup,
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return <Badge variant="secondary">Draft</Badge>;
-      case 'processed':
-        return <Badge variant="default">Processed</Badge>;
-      case 'paid':
-        return <Badge variant="outline" className="text-green-600 border-green-600">Paid</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+  const handleEmployeeSelect = (employee: EmployeeWithSalary) => {
+    setSelectedEmployee(employee);
+    if (employee.salaryStructure) {
+      setFormData({
+        userId: employee.id,
+        basicSalary: employee.salaryStructure.basicSalary,
+        hra: employee.salaryStructure.hra,
+        conveyanceAllowance: employee.salaryStructure.conveyanceAllowance,
+        medicalAllowance: employee.salaryStructure.medicalAllowance,
+        specialAllowance: employee.salaryStructure.specialAllowance,
+        providentFund: employee.salaryStructure.providentFund,
+        professionalTax: employee.salaryStructure.professionalTax,
+        incomeTax: employee.salaryStructure.incomeTax,
+        otherDeductions: employee.salaryStructure.otherDeductions,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        userId: employee.id,
+      });
     }
+    setIsDialogOpen(true);
   };
 
-  const months = [
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
-    { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
-  ];
+  const calculateGross = () => {
+    const basic = parseFloat(formData.basicSalary) || 0;
+    const hra = parseFloat(formData.hra) || 0;
+    const conveyance = parseFloat(formData.conveyanceAllowance) || 0;
+    const medical = parseFloat(formData.medicalAllowance) || 0;
+    const special = parseFloat(formData.specialAllowance) || 0;
+    return basic + hra + conveyance + medical + special;
+  };
+
+  const calculateDeductions = () => {
+    const pf = parseFloat(formData.providentFund) || 0;
+    const pt = parseFloat(formData.professionalTax) || 0;
+    const it = parseFloat(formData.incomeTax) || 0;
+    const other = parseFloat(formData.otherDeductions) || 0;
+    return pf + pt + it + other;
+  };
+
+  const calculateNet = () => {
+    return calculateGross() - calculateDeductions();
+  };
+
+  const handleInputChange = (field: keyof SalaryStructureForm, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    if (!selectedEmployee) return;
+    saveSalaryMutation.mutate(formData);
+  };
+
+  if (employeesLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">Loading employees...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -240,339 +212,270 @@ export default function AdminPayroll() {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Payroll Management</h1>
             <p className="text-muted-foreground">
-              Manage employee salaries and generate payroll reports
+              Manage employee salary structures and payroll processing
             </p>
           </div>
-          
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Payroll
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create Payroll Record</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label>Employee</Label>
-                    <Select 
-                      value={selectedEmployee?.id || ""} 
-                      onValueChange={(value) => {
-                        const employee = employees?.find(e => e.id === value);
-                        setSelectedEmployee(employee || null);
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employee" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {employees?.map((employee) => (
-                          <SelectItem key={employee.id} value={employee.id}>
-                            {employee.firstName} {employee.lastName} - {employee.department}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label>Month</Label>
-                    <Select 
-                      value={selectedMonth.toString()} 
-                      onValueChange={(value) => setSelectedMonth(parseInt(value))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {months.map((month) => (
-                          <SelectItem key={month.value} value={month.value.toString()}>
-                            {month.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div>
-                    <Label>Year</Label>
-                    <Input
-                      type="number"
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                      min="2020"
-                      max="2030"
-                    />
-                  </div>
-                </div>
-
-                <Tabs defaultValue="earnings" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="earnings">Earnings</TabsTrigger>
-                    <TabsTrigger value="deductions">Deductions</TabsTrigger>
-                    <TabsTrigger value="summary">Summary</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="earnings" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="basicSalary">Basic Salary</Label>
-                        <Input
-                          id="basicSalary"
-                          type="number"
-                          value={salaryBreakup.basicSalary}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            basicSalary: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="hra">House Rent Allowance</Label>
-                        <Input
-                          id="hra"
-                          type="number"
-                          value={salaryBreakup.houseRentAllowance}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            houseRentAllowance: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="medical">Medical Allowance</Label>
-                        <Input
-                          id="medical"
-                          type="number"
-                          value={salaryBreakup.medicalAllowance}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            medicalAllowance: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="transport">Transport Allowance</Label>
-                        <Input
-                          id="transport"
-                          type="number"
-                          value={salaryBreakup.transportAllowance}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            transportAllowance: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="special">Special Allowance</Label>
-                        <Input
-                          id="special"
-                          type="number"
-                          value={salaryBreakup.specialAllowance}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            specialAllowance: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="deductions" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="pf">Provident Fund</Label>
-                        <Input
-                          id="pf"
-                          type="number"
-                          value={salaryBreakup.providentFund}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            providentFund: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="pt">Professional Tax</Label>
-                        <Input
-                          id="pt"
-                          type="number"
-                          value={salaryBreakup.professionalTax}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            professionalTax: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="it">Income Tax</Label>
-                        <Input
-                          id="it"
-                          type="number"
-                          value={salaryBreakup.incomeTax}
-                          onChange={(e) => setSalaryBreakup(prev => ({ 
-                            ...prev, 
-                            incomeTax: parseFloat(e.target.value) || 0 
-                          }))}
-                        />
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="summary" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-                        <span className="font-medium">Gross Salary:</span>
-                        <span className="font-bold text-lg">₹{calculateGrossSalary().toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-                        <span className="font-medium">Total Deductions:</span>
-                        <span className="font-bold text-lg text-red-600">
-                          ₹{(salaryBreakup.providentFund + salaryBreakup.professionalTax + salaryBreakup.incomeTax).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center p-4 bg-primary/10 rounded-lg border-2 border-primary/20">
-                        <span className="font-bold text-lg">Net Salary:</span>
-                        <span className="font-bold text-xl text-primary">₹{calculateNetSalary().toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleCreatePayroll}
-                    disabled={!selectedEmployee || createPayrollMutation.isPending}
-                  >
-                    {createPayrollMutation.isPending ? "Creating..." : "Create Payroll"}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
 
-        <div className="flex space-x-4 items-center">
-          <div>
-            <Label>Month</Label>
-            <Select 
-              value={selectedMonth.toString()} 
-              onValueChange={(value) => setSelectedMonth(parseInt(value))}
-            >
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map((month) => (
-                  <SelectItem key={month.value} value={month.value.toString()}>
-                    {month.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <Tabs defaultValue="salary-structures" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="salary-structures">Salary Structures</TabsTrigger>
+            <TabsTrigger value="payroll-processing">Payroll Processing</TabsTrigger>
+          </TabsList>
           
-          <div>
-            <Label>Year</Label>
-            <Input
-              type="number"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="w-24"
-              min="2020"
-              max="2030"
-            />
-          </div>
-        </div>
-
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <DollarSign className="h-5 w-5 mr-2" />
-                Payroll Records - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {payrollLoading ? (
-                <div className="text-center py-8">Loading payroll records...</div>
-              ) : payrollRecords?.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No payroll records found for the selected period
-                </div>
-              ) : (
+          <TabsContent value="salary-structures" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Settings className="h-5 w-5 mr-2" />
+                  Employee Salary Structures
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="space-y-4">
-                  {payrollRecords?.map((record) => (
-                    <div key={record.id} className="border rounded-lg p-4 space-y-2">
+                  {employees?.map((employee) => (
+                    <Card key={employee.id} className="p-4">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold">
-                            {record.user.firstName} {record.user.lastName}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {record.user.email} • {record.user.department}
-                          </p>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              <User className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold">
+                                {employee.firstName} {employee.lastName}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {employee.email} • {employee.department} • {employee.position}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {employee.salaryStructure ? (
+                            <div className="mt-3 grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Basic Salary:</span>
+                                <p className="font-medium">₹{parseFloat(employee.salaryStructure.basicSalary).toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Gross Salary:</span>
+                                <p className="font-medium">₹{parseFloat(employee.salaryStructure.grossSalary).toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Net Salary:</span>
+                                <p className="font-medium text-green-600">₹{parseFloat(employee.salaryStructure.netSalary).toLocaleString()}</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mt-3">
+                              <Badge variant="outline" className="text-orange-600 border-orange-600">
+                                No Salary Structure
+                              </Badge>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {getStatusBadge(record.status)}
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Basic Salary:</span>
-                          <p className="font-medium">₹{record.basicSalary.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Allowances:</span>
-                          <p className="font-medium">₹{record.allowances.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Deductions:</span>
-                          <p className="font-medium text-red-600">₹{record.deductions.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Net Salary:</span>
-                          <p className="font-bold text-primary">₹{record.netSalary.toFixed(2)}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end space-x-2 pt-2">
-                        {record.status === 'draft' && (
-                          <Button
-                            size="sm"
-                            onClick={() => processPayrollMutation.mutate(record.id)}
-                            disabled={processPayrollMutation.isPending}
-                          >
-                            <Calendar className="h-4 w-4 mr-1" />
-                            Process
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => generatePayslipMutation.mutate(record.id)}
-                          disabled={generatePayslipMutation.isPending}
+                        
+                        <Button 
+                          onClick={() => handleEmployeeSelect(employee)}
+                          variant={employee.salaryStructure ? "outline" : "default"}
                         >
-                          <Download className="h-4 w-4 mr-1" />
-                          Download Payslip
+                          {employee.salaryStructure ? (
+                            <>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Structure
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Set Structure
+                            </>
+                          )}
                         </Button>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payroll-processing" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <DollarSign className="h-5 w-5 mr-2" />
+                  Monthly Payroll Processing
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  Payroll processing functionality will be implemented next. This will calculate salaries based on attendance and the salary structures defined above.
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedEmployee?.salaryStructure ? 'Edit' : 'Set'} Salary Structure - {selectedEmployee?.firstName} {selectedEmployee?.lastName}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Earnings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Basic Salary *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="50000"
+                        value={formData.basicSalary}
+                        onChange={(e) => handleInputChange('basicSalary', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>House Rent Allowance (HRA)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="20000"
+                        value={formData.hra}
+                        onChange={(e) => handleInputChange('hra', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Conveyance Allowance</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="2000"
+                        value={formData.conveyanceAllowance}
+                        onChange={(e) => handleInputChange('conveyanceAllowance', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Medical Allowance</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="1500"
+                        value={formData.medicalAllowance}
+                        onChange={(e) => handleInputChange('medicalAllowance', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Special Allowance</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="5000"
+                        value={formData.specialAllowance}
+                        onChange={(e) => handleInputChange('specialAllowance', e.target.value)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Deductions</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Provident Fund (PF)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="6000"
+                        value={formData.providentFund}
+                        onChange={(e) => handleInputChange('providentFund', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Professional Tax</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="200"
+                        value={formData.professionalTax}
+                        onChange={(e) => handleInputChange('professionalTax', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Income Tax (TDS)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="5000"
+                        value={formData.incomeTax}
+                        onChange={(e) => handleInputChange('incomeTax', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Other Deductions</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0"
+                        value={formData.otherDeductions}
+                        onChange={(e) => handleInputChange('otherDeductions', e.target.value)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border-2 border-dashed">
+                <CardHeader>
+                  <CardTitle className="text-lg">Salary Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <p className="text-sm text-green-600 font-medium">Gross Salary</p>
+                      <p className="text-lg font-bold text-green-700">
+                        ₹{calculateGross().toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                      <p className="text-sm text-red-600 font-medium">Total Deductions</p>
+                      <p className="text-lg font-bold text-red-700">
+                        ₹{calculateDeductions().toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-600 font-medium">Net Salary</p>
+                      <p className="text-lg font-bold text-blue-700">
+                        ₹{calculateNet().toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSave} 
+                  disabled={saveSalaryMutation.isPending || !formData.basicSalary}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {saveSalaryMutation.isPending ? 'Saving...' : 'Save Structure'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
