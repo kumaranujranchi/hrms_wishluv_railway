@@ -43,7 +43,8 @@ export default function AdminCreateEmployeePage() {
 
   const createEmployeeMutation = useMutation({
     mutationFn: async (data: CreateEmployeeFormData) => {
-      return apiRequest('/api/admin/create-employee', 'POST', data);
+      const res = await apiRequest('POST', '/api/admin/create-employee', data);
+      return res.json();
     },
     onSuccess: (employee) => {
       setCreatedEmployee(employee);

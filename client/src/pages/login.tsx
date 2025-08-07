@@ -34,7 +34,8 @@ export default function LoginPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      return apiRequest('/api/auth/login', 'POST', data);
+      const res = await apiRequest('POST', '/api/auth/login', data);
+      return res.json();
     },
     onSuccess: (user) => {
       queryClient.setQueryData(['/api/auth/user'], user);

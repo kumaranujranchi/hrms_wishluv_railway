@@ -97,7 +97,8 @@ export default function OnboardingPage() {
 
   const onboardingMutation = useMutation({
     mutationFn: async (data: OnboardingFormData & { bankProofDocumentPath?: string }) => {
-      return apiRequest('/api/employee/onboarding', 'POST', data);
+      const res = await apiRequest('POST', '/api/employee/onboarding', data);
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/employee/profile'] });
@@ -117,7 +118,8 @@ export default function OnboardingPage() {
 
   const handleBankProofUpload = async () => {
     try {
-      const response = await apiRequest('/api/objects/upload', 'POST', {});
+      const res = await apiRequest('POST', '/api/objects/upload', {});
+      const response = await res.json();
       return {
         method: 'PUT' as const,
         url: response.uploadURL,
