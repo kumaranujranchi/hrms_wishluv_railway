@@ -49,13 +49,18 @@ export default function Layout({ children }: LayoutProps) {
       badge: "3",
       current: location === "/attendance" 
     }]),
-    { 
+    ...(user?.role === 'admin' ? [{
+      name: "Leave Management", 
+      href: "/admin/leave-management", 
+      icon: Calendar, 
+      current: location === "/admin/leave-management" 
+    }] : [{
       name: "Leave Management", 
       href: "/leave-management", 
       icon: Calendar, 
       badge: "7",
       current: location === "/leave-management" 
-    },
+    }]),
     { 
       name: "Expenses", 
       href: "/expenses", 

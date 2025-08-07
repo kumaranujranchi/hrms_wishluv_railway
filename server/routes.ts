@@ -588,6 +588,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin leave management routes
+  app.post("/api/admin/leave-assignments", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const assignment = await storage.createLeaveAssignment(req.body);
+      res.status(201).json(assignment);
+    } catch (error) {
+      console.error("Error creating leave assignment:", error);
+      res.status(500).json({ message: "Failed to create leave assignment" });
+    }
+  });
+
+  app.get("/api/admin/leave-assignments", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const assignments = await storage.getLeaveAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching leave assignments:", error);
+      res.status(500).json({ message: "Failed to fetch leave assignments" });
+    }
+  });
+
+  app.get("/api/admin/leave-requests", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const requests = await storage.getAllLeaveRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching leave requests:", error);
+      res.status(500).json({ message: "Failed to fetch leave requests" });
+    }
+  });
+
+  app.put("/api/admin/leave-requests/:id/respond", isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { status, notes } = req.body;
+      const approverId = req.user.id;
+      
+      const request = await storage.respondToLeaveRequest(id, status, notes, approverId);
+      res.json(request);
+    } catch (error) {
+      console.error("Error responding to leave request:", error);
+      res.status(500).json({ message: "Failed to respond to leave request" });
+    }
+  });
+
   // Employee onboarding routes
   app.get('/api/employee/profile', isAuthenticated, async (req: any, res) => {
     try {

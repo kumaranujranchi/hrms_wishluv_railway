@@ -60,6 +60,13 @@ export interface IStorage {
   processPayrollRecord(recordId: string): Promise<Payroll>;
   getPayrollRecordById(recordId: string): Promise<Payroll | undefined>;
   
+  // Admin leave management operations
+  createLeaveAssignment(assignmentData: InsertLeaveAssignment): Promise<LeaveAssignment>;
+  getLeaveAssignments(): Promise<any[]>;
+  getAllLeaveRequests(): Promise<any[]>;
+  respondToLeaveRequest(requestId: string, status: string, notes?: string, approverId?: string): Promise<LeaveRequest>;
+  updateLeaveBalance(userId: string, leaveType: string, days: number): Promise<void>;
+  
   // Leave operations
   createLeaveRequest(leaveRequest: InsertLeaveRequest): Promise<LeaveRequest>;
   getLeaveRequestsByUser(userId: string): Promise<LeaveRequest[]>;
@@ -712,6 +719,133 @@ export class DatabaseStorage implements IStorage {
       .from(payroll)
       .where(eq(payroll.id, recordId));
     return record;
+  }
+
+  // Admin leave management operations
+  async createLeaveAssignment(assignmentData: InsertLeaveAssignment): Promise<LeaveAssignment> {
+    const [assignment] = await db
+      .insert(leaveAssignments)
+      .values({
+        ...assignmentData,
+        updatedAt: new Date(),
+      })
+      .returning();
+    return assignment;
+  }
+
+  async getLeaveAssignments(): Promise<any[]> {
+    return await db
+      .select({
+        id: leaveAssignments.id,
+        userId: leaveAssignments.userId,
+        year: leaveAssignments.year,
+        annualLeave: leaveAssignments.annualLeave,
+        sickLeave: leaveAssignments.sickLeave,
+        casualLeave: leaveAssignments.casualLeave,
+        maternityLeave: leaveAssignments.maternityLeave,
+        paternityLeave: leaveAssignments.paternityLeave,
+        annualUsed: leaveAssignments.annualUsed,
+        sickUsed: leaveAssignments.sickUsed,
+        casualUsed: leaveAssignments.casualUsed,
+        maternityUsed: leaveAssignments.maternityUsed,
+        paternityUsed: leaveAssignments.paternityUsed,
+        createdAt: leaveAssignments.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          department: users.department,
+        },
+      })
+      .from(leaveAssignments)
+      .innerJoin(users, eq(leaveAssignments.userId, users.id))
+      .orderBy(desc(leaveAssignments.createdAt));
+  }
+
+  async getAllLeaveRequests(): Promise<any[]> {
+    return await db
+      .select({
+        id: leaveRequests.id,
+        userId: leaveRequests.userId,
+        type: leaveRequests.type,
+        startDate: leaveRequests.startDate,
+        endDate: leaveRequests.endDate,
+        days: leaveRequests.days,
+        reason: leaveRequests.reason,
+        status: leaveRequests.status,
+        approverId: leaveRequests.approverId,
+        approverNotes: leaveRequests.approverNotes,
+        createdAt: leaveRequests.createdAt,
+        updatedAt: leaveRequests.updatedAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          department: users.department,
+          position: users.position,
+        },
+      })
+      .from(leaveRequests)
+      .innerJoin(users, eq(leaveRequests.userId, users.id))
+      .orderBy(desc(leaveRequests.createdAt));
+  }
+
+  async respondToLeaveRequest(requestId: string, status: string, notes?: string, approverId?: string): Promise<LeaveRequest> {
+    const [request] = await db
+      .update(leaveRequests)
+      .set({
+        status: status as any,
+        approverNotes: notes,
+        approverId,
+        updatedAt: new Date(),
+      })
+      .where(eq(leaveRequests.id, requestId))
+      .returning();
+    
+    // If approved, update leave balance
+    if (status === 'approved' && request) {
+      await this.updateLeaveBalance(request.userId, request.type, request.days);
+    }
+    
+    return request;
+  }
+
+  async updateLeaveBalance(userId: string, leaveType: string, days: number): Promise<void> {
+    const currentYear = new Date().getFullYear();
+    
+    // Map leave types to database columns
+    const columnMap: { [key: string]: string } = {
+      annual: 'annualUsed',
+      sick: 'sickUsed',
+      casual: 'casualUsed',
+      maternity: 'maternityUsed',
+      paternity: 'paternityUsed',
+    };
+
+    const column = columnMap[leaveType];
+    if (!column) return;
+
+    // Get current assignment
+    const [currentAssignment] = await db
+      .select()
+      .from(leaveAssignments)
+      .where(
+        and(
+          eq(leaveAssignments.userId, userId),
+          eq(leaveAssignments.year, currentYear)
+        )
+      );
+
+    if (currentAssignment) {
+      // Update existing assignment
+      await db
+        .update(leaveAssignments)
+        .set({
+          [column]: (currentAssignment[column as keyof typeof currentAssignment] as number) + days,
+          updatedAt: new Date(),
+        })
+        .where(eq(leaveAssignments.id, currentAssignment.id));
+    }
   }
 }
 

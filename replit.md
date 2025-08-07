@@ -2,7 +2,7 @@
 
 ## Overview
 
-Synergy HRMS Pro is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, leave management with approval workflows, expense claim processing, employee directory management, payroll processing, and comprehensive reporting capabilities. The system supports role-based access control with admin, manager, and employee roles, each having appropriate permissions and dashboard views.
+Synergy HRMS Pro is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, comprehensive leave management with admin approval workflows and leave allocation tracking, expense claim processing, employee directory management, advanced payroll processing with detailed salary breakdowns, and comprehensive reporting capabilities. The system supports role-based access control with admin and employee roles, each having appropriate permissions and dashboard views.
 
 ## User Preferences
 
@@ -29,12 +29,14 @@ Preferred communication style: Simple, everyday language.
 - **Primary Database**: PostgreSQL via Neon Database for reliability and performance
 - **Schema Management**: Drizzle Kit for migrations and schema evolution
 - **Key Tables**: 
-  - Users table with role-based access (admin, manager, employee)
+  - Users table with role-based access (admin, employee)
   - Attendance tracking with geo-location support
-  - Leave requests with approval workflows
+  - Leave requests with comprehensive approval workflows
+  - Leave assignments for admin-controlled leave allocations
   - Expense claims with receipt file attachments
-  - Payroll records with detailed salary breakdowns
-  - Company announcements and settings
+  - Payroll records with detailed salary breakdowns and status tracking
+  - Employee profiles with onboarding workflow
+  - Company announcements, departments, and designations
 
 ### File Storage Strategy
 - **Object Storage**: Google Cloud Storage for file attachments (receipts, documents)

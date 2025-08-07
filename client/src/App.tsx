@@ -18,6 +18,7 @@ import AdminDepartments from "@/pages/admin-departments";
 import AdminDesignations from "@/pages/admin-designations";
 import AdminAttendance from "@/pages/admin-attendance";
 import AdminPayroll from "@/pages/admin-payroll";
+import AdminLeaveManagement from "@/pages/admin-leave-management";
 import Payroll from "@/pages/payroll";
 import Reports from "@/pages/reports";
 
@@ -50,6 +51,7 @@ function Router() {
           <Route path="/admin/designations" component={AdminDesignations} />
           <Route path="/admin/attendance" component={AdminAttendance} />
           <Route path="/admin/payroll" component={AdminPayroll} />
+          <Route path="/admin/leave-management" component={AdminLeaveManagement} />
           <Route path="/payroll" component={Payroll} />
           <Route path="/reports" component={Reports} />
         </>

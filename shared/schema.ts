@@ -318,6 +318,36 @@ export const insertPayrollSchema = createInsertSchema(payroll).omit({
   processedAt: true,
 });
 
+// Leave assignments table for admin-assigned leave balances
+export const leaveAssignments = pgTable("leave_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  year: integer("year").notNull(),
+  annualLeave: integer("annual_leave").default(21),
+  sickLeave: integer("sick_leave").default(7),
+  casualLeave: integer("casual_leave").default(7),
+  maternityLeave: integer("maternity_leave").default(84),
+  paternityLeave: integer("paternity_leave").default(15),
+  annualUsed: integer("annual_used").default(0),
+  sickUsed: integer("sick_used").default(0),
+  casualUsed: integer("casual_used").default(0),
+  maternityUsed: integer("maternity_used").default(0),
+  paternityUsed: integer("paternity_used").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLeaveAssignmentSchema = createInsertSchema(leaveAssignments).omit({
+  id: true,
+  annualUsed: true,
+  sickUsed: true,
+  casualUsed: true,
+  maternityUsed: true,
+  paternityUsed: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type CreateEmployee = z.infer<typeof createEmployeeSchema>;
@@ -332,6 +362,8 @@ export type ExpenseClaim = typeof expenseClaims.$inferSelect;
 export type InsertExpenseClaim = z.infer<typeof insertExpenseClaimSchema>;
 export type Payroll = typeof payroll.$inferSelect;
 export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
+export type LeaveAssignment = typeof leaveAssignments.$inferSelect;
+export type InsertLeaveAssignment = z.infer<typeof insertLeaveAssignmentSchema>;
 export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type CompanySettings = typeof companySettings.$inferSelect;

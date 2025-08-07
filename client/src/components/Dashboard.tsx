@@ -67,6 +67,12 @@ export default function Dashboard() {
       color: "text-warning-600 bg-warning-50",
     },
     {
+      title: "Leave Management",
+      href: "/admin/leave-management",
+      icon: Calendar,
+      color: "text-info-600 bg-info-50",
+    },
+    {
       title: "Employee Directory",
       href: "/employee-directory",
       icon: Users,
