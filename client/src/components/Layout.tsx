@@ -20,7 +20,8 @@ import {
   BarChart3, 
   Settings,
   Building2,
-  Plus
+  Plus,
+  LogOut
 } from "lucide-react";
 
 interface LayoutProps {
@@ -180,11 +181,32 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </nav>
 
-        {/* Quick Actions */}
-        <div className="p-4 border-t border-neutral-200">
-          <Button className="w-full bg-primary-500 hover:bg-primary-600 text-white">
-            <Plus className="text-lg mr-2" />
-            Quick Action
+        {/* User Info & Logout */}
+        <div className="p-4 border-t border-neutral-200 space-y-3">
+          <div className="flex items-center space-x-3 text-sm">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-primary-100 text-primary-600 text-xs font-semibold">
+                {user?.firstName?.[0]}{user?.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-neutral-900 truncate">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-neutral-500 capitalize">{user?.role}</p>
+            </div>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full text-red-600 border-red-200 hover:bg-red-50"
+            onClick={async () => {
+              await fetch('/api/auth/logout', { method: 'POST' });
+              window.location.href = "/";
+            }}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
           </Button>
         </div>
       </aside>
@@ -221,17 +243,28 @@ export default function Layout({ children }: LayoutProps) {
               {/* Notifications */}
               {user?.id && <NotificationSystem userId={user.id} />}
               
-              {/* Profile Menu */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={async () => {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  window.location.href = "/";
-                }}
-              >
-                <User className="h-5 w-5" />
-              </Button>
+              {/* Profile Menu with Logout */}
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 text-sm text-neutral-600">
+                  <User className="h-4 w-4" />
+                  <span>{user?.firstName} {user?.lastName}</span>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    {user?.role === 'admin' ? 'Admin' : 'Employee'}
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = "/";
+                  }}
+                  className="text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Logout
+                </Button>
+              </div>
             </div>
           </div>
         </header>
