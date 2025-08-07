@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import NotificationSystem from "./NotificationSystem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -207,12 +208,7 @@ export default function Layout({ children }: LayoutProps) {
               </div>
               
               {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 bg-warning-500 text-white text-xs">
-                  5
-                </Badge>
-              </Button>
+              {user?.id && <NotificationSystem userId={user.id} />}
               
               {/* Profile Menu */}
               <Button

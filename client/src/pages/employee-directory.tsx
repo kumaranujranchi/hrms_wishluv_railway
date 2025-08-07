@@ -30,8 +30,8 @@ interface Employee {
 
 export default function EmployeeDirectoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -45,8 +45,8 @@ export default function EmployeeDirectoryPage() {
       employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       employee.position.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
-    const matchesRole = !roleFilter || employee.role === roleFilter;
+    const matchesDepartment = departmentFilter === "all" || employee.department === departmentFilter;
+    const matchesRole = roleFilter === "all" || employee.role === roleFilter;
     
     return matchesSearch && matchesDepartment && matchesRole;
   });
@@ -164,7 +164,7 @@ export default function EmployeeDirectoryPage() {
                   <SelectValue placeholder="All Departments" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Departments</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   {departments.map(dept => (
                     <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                   ))}
@@ -175,7 +175,7 @@ export default function EmployeeDirectoryPage() {
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Roles</SelectItem>
+                  <SelectItem value="all">All Roles</SelectItem>
                   {roles.map(role => (
                     <SelectItem key={role} value={role} className="capitalize">{role}</SelectItem>
                   ))}

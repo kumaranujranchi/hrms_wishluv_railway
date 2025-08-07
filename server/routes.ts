@@ -341,6 +341,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notification routes
+  app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock notifications for demonstration
+      const notifications = [
+        {
+          id: '1',
+          title: 'Leave Request Approval',
+          message: 'John Smith has requested 3 days of vacation leave',
+          type: 'info',
+          read: false,
+          actionType: 'leave_approval',
+          actionId: 'leave-123',
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: '2',
+          title: 'Expense Claim Review',
+          message: 'Travel expense of $450 requires your approval',
+          type: 'warning',
+          read: false,
+          actionType: 'expense_approval',
+          actionId: 'expense-456',
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        }
+      ];
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.post('/api/notifications/:id/read', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mark notification as read (mock implementation)
+      res.json({ message: 'Notification marked as read' });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // AI Insights route
+  app.get('/api/ai/insights/:userId', isAuthenticated, async (req: any, res) => {
+    try {
+      // Mock AI insights for demonstration
+      const insights = [
+        {
+          id: '1',
+          type: 'attendance',
+          title: 'Attendance Pattern Analysis',
+          description: 'Team productivity peaks on Tuesdays and Wednesdays',
+          recommendation: 'Schedule important meetings on high-productivity days',
+          confidence: 89,
+          impact: 'medium',
+          data: { peak_days: ['Tuesday', 'Wednesday'], productivity_increase: '23%' }
+        }
+      ];
+      res.json(insights);
+    } catch (error) {
+      console.error("Error fetching AI insights:", error);
+      res.status(500).json({ message: "Failed to fetch AI insights" });
+    }
+  });
+
+  // Attendance statistics route
+  app.get('/api/attendance/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      // Calculate attendance statistics
+      const stats = {
+        totalDays: 30,
+        presentDays: 28,
+        lateDays: 2,
+        absentDays: 2,
+        averageHours: 8.2,
+        attendanceRate: 93.3
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching attendance stats:", error);
+      res.status(500).json({ message: "Failed to fetch attendance statistics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
