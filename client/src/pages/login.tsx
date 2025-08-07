@@ -69,7 +69,7 @@ export default function LoginPage() {
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800">
               <strong>Admin Login:</strong><br />
-              Email: admin@company.com<br />
+              Email: anuj.kumar@wishluvbuildcon.com<br />
               Password: admin123
             </p>
           </div>
