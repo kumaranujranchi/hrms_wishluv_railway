@@ -38,10 +38,8 @@ export default function AdminDepartmentsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertDepartment) => {
-      return await apiRequest("/api/departments", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("POST", "/api/departments", data);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -63,10 +61,9 @@ export default function AdminDepartmentsPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertDepartment & { id: string }) => {
-      return await apiRequest(`/api/departments/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      const { id, ...updateData } = data;
+      const response = await apiRequest("PUT", `/api/departments/${id}`, updateData);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -89,9 +86,8 @@ export default function AdminDepartmentsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/departments/${id}`, {
-        method: "DELETE",
-      });
+      const response = await apiRequest("DELETE", `/api/departments/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       toast({

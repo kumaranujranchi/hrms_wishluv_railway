@@ -44,10 +44,8 @@ export default function AdminDesignationsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertDesignation) => {
-      return await apiRequest("/api/designations", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const response = await apiRequest("POST", "/api/designations", data);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -69,10 +67,9 @@ export default function AdminDesignationsPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertDesignation & { id: string }) => {
-      return await apiRequest(`/api/designations/${data.id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
+      const { id, ...updateData } = data;
+      const response = await apiRequest("PUT", `/api/designations/${id}`, updateData);
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -95,9 +92,8 @@ export default function AdminDesignationsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/designations/${id}`, {
-        method: "DELETE",
-      });
+      const response = await apiRequest("DELETE", `/api/designations/${id}`);
+      return response.json();
     },
     onSuccess: () => {
       toast({

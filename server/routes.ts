@@ -596,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/departments", requireAdmin, async (req, res) => {
+  app.post("/api/departments", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const result = insertDepartmentSchema.safeParse(req.body);
       if (!result.success) {
@@ -618,7 +618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/departments/:id", requireAdmin, async (req, res) => {
+  app.put("/api/departments/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const result = insertDepartmentSchema.safeParse(req.body);
       if (!result.success) {
@@ -640,7 +640,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/departments/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/departments/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const success = await storage.deleteDepartment(req.params.id);
       if (!success) {
@@ -665,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/designations", requireAdmin, async (req, res) => {
+  app.post("/api/designations", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const result = insertDesignationSchema.safeParse(req.body);
       if (!result.success) {
@@ -687,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/designations/:id", requireAdmin, async (req, res) => {
+  app.put("/api/designations/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const result = insertDesignationSchema.safeParse(req.body);
       if (!result.success) {
@@ -709,7 +709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/designations/:id", requireAdmin, async (req, res) => {
+  app.delete("/api/designations/:id", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
       const success = await storage.deleteDesignation(req.params.id);
       if (!success) {
