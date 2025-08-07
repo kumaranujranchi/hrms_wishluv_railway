@@ -54,17 +54,11 @@ export default function Landing() {
             Complete Human Resource Management System with attendance tracking, 
             leave management, expense claims, and comprehensive reporting.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link href="/login">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                <LogIn className="h-5 w-5 mr-2" />
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                <UserPlus className="h-5 w-5 mr-2" />
-                Create Account
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-lg font-semibold transition-colors text-lg">
+                <LogIn className="mr-3 h-6 w-6" />
+                Sign In to HRMS
               </Button>
             </Link>
           </div>
@@ -98,22 +92,16 @@ export default function Landing() {
             Ready to Transform Your HR Management?
           </h2>
           <p className="text-lg text-neutral-600 mb-8 max-w-2xl mx-auto">
-            Join thousands of companies that trust HRMS Pro for their human resource management needs. 
-            Get started today and experience the difference.
+            Secure access to your HR management dashboard. Sign in with your credentials to manage attendance, 
+            leave requests, expenses, and more.
           </p>
-          <div className="flex justify-center space-x-4">
-            <Link href="/register">
+          <div className="flex justify-center">
+            <Link href="/login">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                Get Started Now
+                <LogIn className="mr-2 h-5 w-5" />
+                Access HRMS Pro
               </Button>
             </Link>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="border-neutral-300"
-            >
-              Learn More
-            </Button>
           </div>
         </div>
       </div>
