@@ -76,13 +76,6 @@ export default function Layout({ children }: LayoutProps) {
       current: location === "/employee-directory" 
     },
     { 
-      name: "Create Employee", 
-      href: "/admin/create-employee", 
-      icon: UserPlus,
-      current: location === "/admin/create-employee",
-      adminOnly: true
-    },
-    { 
       name: "Departments", 
       href: "/admin/departments", 
       icon: Building,
