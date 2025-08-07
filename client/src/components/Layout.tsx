@@ -100,7 +100,7 @@ export default function Layout({ children }: LayoutProps) {
               <Building2 className="text-white text-xl" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-neutral-900">HRMS Pro</h1>
+              <h1 className="text-lg font-semibold text-neutral-900">Synergy HRMS Pro</h1>
               <p className="text-sm text-neutral-600">HR Management</p>
             </div>
           </div>

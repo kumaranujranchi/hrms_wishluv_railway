@@ -1,8 +1,8 @@
-# HRMS Pro
+# Synergy HRMS Pro
 
 ## Overview
 
-HRMS Pro is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, leave management with approval workflows, expense claim processing, employee directory management, payroll processing, and comprehensive reporting capabilities. The system supports role-based access control with admin, manager, and employee roles, each having appropriate permissions and dashboard views.
+Synergy HRMS Pro is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, leave management with approval workflows, expense claim processing, employee directory management, payroll processing, and comprehensive reporting capabilities. The system supports role-based access control with admin, manager, and employee roles, each having appropriate permissions and dashboard views.
 
 ## User Preferences
 
