@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, registerUser, loginUser, createEmployeeByAdmin } from "./auth";
+import { setupAuth, isAuthenticated, registerUser, loginUser, createEmployeeByAdmin, requireAdmin } from "./auth";
 import { ObjectStorageService } from "./objectStorage";
 import { 
   insertAttendanceSchema,
@@ -9,6 +9,8 @@ import {
   insertExpenseClaimSchema,
   insertAnnouncementSchema,
   insertEmployeeProfileSchema,
+  insertDepartmentSchema,
+  insertDesignationSchema,
   registerUserSchema,
   loginUserSchema,
   createEmployeeSchema,
@@ -580,6 +582,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error setting document ACL:', error);
       res.status(500).json({ error: 'Failed to set document permissions' });
+    }
+  });
+
+  // Departments API
+  app.get("/api/departments", async (req, res) => {
+    try {
+      const departmentList = await storage.getDepartments();
+      res.json(departmentList);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      res.status(500).json({ message: "Failed to fetch departments" });
+    }
+  });
+
+  app.post("/api/departments", requireAdmin, async (req, res) => {
+    try {
+      const result = insertDepartmentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid department data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const department = await storage.createDepartment({
+        ...result.data,
+        createdBy: req.user?.id
+      });
+
+      res.status(201).json(department);
+    } catch (error) {
+      console.error("Error creating department:", error);
+      res.status(500).json({ message: "Failed to create department" });
+    }
+  });
+
+  app.put("/api/departments/:id", requireAdmin, async (req, res) => {
+    try {
+      const result = insertDepartmentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid department data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const department = await storage.updateDepartment(req.params.id, result.data);
+      if (!department) {
+        return res.status(404).json({ message: "Department not found" });
+      }
+
+      res.json(department);
+    } catch (error) {
+      console.error("Error updating department:", error);
+      res.status(500).json({ message: "Failed to update department" });
+    }
+  });
+
+  app.delete("/api/departments/:id", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteDepartment(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Department not found" });
+      }
+
+      res.json({ message: "Department deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting department:", error);
+      res.status(500).json({ message: "Failed to delete department" });
+    }
+  });
+
+  // Designations API
+  app.get("/api/designations", async (req, res) => {
+    try {
+      const designationList = await storage.getDesignations();
+      res.json(designationList);
+    } catch (error) {
+      console.error("Error fetching designations:", error);
+      res.status(500).json({ message: "Failed to fetch designations" });
+    }
+  });
+
+  app.post("/api/designations", requireAdmin, async (req, res) => {
+    try {
+      const result = insertDesignationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid designation data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const designation = await storage.createDesignation({
+        ...result.data,
+        createdBy: req.user?.id
+      });
+
+      res.status(201).json(designation);
+    } catch (error) {
+      console.error("Error creating designation:", error);
+      res.status(500).json({ message: "Failed to create designation" });
+    }
+  });
+
+  app.put("/api/designations/:id", requireAdmin, async (req, res) => {
+    try {
+      const result = insertDesignationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid designation data", 
+          errors: result.error.issues 
+        });
+      }
+
+      const designation = await storage.updateDesignation(req.params.id, result.data);
+      if (!designation) {
+        return res.status(404).json({ message: "Designation not found" });
+      }
+
+      res.json(designation);
+    } catch (error) {
+      console.error("Error updating designation:", error);
+      res.status(500).json({ message: "Failed to update designation" });
+    }
+  });
+
+  app.delete("/api/designations/:id", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteDesignation(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Designation not found" });
+      }
+
+      res.json({ message: "Designation deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting designation:", error);
+      res.status(500).json({ message: "Failed to delete designation" });
     }
   });
 

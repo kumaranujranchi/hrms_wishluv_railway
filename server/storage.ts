@@ -21,6 +21,12 @@ import {
   employeeProfiles,
   type EmployeeProfile,
   type InsertEmployeeProfile,
+  departments,
+  designations,
+  type Department,
+  type InsertDepartment,
+  type Designation,
+  type InsertDesignation,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
@@ -72,6 +78,18 @@ export interface IStorage {
   // Company settings
   getCompanySettings(): Promise<CompanySettings | undefined>;
   updateCompanySettings(settings: Partial<CompanySettings>): Promise<CompanySettings>;
+
+  // Department operations
+  getDepartments(): Promise<Department[]>;
+  createDepartment(department: InsertDepartment & { createdBy: string }): Promise<Department>;
+  updateDepartment(id: string, department: InsertDepartment): Promise<Department | null>;
+  deleteDepartment(id: string): Promise<boolean>;
+
+  // Designation operations
+  getDesignations(): Promise<(Designation & { department?: Department })[]>;
+  createDesignation(designation: InsertDesignation & { createdBy: string }): Promise<Designation>;
+  updateDesignation(id: string, designation: InsertDesignation): Promise<Designation | null>;
+  deleteDesignation(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -423,6 +441,80 @@ export class DatabaseStorage implements IStorage {
       .where(eq(employeeProfiles.userId, userId))
       .returning();
     return updated;
+  }
+
+  // Department operations
+  async getDepartments(): Promise<Department[]> {
+    return await db.select().from(departments).orderBy(desc(departments.createdAt));
+  }
+
+  async createDepartment(department: InsertDepartment & { createdBy: string }): Promise<Department> {
+    const [newDepartment] = await db
+      .insert(departments)
+      .values(department)
+      .returning();
+    return newDepartment;
+  }
+
+  async updateDepartment(id: string, departmentData: InsertDepartment): Promise<Department | null> {
+    const [updated] = await db
+      .update(departments)
+      .set({ ...departmentData, updatedAt: new Date() })
+      .where(eq(departments.id, id))
+      .returning();
+    return updated || null;
+  }
+
+  async deleteDepartment(id: string): Promise<boolean> {
+    const result = await db.delete(departments).where(eq(departments.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Designation operations
+  async getDesignations(): Promise<(Designation & { department?: Department })[]> {
+    return await db
+      .select({
+        id: designations.id,
+        name: designations.name,
+        description: designations.description,
+        departmentId: designations.departmentId,
+        createdBy: designations.createdBy,
+        createdAt: designations.createdAt,
+        updatedAt: designations.updatedAt,
+        department: {
+          id: departments.id,
+          name: departments.name,
+          description: departments.description,
+          createdBy: departments.createdBy,
+          createdAt: departments.createdAt,
+          updatedAt: departments.updatedAt,
+        },
+      })
+      .from(designations)
+      .leftJoin(departments, eq(designations.departmentId, departments.id))
+      .orderBy(desc(designations.createdAt));
+  }
+
+  async createDesignation(designation: InsertDesignation & { createdBy: string }): Promise<Designation> {
+    const [newDesignation] = await db
+      .insert(designations)
+      .values(designation)
+      .returning();
+    return newDesignation;
+  }
+
+  async updateDesignation(id: string, designationData: InsertDesignation): Promise<Designation | null> {
+    const [updated] = await db
+      .update(designations)
+      .set({ ...designationData, updatedAt: new Date() })
+      .where(eq(designations.id, id))
+      .returning();
+    return updated || null;
+  }
+
+  async deleteDesignation(id: string): Promise<boolean> {
+    const result = await db.delete(designations).where(eq(designations.id, id));
+    return result.rowCount > 0;
   }
 }
 

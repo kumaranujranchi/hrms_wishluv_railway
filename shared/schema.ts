@@ -323,5 +323,65 @@ export type Payroll = typeof payroll.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type CompanySettings = typeof companySettings.$inferSelect;
+
+// Department schema
+export const departments = pgTable("departments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(),
+  description: text("description"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDepartmentSchema = createInsertSchema(departments).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Designation schema
+export const designations = pgTable("designations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  departmentId: varchar("department_id").references(() => departments.id),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDesignationSchema = createInsertSchema(designations).omit({
+  id: true,
+  createdBy: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Relations for departments and designations
+export const departmentsRelations = relations(departments, ({ many, one }) => ({
+  designations: many(designations),
+  createdBy: one(users, {
+    fields: [departments.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const designationsRelations = relations(designations, ({ one }) => ({
+  department: one(departments, {
+    fields: [designations.departmentId],
+    references: [departments.id],
+  }),
+  createdBy: one(users, {
+    fields: [designations.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type Designation = typeof designations.$inferSelect;
+export type InsertDesignation = z.infer<typeof insertDesignationSchema>;
 export type EmployeeProfile = typeof employeeProfiles.$inferSelect;
 export type InsertEmployeeProfile = z.infer<typeof insertEmployeeProfileSchema>;

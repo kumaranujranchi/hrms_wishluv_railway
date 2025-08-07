@@ -136,3 +136,14 @@ export async function loginUser(credentials: LoginUser) {
   const { passwordHash: _, ...userWithoutPassword } = user;
   return userWithoutPassword;
 }
+
+// Helper middleware to check authentication
+
+
+// Helper middleware to require admin role
+export function requireAdmin(req: any, res: any, next: any) {
+  if (req.user && req.user.role === 'admin') {
+    return next();
+  }
+  return res.status(403).json({ message: "Admin access required" });
+}

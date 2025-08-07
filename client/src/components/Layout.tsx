@@ -21,7 +21,9 @@ import {
   Settings,
   Building2,
   Plus,
-  LogOut
+  LogOut,
+  Building,
+  Briefcase
 } from "lucide-react";
 
 interface LayoutProps {
@@ -79,6 +81,20 @@ export default function Layout({ children }: LayoutProps) {
       href: "/admin/create-employee", 
       icon: Plus,
       current: location === "/admin/create-employee",
+      adminOnly: true
+    },
+    { 
+      name: "Departments", 
+      href: "/admin/departments", 
+      icon: Building,
+      current: location === "/admin/departments",
+      adminOnly: true
+    },
+    { 
+      name: "Designations", 
+      href: "/admin/designations", 
+      icon: Briefcase,
+      current: location === "/admin/designations",
       adminOnly: true
     },
   ];
