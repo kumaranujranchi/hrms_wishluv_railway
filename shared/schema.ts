@@ -290,6 +290,34 @@ export const createEmployeeSchema = z.object({
   tempPassword: z.string().min(8, "Temporary password must be at least 8 characters"),
 });
 
+// Update employee schema (for admin editing)
+export const updateEmployeeSchema = z.object({
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().min(2, "Last name is required"),
+  email: z.string().email("Please enter a valid email address"),
+  department: z.string().min(1, "Department is required"),
+  position: z.string().min(1, "Position is required"),
+  // Personal details
+  fatherName: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  marriageAnniversary: z.string().optional(),
+  personalMobile: z.string().optional(),
+  // Emergency contact
+  emergencyContactName: z.string().optional(),
+  emergencyContactNumber: z.string().optional(),
+  emergencyContactRelation: z.string().optional(),
+  // Government IDs
+  panNumber: z.string().optional(),
+  aadharNumber: z.string().optional(),
+  // Address
+  currentAddress: z.string().optional(),
+  permanentAddress: z.string().optional(),
+  // Banking details
+  bankAccountNumber: z.string().optional(),
+  ifscCode: z.string().optional(),
+  bankName: z.string().optional(),
+});
+
 export const registerUserSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),

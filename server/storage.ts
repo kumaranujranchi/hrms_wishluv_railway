@@ -464,6 +464,71 @@ export class DatabaseStorage implements IStorage {
       .limit(5);
   }
 
+  // Employee profile management
+  async updateEmployeeProfile(employeeId: string, profileData: any): Promise<User> {
+    // First update the user table with basic info
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+        department: profileData.department,
+        position: profileData.position,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, employeeId))
+      .returning();
+
+    // Then update or insert the employee profile details
+    const profileUpdate = {
+      userId: employeeId,
+      fatherName: profileData.fatherName,
+      dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null,
+      marriageAnniversary: profileData.marriageAnniversary ? new Date(profileData.marriageAnniversary) : null,
+      personalMobile: profileData.personalMobile,
+      emergencyContactName: profileData.emergencyContactName,
+      emergencyContactNumber: profileData.emergencyContactNumber,
+      emergencyContactRelation: profileData.emergencyContactRelation,
+      panNumber: profileData.panNumber,
+      aadharNumber: profileData.aadharNumber,
+      currentAddress: profileData.currentAddress,
+      permanentAddress: profileData.permanentAddress,
+      bankAccountNumber: profileData.bankAccountNumber,
+      ifscCode: profileData.ifscCode,
+      bankName: profileData.bankName,
+      updatedAt: new Date(),
+    };
+
+    // Check if profile already exists
+    const existingProfile = await this.getEmployeeProfile(employeeId);
+    
+    if (existingProfile) {
+      await db
+        .update(employeeProfiles)
+        .set(profileUpdate)
+        .where(eq(employeeProfiles.userId, employeeId));
+    } else {
+      await db
+        .insert(employeeProfiles)
+        .values(profileUpdate)
+        .onConflictDoUpdate({
+          target: employeeProfiles.userId,
+          set: profileUpdate
+        });
+    }
+
+    return updatedUser;
+  }
+
+  async getEmployeeProfile(employeeId: string): Promise<EmployeeProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(employeeProfiles)
+      .where(eq(employeeProfiles.userId, employeeId));
+    return profile;
+  }
+
   // Company settings
   async getCompanySettings(): Promise<CompanySettings | undefined> {
     const [settings] = await db.select().from(companySettings).limit(1);

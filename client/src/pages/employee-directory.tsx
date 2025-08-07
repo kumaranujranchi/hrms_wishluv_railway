@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Search, 
   Users, 
@@ -18,7 +27,14 @@ import {
   MapPin,
   Calendar,
   Briefcase,
-  UserPlus
+  UserPlus,
+  Edit,
+  Save,
+  User,
+  Building,
+  CreditCard,
+  FileText,
+  Heart
 } from "lucide-react";
 
 interface Employee {
@@ -30,17 +46,161 @@ interface Employee {
   position: string;
   profileImageUrl: string | null;
   role: string;
+  isOnboardingComplete: boolean;
+  joinDate: string | null;
+  isActive: boolean;
 }
+
+const editEmployeeSchema = z.object({
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().min(2, "Last name is required"),
+  email: z.string().email("Please enter a valid email address"),
+  department: z.string().min(1, "Department is required"),
+  position: z.string().min(1, "Position is required"),
+  // Personal details
+  fatherName: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  marriageAnniversary: z.string().optional(),
+  personalMobile: z.string().optional(),
+  // Emergency contact
+  emergencyContactName: z.string().optional(),
+  emergencyContactNumber: z.string().optional(),
+  emergencyContactRelation: z.string().optional(),
+  // Government IDs
+  panNumber: z.string().optional(),
+  aadharNumber: z.string().optional(),
+  // Address
+  currentAddress: z.string().optional(),
+  permanentAddress: z.string().optional(),
+  // Banking details
+  bankAccountNumber: z.string().optional(),
+  ifscCode: z.string().optional(),
+  bankName: z.string().optional(),
+});
+
+type EditEmployeeFormData = z.infer<typeof editEmployeeSchema>;
 
 export default function EmployeeDirectoryPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
   });
+
+  const form = useForm<EditEmployeeFormData>({
+    resolver: zodResolver(editEmployeeSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      department: '',
+      position: '',
+      fatherName: '',
+      dateOfBirth: '',
+      marriageAnniversary: '',
+      personalMobile: '',
+      emergencyContactName: '',
+      emergencyContactNumber: '',
+      emergencyContactRelation: '',
+      panNumber: '',
+      aadharNumber: '',
+      currentAddress: '',
+      permanentAddress: '',
+      bankAccountNumber: '',
+      ifscCode: '',
+      bankName: '',
+    },
+  });
+
+  const updateEmployeeMutation = useMutation({
+    mutationFn: async (data: EditEmployeeFormData) => {
+      if (!selectedEmployee) return;
+      await apiRequest("PUT", `/api/admin/employees/${selectedEmployee.id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Employee details updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      setEditDialogOpen(false);
+      setSelectedEmployee(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEditEmployee = async (employee: Employee) => {
+    setSelectedEmployee(employee);
+    
+    // Fetch employee profile details
+    try {
+      const profileResponse = await fetch(`/api/employees/${employee.id}/profile`);
+      const profileData = profileResponse.ok ? await profileResponse.json() : {};
+      
+      form.reset({
+        firstName: employee.firstName || '',
+        lastName: employee.lastName || '',
+        email: employee.email || '',
+        department: employee.department || '',
+        position: employee.position || '',
+        fatherName: profileData.fatherName || '',
+        dateOfBirth: profileData.dateOfBirth ? profileData.dateOfBirth.split('T')[0] : '',
+        marriageAnniversary: profileData.marriageAnniversary ? profileData.marriageAnniversary.split('T')[0] : '',
+        personalMobile: profileData.personalMobile || '',
+        emergencyContactName: profileData.emergencyContactName || '',
+        emergencyContactNumber: profileData.emergencyContactNumber || '',
+        emergencyContactRelation: profileData.emergencyContactRelation || '',
+        panNumber: profileData.panNumber || '',
+        aadharNumber: profileData.aadharNumber || '',
+        currentAddress: profileData.currentAddress || '',
+        permanentAddress: profileData.permanentAddress || '',
+        bankAccountNumber: profileData.bankAccountNumber || '',
+        ifscCode: profileData.ifscCode || '',
+        bankName: profileData.bankName || '',
+      });
+    } catch (error) {
+      form.reset({
+        firstName: employee.firstName || '',
+        lastName: employee.lastName || '',
+        email: employee.email || '',
+        department: employee.department || '',
+        position: employee.position || '',
+        fatherName: '',
+        dateOfBirth: '',
+        marriageAnniversary: '',
+        personalMobile: '',
+        emergencyContactName: '',
+        emergencyContactNumber: '',
+        emergencyContactRelation: '',
+        panNumber: '',
+        aadharNumber: '',
+        currentAddress: '',
+        permanentAddress: '',
+        bankAccountNumber: '',
+        ifscCode: '',
+        bankName: '',
+      });
+    }
+    
+    setEditDialogOpen(true);
+  };
+
+  const onSubmit = (data: EditEmployeeFormData) => {
+    updateEmployeeMutation.mutate(data);
+  };
 
   // Filter employees based on search and filters
   const filteredEmployees = employees?.filter(employee => {
@@ -227,7 +387,19 @@ export default function EmployeeDirectoryPage() {
                           </h3>
                           <p className="text-sm text-neutral-600 truncate">{employee.position}</p>
                         </div>
-                        {getRoleBadge(employee.role)}
+                        <div className="flex items-center space-x-2">
+                          {user?.role === 'admin' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditEmployee(employee)}
+                            >
+                              <Edit className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                          )}
+                          {getRoleBadge(employee.role)}
+                        </div>
                       </div>
                       
                       <div className="space-y-3">
@@ -302,6 +474,396 @@ export default function EmployeeDirectoryPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Employee Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Employee Details</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Update employee information and complete their profile manually
+            </p>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="personal">Personal</TabsTrigger>
+                  <TabsTrigger value="emergency">Emergency</TabsTrigger>
+                  <TabsTrigger value="government">Government IDs</TabsTrigger>
+                  <TabsTrigger value="banking">Banking</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="John" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="Doe" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="john.doe@company.com" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Department</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="Engineering" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="position"
+                      render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                          <FormLabel>Position</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="Software Engineer" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="personal" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="fatherName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Father's Name</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="Father's Full Name" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="personalMobile"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Personal Mobile</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="+1234567890" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date of Birth</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="marriageAnniversary"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Marriage Anniversary</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="currentAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Address</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Current residential address" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="permanentAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Permanent Address</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Permanent address (if different)" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="emergency" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Name</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="Contact person's name" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Number</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="+1234567890" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactRelation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Relationship</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Heart className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="Spouse, Parent, Sibling" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="government" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="panNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PAN Number</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="ABCDE1234F" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="aadharNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Aadhar Number</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="1234 5678 9012" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="banking" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Name</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="State Bank of India" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="bankAccountNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Account Number</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <CreditCard className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="123456789012" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="ifscCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>IFSC Code</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="SBIN0001234" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              <div className="flex justify-end space-x-4 pt-6 border-t">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => setEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={updateEmployeeMutation.isPending}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {updateEmployeeMutation.isPending ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Updating...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

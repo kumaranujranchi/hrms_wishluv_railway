@@ -1,4 +1,5 @@
 import React from 'react';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,7 @@ import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus, Mail, User, Building, Briefcase, Lock } from 'lucide-react';
+import { UserPlus, Mail, User, Building, Briefcase, Lock, Info } from 'lucide-react';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -78,11 +79,23 @@ export default function AdminCreateEmployeePage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Create New Employee</h1>
-        <p className="text-neutral-600">Add a new employee to the system and generate their login credentials.</p>
-      </div>
+    <Layout>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight">Create New Employee</h1>
+          <p className="text-muted-foreground">Add a new employee to the system with basic details. The employee can complete their profile later, or you can edit their details from the Employee Directory.</p>
+        </div>
+
+        <Alert className="mb-6 border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800">
+            <strong>Two Options Available:</strong>
+            <br />
+            1. <strong>Create Basic Profile:</strong> Employee can log in and complete their details from their dashboard
+            <br />
+            2. <strong>Admin Complete Profile:</strong> After creation, visit Employee Directory to edit and complete all details manually
+          </AlertDescription>
+        </Alert>
 
       {createdEmployee && (
         <Alert className="mb-6 border-green-200 bg-green-50">
@@ -262,6 +275,7 @@ export default function AdminCreateEmployeePage() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }

@@ -14,6 +14,7 @@ import {
   registerUserSchema,
   loginUserSchema,
   createEmployeeSchema,
+  updateEmployeeSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -96,6 +97,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ 
         message: error instanceof Error ? error.message : "Failed to create employee" 
       });
+    }
+  });
+
+  // Admin updates employee details
+  app.put('/api/admin/employees/:employeeId', isAuthenticated, async (req: any, res) => {
+    try {
+      // Check if user is admin
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Only admins can edit employee details' });
+      }
+
+      const { employeeId } = req.params;
+      const updateData = updateEmployeeSchema.parse(req.body);
+      
+      const updatedEmployee = await storage.updateEmployeeProfile(employeeId, updateData);
+      
+      res.json(updatedEmployee);
+    } catch (error) {
+      console.error("Update employee error:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Failed to update employee" 
+      });
+    }
+  });
+
+  // Get employee profile details
+  app.get('/api/employees/:employeeId/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const { employeeId } = req.params;
+      
+      // Allow access if user is admin or it's their own profile
+      if (req.user.role !== 'admin' && req.user.id !== employeeId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const profile = await storage.getEmployeeProfile(employeeId);
+      res.json(profile || {});
+    } catch (error) {
+      console.error("Get employee profile error:", error);
+      res.status(500).json({ message: "Failed to get employee profile" });
     }
   });
 
