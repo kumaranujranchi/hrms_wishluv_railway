@@ -18,6 +18,9 @@ import {
   type Announcement,
   type InsertAnnouncement,
   type CompanySettings,
+  employeeProfiles,
+  type EmployeeProfile,
+  type InsertEmployeeProfile,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
@@ -53,6 +56,11 @@ export interface IStorage {
   // Payroll operations
   getPayrollByUser(userId: string): Promise<Payroll[]>;
   getPayrollByUserAndPeriod(userId: string, month: number, year: number): Promise<Payroll | undefined>;
+  
+  // Employee Profile operations
+  getEmployeeProfile(userId: string): Promise<EmployeeProfile | undefined>;
+  createEmployeeProfile(profile: InsertEmployeeProfile): Promise<EmployeeProfile>;
+  updateEmployeeProfile(userId: string, updates: Partial<EmployeeProfile>): Promise<EmployeeProfile>;
   
   // Announcements operations
   createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement>;
@@ -367,6 +375,32 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return created;
     }
+  }
+
+  // Employee Profile operations
+  async getEmployeeProfile(userId: string): Promise<EmployeeProfile | undefined> {
+    const [profile] = await db
+      .select()
+      .from(employeeProfiles)
+      .where(eq(employeeProfiles.userId, userId));
+    return profile;
+  }
+
+  async createEmployeeProfile(profile: InsertEmployeeProfile): Promise<EmployeeProfile> {
+    const [newProfile] = await db
+      .insert(employeeProfiles)
+      .values(profile)
+      .returning();
+    return newProfile;
+  }
+
+  async updateEmployeeProfile(userId: string, updates: Partial<EmployeeProfile>): Promise<EmployeeProfile> {
+    const [updated] = await db
+      .update(employeeProfiles)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(employeeProfiles.userId, userId))
+      .returning();
+    return updated;
   }
 }
 

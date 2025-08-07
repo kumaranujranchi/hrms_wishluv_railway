@@ -134,17 +134,71 @@ export const companySettings = pgTable("company_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Employee onboarding details table
+export const employeeProfiles = pgTable("employee_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull().unique(),
+  
+  // Personal Information
+  fatherName: varchar("father_name"),
+  dateOfBirth: timestamp("date_of_birth"),
+  marriageAnniversary: timestamp("marriage_anniversary"),
+  personalMobile: varchar("personal_mobile"),
+  
+  // Emergency Contact
+  emergencyContactName: varchar("emergency_contact_name"),
+  emergencyContactNumber: varchar("emergency_contact_number"),
+  emergencyContactRelation: varchar("emergency_contact_relation"),
+  
+  // Employment Details
+  dateOfJoining: timestamp("date_of_joining"),
+  designation: varchar("designation"),
+  
+  // Government IDs
+  panNumber: varchar("pan_number"),
+  aadharNumber: varchar("aadhar_number"),
+  
+  // Banking Details
+  bankAccountNumber: varchar("bank_account_number"),
+  ifscCode: varchar("ifsc_code"),
+  bankProofDocumentPath: varchar("bank_proof_document_path"),
+  
+  // PF Details
+  uanNumber: varchar("uan_number"),
+  pfNumber: varchar("pf_number"),
+  
+  // Status
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many, one }) => ({
   attendanceRecords: many(attendance),
   leaveRequests: many(leaveRequests),
   expenseClaims: many(expenseClaims),
   payrollRecords: many(payroll),
+  employeeProfile: one(employeeProfiles),
   manager: one(users, {
     fields: [users.managerId],
     references: [users.id],
   }),
   subordinates: many(users),
+}));
+
+export const employeeProfilesRelations = relations(employeeProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [employeeProfiles.userId],
+    references: [users.id],
+  }),
+  approver: one(users, {
+    fields: [employeeProfiles.approvedBy],
+    references: [users.id],
+  }),
 }));
 
 export const attendanceRelations = relations(attendance, ({ one }) => ({
@@ -218,6 +272,15 @@ export const insertAnnouncementSchema = createInsertSchema(announcements).omit({
   createdAt: true,
 });
 
+export const insertEmployeeProfileSchema = createInsertSchema(employeeProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  onboardingCompleted: true,
+  approvedBy: true,
+  approvedAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -231,3 +294,5 @@ export type Payroll = typeof payroll.$inferSelect;
 export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
 export type CompanySettings = typeof companySettings.$inferSelect;
+export type EmployeeProfile = typeof employeeProfiles.$inferSelect;
+export type InsertEmployeeProfile = z.infer<typeof insertEmployeeProfileSchema>;

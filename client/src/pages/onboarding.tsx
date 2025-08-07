@@ -1,146 +1,152 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { ObjectUploader } from "@/components/ObjectUploader";
+import React, { useState } from 'react';
+import Layout from '@/components/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { ObjectUploader } from '@/components/ObjectUploader';
+import type { UploadResult } from '@uppy/core';
+import { format } from 'date-fns';
 import { 
-  UserPlus, 
-  FileText, 
+  CalendarIcon, 
   Upload, 
-  CheckCircle, 
   User, 
-  Briefcase, 
-  CreditCard,
-  Shield,
-  ArrowLeft,
-  ArrowRight
-} from "lucide-react";
+  FileText, 
+  CreditCard, 
+  Phone, 
+  CheckCircle,
+  AlertCircle,
+  Camera
+} from 'lucide-react';
 
-interface OnboardingData {
+const onboardingSchema = z.object({
   // Personal Information
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  dateOfBirth: string;
+  fatherName: z.string().min(2, 'Father\'s name is required'),
+  dateOfBirth: z.date({
+    required_error: 'Date of birth is required',
+  }),
+  marriageAnniversary: z.date().optional(),
+  personalMobile: z.string().min(10, 'Valid mobile number is required'),
   
-  // Job Information
-  position: string;
-  department: string;
-  startDate: string;
-  managerId: string;
-  salary: string;
+  // Emergency Contact
+  emergencyContactName: z.string().min(2, 'Emergency contact name is required'),
+  emergencyContactNumber: z.string().min(10, 'Emergency contact number is required'),
+  emergencyContactRelation: z.string().min(2, 'Relationship is required'),
   
-  // Documents
-  profilePhotoUrl: string;
-  resumeUrl: string;
-  idProofUrl: string;
+  // Employment Details
+  dateOfJoining: z.date({
+    required_error: 'Date of joining is required',
+  }),
+  designation: z.string().min(2, 'Designation is required'),
   
-  // Bank Details
-  bankName: string;
-  accountNumber: string;
-  routingNumber: string;
-  accountHolderName: string;
-}
+  // Government IDs
+  panNumber: z.string().min(10, 'Valid PAN number is required'),
+  aadharNumber: z.string().min(12, 'Valid Aadhar number is required'),
+  
+  // Banking Details
+  bankAccountNumber: z.string().min(8, 'Valid bank account number is required'),
+  ifscCode: z.string().min(11, 'Valid IFSC code is required'),
+  
+  // PF Details
+  uanNumber: z.string().min(12, 'Valid UAN number is required'),
+  pfNumber: z.string().min(5, 'Valid PF number is required'),
+});
+
+type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
 export default function OnboardingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [bankProofDocument, setBankProofDocument] = useState<string>('');
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<OnboardingData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    dateOfBirth: '',
-    position: '',
-    department: '',
-    startDate: '',
-    managerId: '',
-    salary: '',
-    profilePhotoUrl: '',
-    resumeUrl: '',
-    idProofUrl: '',
-    bankName: '',
-    accountNumber: '',
-    routingNumber: '',
-    accountHolderName: '',
+  const totalSteps = 5;
+
+  const form = useForm<OnboardingFormData>({
+    resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      personalMobile: '',
+      emergencyContactName: '',
+      emergencyContactNumber: '',
+      emergencyContactRelation: '',
+      designation: '',
+      panNumber: '',
+      aadharNumber: '',
+      bankAccountNumber: '',
+      ifscCode: '',
+      uanNumber: '',
+      pfNumber: '',
+    },
   });
 
-  const totalSteps = 4;
-  const progress = (currentStep / totalSteps) * 100;
+  const { data: employeeProfile, isLoading } = useQuery({
+    queryKey: ['/api/employee/profile'],
+  });
 
-  const submitOnboardingMutation = useMutation({
-    mutationFn: async (data: OnboardingData) => {
-      // This would typically create a new employee record
-      // For now, we'll just show a success message
-      console.log('Onboarding data:', data);
-      return Promise.resolve();
+  const onboardingMutation = useMutation({
+    mutationFn: async (data: OnboardingFormData & { bankProofDocumentPath?: string }) => {
+      return apiRequest('/api/employee/onboarding', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/employee/profile'] });
       toast({
-        title: "Success",
-        description: "Employee onboarding completed successfully!",
+        title: 'Onboarding Complete!',
+        description: 'Your information has been submitted for approval.',
       });
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        address: '',
-        dateOfBirth: '',
-        position: '',
-        department: '',
-        startDate: '',
-        managerId: '',
-        salary: '',
-        profilePhotoUrl: '',
-        resumeUrl: '',
-        idProofUrl: '',
-        bankName: '',
-        accountNumber: '',
-        routingNumber: '',
-        accountHolderName: '',
-      });
-      setCurrentStep(1);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: "Failed to complete onboarding. Please try again.",
-        variant: "destructive",
+        title: 'Submission Failed',
+        description: error.message || 'Please try again later.',
+        variant: 'destructive',
       });
     },
   });
 
-  const handleGetUploadParameters = async () => {
-    // In a real implementation, this would call the backend API
-    return {
-      method: "PUT" as const,
-      url: "https://example.com/upload", // This would be a presigned URL
-    };
+  const handleBankProofUpload = async () => {
+    try {
+      const response = await apiRequest('/api/objects/upload', { method: 'POST' });
+      return {
+        method: 'PUT' as const,
+        url: response.uploadURL,
+      };
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      throw error;
+    }
   };
 
-  const handleUploadComplete = (result: any, field: string) => {
-    if (result.successful && result.successful[0]) {
-      const uploadURL = result.successful[0].uploadURL;
-      setFormData({ ...formData, [field]: uploadURL });
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      setBankProofDocument(result.successful[0].uploadURL as string);
       toast({
-        title: "Success",
-        description: "File uploaded successfully!",
+        title: 'Document Uploaded',
+        description: 'Bank proof document uploaded successfully.',
       });
     }
+  };
+
+  const onSubmit = (data: OnboardingFormData) => {
+    const submitData = {
+      ...data,
+      bankProofDocumentPath: bankProofDocument,
+    };
+    onboardingMutation.mutate(submitData);
   };
 
   const nextStep = () => {
@@ -155,61 +161,61 @@ export default function OnboardingPage() {
     }
   };
 
-  const handleSubmit = () => {
-    submitOnboardingMutation.mutate(formData);
-  };
-
-  const isStepValid = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.firstName && formData.lastName && formData.email && formData.phone;
-      case 2:
-        return formData.position && formData.department && formData.startDate;
-      case 3:
-        return true; // Documents are optional
-      case 4:
-        return formData.bankName && formData.accountNumber && formData.accountHolderName;
-      default:
-        return false;
+  const getStepTitle = (step: number) => {
+    switch (step) {
+      case 1: return 'Personal Information';
+      case 2: return 'Emergency Contact';
+      case 3: return 'Employment Details';
+      case 4: return 'Government IDs';
+      case 5: return 'Banking & PF Details';
+      default: return '';
     }
   };
 
-  const departments = [
-    'Engineering',
-    'Marketing',
-    'Sales',
-    'Human Resources',
-    'Finance',
-    'Operations',
-    'Design',
-    'Customer Support'
-  ];
+  const getStepIcon = (step: number) => {
+    switch (step) {
+      case 1: return <User className="h-5 w-5" />;
+      case 2: return <Phone className="h-5 w-5" />;
+      case 3: return <FileText className="h-5 w-5" />;
+      case 4: return <CreditCard className="h-5 w-5" />;
+      case 5: return <Upload className="h-5 w-5" />;
+      default: return null;
+    }
+  };
 
-  const positions = [
-    'Software Engineer',
-    'Senior Software Engineer',
-    'Marketing Manager',
-    'Sales Representative',
-    'HR Specialist',
-    'Financial Analyst',
-    'Product Manager',
-    'Designer',
-    'Customer Support Specialist'
-  ];
-
-  // Only allow access for admin and manager roles
-  if (user?.role !== 'admin' && user?.role !== 'manager') {
+  if (isLoading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Card className="w-full max-w-md">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <Shield className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
-                <h2 className="text-lg font-semibold text-neutral-900 mb-2">Access Restricted</h2>
-                <p className="text-sm text-neutral-600">
-                  Only administrators and managers can access the onboarding portal.
-                </p>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // If onboarding is already completed, show status
+  if (employeeProfile?.onboardingCompleted) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-green-600">
+                <CheckCircle className="h-6 w-6" />
+                <span>Onboarding Completed</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-neutral-600 mb-4">
+                Your onboarding has been completed and approved by HR.
+              </p>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-green-800 font-medium">
+                    Approved on {employeeProfile.approvedAt ? format(new Date(employeeProfile.approvedAt), 'MMM dd, yyyy') : 'N/A'}
+                  </span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -220,334 +226,472 @@ export default function OnboardingPage() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Progress Header */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-neutral-900">Employee Onboarding</h1>
-              <div className="text-sm text-neutral-600">
-                Step {currentStep} of {totalSteps}
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-neutral-900 mb-2">Employee Onboarding</h1>
+          <p className="text-neutral-600">
+            Complete your profile information to get started with the company.
+          </p>
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div key={step} className="flex items-center">
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                    step <= currentStep
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'bg-white border-neutral-300 text-neutral-400'
+                  }`}
+                >
+                  {step < currentStep ? (
+                    <CheckCircle className="h-5 w-5" />
+                  ) : (
+                    getStepIcon(step)
+                  )}
+                </div>
+                {step < totalSteps && (
+                  <div
+                    className={`w-24 h-1 mx-2 ${
+                      step < currentStep ? 'bg-blue-600' : 'bg-neutral-200'
+                    }`}
+                  />
+                )}
               </div>
-            </div>
-            <Progress value={progress} className="mb-4" />
-            <div className="flex justify-between text-sm text-neutral-600">
-              <span className={currentStep >= 1 ? "text-primary-600 font-medium" : ""}>Personal Info</span>
-              <span className={currentStep >= 2 ? "text-primary-600 font-medium" : ""}>Job Details</span>
-              <span className={currentStep >= 3 ? "text-primary-600 font-medium" : ""}>Documents</span>
-              <span className={currentStep >= 4 ? "text-primary-600 font-medium" : ""}>Bank Details</span>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+          <div className="mt-2 text-center">
+            <span className="text-sm text-neutral-500">
+              Step {currentStep} of {totalSteps}: {getStepTitle(currentStep)}
+            </span>
+          </div>
+        </div>
 
-        {/* Step Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              {currentStep === 1 && <User className="h-5 w-5" />}
-              {currentStep === 2 && <Briefcase className="h-5 w-5" />}
-              {currentStep === 3 && <FileText className="h-5 w-5" />}
-              {currentStep === 4 && <CreditCard className="h-5 w-5" />}
-              <span>
-                {currentStep === 1 && "Personal Information"}
-                {currentStep === 2 && "Job Information"}
-                {currentStep === 3 && "Document Upload"}
-                {currentStep === 4 && "Banking Details"}
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Step 1: Personal Information */}
-            {currentStep === 1 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name *</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                  <Input
-                    id="dateOfBirth"
-                    type="date"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    placeholder="Full address including city, state, and zip code"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Job Information */}
-            {currentStep === 2 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="position">Position *</Label>
-                  <Select value={formData.position} onValueChange={(value) => setFormData({...formData, position: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select position" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {positions.map(position => (
-                        <SelectItem key={position} value={position}>{position}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="department">Department *</Label>
-                  <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="startDate">Start Date *</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="salary">Annual Salary</Label>
-                  <Input
-                    id="salary"
-                    type="number"
-                    placeholder="50000"
-                    value={formData.salary}
-                    onChange={(e) => setFormData({...formData, salary: e.target.value})}
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <Label htmlFor="managerId">Reporting Manager</Label>
-                  <Input
-                    id="managerId"
-                    placeholder="Manager's employee ID or email"
-                    value={formData.managerId}
-                    onChange={(e) => setFormData({...formData, managerId: e.target.value})}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Documents */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <FileText className="h-12 w-12 text-primary-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">Upload Required Documents</h3>
-                  <p className="text-sm text-neutral-600">
-                    Please upload the following documents. All files should be in PDF, JPG, or PNG format.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label>Profile Photo</Label>
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={5242880} // 5MB
-                      onGetUploadParameters={handleGetUploadParameters}
-                      onComplete={(result) => handleUploadComplete(result, 'profilePhotoUrl')}
-                      buttonClassName="w-full"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {formData.profilePhotoUrl ? "Photo Uploaded ✓" : "Upload Photo"}
-                    </ObjectUploader>
-                    <p className="text-xs text-neutral-500">Professional headshot (Max 5MB)</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Resume/CV</Label>
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={10485760} // 10MB
-                      onGetUploadParameters={handleGetUploadParameters}
-                      onComplete={(result) => handleUploadComplete(result, 'resumeUrl')}
-                      buttonClassName="w-full"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {formData.resumeUrl ? "Resume Uploaded ✓" : "Upload Resume"}
-                    </ObjectUploader>
-                    <p className="text-xs text-neutral-500">PDF format preferred (Max 10MB)</p>
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <Label>ID Proof</Label>
-                    <ObjectUploader
-                      maxNumberOfFiles={1}
-                      maxFileSize={5242880} // 5MB
-                      onGetUploadParameters={handleGetUploadParameters}
-                      onComplete={(result) => handleUploadComplete(result, 'idProofUrl')}
-                      buttonClassName="w-full"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {formData.idProofUrl ? "ID Proof Uploaded ✓" : "Upload ID Proof"}
-                    </ObjectUploader>
-                    <p className="text-xs text-neutral-500">
-                      Government issued ID (Driver's License, Passport, etc.) - Max 5MB
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Banking Details */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
-                <div className="text-center mb-8">
-                  <CreditCard className="h-12 w-12 text-primary-500 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">Banking Information</h3>
-                  <p className="text-sm text-neutral-600">
-                    This information is required for payroll processing. All data is encrypted and secure.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="bankName">Bank Name *</Label>
-                    <Input
-                      id="bankName"
-                      value={formData.bankName}
-                      onChange={(e) => setFormData({...formData, bankName: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="accountHolderName">Account Holder Name *</Label>
-                    <Input
-                      id="accountHolderName"
-                      value={formData.accountHolderName}
-                      onChange={(e) => setFormData({...formData, accountHolderName: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="accountNumber">Account Number *</Label>
-                    <Input
-                      id="accountNumber"
-                      value={formData.accountNumber}
-                      onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="routingNumber">Routing Number</Label>
-                    <Input
-                      id="routingNumber"
-                      value={formData.routingNumber}
-                      onChange={(e) => setFormData({...formData, routingNumber: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium text-blue-900">Security Notice</h4>
-                      <p className="text-xs text-blue-700 mt-1">
-                        Your banking information is encrypted and stored securely. This data is only used for payroll processing and will never be shared with third parties.
-                      </p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  {getStepIcon(currentStep)}
+                  <span>{getStepTitle(currentStep)}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {currentStep === 1 && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label>Email Address</Label>
+                        <Input value={user?.email || ''} disabled className="bg-neutral-50" />
+                        <p className="text-xs text-neutral-500 mt-1">
+                          Using your Google account email
+                        </p>
+                      </div>
+                      
+                      <div>
+                        <Label>Full Name</Label>
+                        <Input 
+                          value={`${user?.firstName || ''} ${user?.lastName || ''}`} 
+                          disabled 
+                          className="bg-neutral-50" 
+                        />
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Navigation */}
-        <Card>
-          <CardContent className="p-6">
+                    <FormField
+                      control={form.control}
+                      name="fatherName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Father's Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter father's name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="dateOfBirth"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Date of Birth *</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={`w-full pl-3 text-left font-normal ${
+                                      !field.value && 'text-muted-foreground'
+                                    }`}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, 'PPP')
+                                    ) : (
+                                      <span>Pick a date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date('1900-01-01')
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="marriageAnniversary"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Marriage Anniversary (Optional)</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={`w-full pl-3 text-left font-normal ${
+                                      !field.value && 'text-muted-foreground'
+                                    }`}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, 'PPP')
+                                    ) : (
+                                      <span>Pick a date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date('1900-01-01')
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="personalMobile"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Personal Mobile Number *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter 10-digit mobile number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {currentStep === 2 && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter emergency contact name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Emergency Contact Number *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter emergency contact number" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="emergencyContactRelation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Relationship with Employee *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select relationship" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="spouse">Spouse</SelectItem>
+                              <SelectItem value="parent">Parent</SelectItem>
+                              <SelectItem value="sibling">Sibling</SelectItem>
+                              <SelectItem value="child">Child</SelectItem>
+                              <SelectItem value="friend">Friend</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {currentStep === 3 && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="dateOfJoining"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Date of Joining *</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={`w-full pl-3 text-left font-normal ${
+                                    !field.value && 'text-muted-foreground'
+                                  }`}
+                                >
+                                  {field.value ? (
+                                    format(field.value, 'PPP')
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) => date > new Date()}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="designation"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Designation *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter your job title/designation" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {currentStep === 4 && (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="panNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>PAN Number *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="ABCDE1234F" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="aadharNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Aadhar Number *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="XXXX XXXX XXXX" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </>
+                )}
+
+                {currentStep === 5 && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="bankAccountNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bank Account Number *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter account number" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="ifscCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>IFSC Code *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="HDFC0001234" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium">Bank Account Proof *</Label>
+                      <p className="text-xs text-neutral-500 mb-3">
+                        Upload cancelled cheque or bank passbook copy
+                      </p>
+                      <div className="border-2 border-dashed border-neutral-300 rounded-lg p-6">
+                        {bankProofDocument ? (
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                              <span className="text-sm text-green-700">Document uploaded successfully</span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setBankProofDocument('')}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        ) : (
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880} // 5MB
+                            onGetUploadParameters={handleBankProofUpload}
+                            onComplete={handleUploadComplete}
+                            buttonClassName="w-full"
+                          >
+                            <div className="flex flex-col items-center space-y-2">
+                              <Upload className="h-8 w-8 text-neutral-400" />
+                              <span>Upload Bank Proof Document</span>
+                              <span className="text-xs text-neutral-500">PDF, JPG, PNG (Max 5MB)</span>
+                            </div>
+                          </ObjectUploader>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="uanNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>UAN Number *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="123456789012" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="pfNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>PF Number *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="PF/12345/67890" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Navigation Buttons */}
             <div className="flex justify-between">
               <Button
+                type="button"
                 variant="outline"
                 onClick={prevStep}
                 disabled={currentStep === 1}
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
                 Previous
               </Button>
-              
-              <div className="flex space-x-2">
-                {currentStep < totalSteps ? (
-                  <Button
-                    onClick={nextStep}
-                    disabled={!isStepValid()}
-                  >
-                    Next
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!isStepValid() || submitOnboardingMutation.isPending}
-                    className="bg-success-600 hover:bg-success-700"
-                  >
-                    {submitOnboardingMutation.isPending ? (
-                      "Processing..."
-                    ) : (
-                      <>
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Complete Onboarding
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
+
+              {currentStep < totalSteps ? (
+                <Button type="button" onClick={nextStep}>
+                  Next
+                </Button>
+              ) : (
+                <Button 
+                  type="submit" 
+                  disabled={onboardingMutation.isPending || !bankProofDocument}
+                >
+                  {onboardingMutation.isPending ? 'Submitting...' : 'Submit for Approval'}
+                </Button>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </form>
+        </Form>
       </div>
     </Layout>
   );

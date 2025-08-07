@@ -8,6 +8,7 @@ import {
   insertLeaveRequestSchema,
   insertExpenseClaimSchema,
   insertAnnouncementSchema,
+  insertEmployeeProfileSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -424,6 +425,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching attendance stats:", error);
       res.status(500).json({ message: "Failed to fetch attendance statistics" });
+    }
+  });
+
+  // Employee onboarding routes
+  app.get('/api/employee/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const profile = await storage.getEmployeeProfile(userId);
+      
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching employee profile:", error);
+      res.status(500).json({ message: "Failed to fetch employee profile" });
+    }
+  });
+
+  app.post('/api/employee/onboarding', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Check if profile already exists
+      const existingProfile = await storage.getEmployeeProfile(userId);
+      if (existingProfile) {
+        return res.status(400).json({ message: "Profile already exists" });
+      }
+
+      const profileData = insertEmployeeProfileSchema.parse({ 
+        ...req.body, 
+        userId 
+      });
+
+      const profile = await storage.createEmployeeProfile(profileData);
+      res.json(profile);
+    } catch (error) {
+      console.error("Error creating employee profile:", error);
+      res.status(500).json({ message: "Failed to create employee profile" });
+    }
+  });
+
+  app.put('/api/employee/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const updates = req.body;
+      
+      const profile = await storage.updateEmployeeProfile(userId, updates);
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating employee profile:", error);
+      res.status(500).json({ message: "Failed to update employee profile" });
+    }
+  });
+
+  // Object storage routes (required for file uploads in onboarding)
+  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Failed to get upload URL' });
+    }
+  });
+
+  app.put('/api/objects/bank-proof', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      if (!req.body.documentURL) {
+        return res.status(400).json({ error: 'documentURL is required' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        req.body.documentURL,
+        {
+          owner: userId,
+          visibility: "private",
+        }
+      );
+
+      res.json({ objectPath });
+    } catch (error) {
+      console.error('Error setting document ACL:', error);
+      res.status(500).json({ error: 'Failed to set document permissions' });
     }
   });
 
