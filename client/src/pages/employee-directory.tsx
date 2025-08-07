@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Layout from "@/components/Layout";
+import { Link } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
@@ -14,7 +17,8 @@ import {
   Phone, 
   MapPin,
   Calendar,
-  Briefcase
+  Briefcase,
+  UserPlus
 } from "lucide-react";
 
 interface Employee {
@@ -29,6 +33,7 @@ interface Employee {
 }
 
 export default function EmployeeDirectoryPage() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -146,7 +151,17 @@ export default function EmployeeDirectoryPage() {
         {/* Search and Filters */}
         <Card>
           <CardHeader>
-            <CardTitle>Employee Directory</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Employee Directory</CardTitle>
+              {user?.role === 'admin' && (
+                <Button asChild>
+                  <Link href="/admin/create-employee">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create New Employee
+                  </Link>
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col md:flex-row gap-4 mb-6">
