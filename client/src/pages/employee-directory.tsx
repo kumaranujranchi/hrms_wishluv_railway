@@ -76,6 +76,26 @@ const editEmployeeSchema = z.object({
   bankAccountNumber: z.string().optional(),
   ifscCode: z.string().optional(),
   bankName: z.string().optional(),
+  // Salary structure
+  basicSalary: z.string().optional(),
+  hra: z.string().optional(),
+  pfEmployeeContribution: z.string().optional(),
+  pfEmployerContribution: z.string().optional(),
+  esicEmployeeContribution: z.string().optional(),
+  esicEmployerContribution: z.string().optional(),
+  specialAllowance: z.string().optional(),
+  performanceBonus: z.string().optional(),
+  gratuity: z.string().optional(),
+  professionalTax: z.string().optional(),
+  medicalAllowance: z.string().optional(),
+  conveyanceAllowance: z.string().optional(),
+  foodCoupons: z.string().optional(),
+  lta: z.string().optional(),
+  shiftAllowance: z.string().optional(),
+  overtimePay: z.string().optional(),
+  attendanceBonus: z.string().optional(),
+  joiningBonus: z.string().optional(),
+  retentionBonus: z.string().optional(),
 });
 
 type EditEmployeeFormData = z.infer<typeof editEmployeeSchema>;
@@ -488,12 +508,13 @@ export default function EmployeeDirectoryPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
+                <TabsList className="grid w-full grid-cols-6">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
                   <TabsTrigger value="personal">Personal</TabsTrigger>
                   <TabsTrigger value="emergency">Emergency</TabsTrigger>
                   <TabsTrigger value="government">Government IDs</TabsTrigger>
                   <TabsTrigger value="banking">Banking</TabsTrigger>
+                  <TabsTrigger value="salary">Salary</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="basic" className="space-y-4">
@@ -830,6 +851,318 @@ export default function EmployeeDirectoryPage() {
                         </FormItem>
                       )}
                     />
+                    
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Name</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Input placeholder="State Bank of India" className="pl-10" {...field} />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="salary" className="space-y-6">
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Salary Structure</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="basicSalary"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Basic Salary</FormLabel>
+                              <FormControl>
+                                <Input placeholder="25000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="hra"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>House Rent Allowance (HRA)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="8000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="specialAllowance"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Special Allowance</FormLabel>
+                              <FormControl>
+                                <Input placeholder="5000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="medicalAllowance"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Medical Allowance</FormLabel>
+                              <FormControl>
+                                <Input placeholder="1500" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="conveyanceAllowance"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Conveyance Allowance</FormLabel>
+                              <FormControl>
+                                <Input placeholder="1600" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="foodCoupons"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Food Coupons / Meal Card</FormLabel>
+                              <FormControl>
+                                <Input placeholder="2000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="lta"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Leave Travel Allowance (LTA)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="15000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="shiftAllowance"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Shift Allowance</FormLabel>
+                              <FormControl>
+                                <Input placeholder="2000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Provident Fund (PF)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="pfEmployeeContribution"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>PF - Employee Contribution</FormLabel>
+                              <FormControl>
+                                <Input placeholder="1800" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="pfEmployerContribution"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>PF - Employer Contribution</FormLabel>
+                              <FormControl>
+                                <Input placeholder="1800" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Employee State Insurance (ESIC)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="esicEmployeeContribution"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>ESIC - Employee Contribution</FormLabel>
+                              <FormControl>
+                                <Input placeholder="112.5" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="esicEmployerContribution"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>ESIC - Employer Contribution</FormLabel>
+                              <FormControl>
+                                <Input placeholder="315" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Bonuses & Variable Pay</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="performanceBonus"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Performance Bonus / Variable Pay</FormLabel>
+                              <FormControl>
+                                <Input placeholder="10000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="attendanceBonus"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Attendance Bonus</FormLabel>
+                              <FormControl>
+                                <Input placeholder="1000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="joiningBonus"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Joining Bonus</FormLabel>
+                              <FormControl>
+                                <Input placeholder="5000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="retentionBonus"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Retention Bonus</FormLabel>
+                              <FormControl>
+                                <Input placeholder="15000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-lg font-medium text-gray-900 mb-4">Other Components</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="gratuity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gratuity</FormLabel>
+                              <FormControl>
+                                <Input placeholder="1200" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="professionalTax"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Professional Tax (PT)</FormLabel>
+                              <FormControl>
+                                <Input placeholder="200" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="overtimePay"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Overtime Pay</FormLabel>
+                              <FormControl>
+                                <Input placeholder="2000" type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </TabsContent>
               </Tabs>

@@ -189,11 +189,33 @@ export const employeeProfiles = pgTable("employee_profiles", {
   // Banking Details
   bankAccountNumber: varchar("bank_account_number"),
   ifscCode: varchar("ifsc_code"),
+  bankName: varchar("bank_name"),
   bankProofDocumentPath: varchar("bank_proof_document_path"),
   
   // PF Details
   uanNumber: varchar("uan_number"),
   pfNumber: varchar("pf_number"),
+  
+  // Salary Structure
+  basicSalary: decimal("basic_salary", { precision: 15, scale: 2 }),
+  hra: decimal("hra", { precision: 15, scale: 2 }),
+  pfEmployeeContribution: decimal("pf_employee_contribution", { precision: 15, scale: 2 }),
+  pfEmployerContribution: decimal("pf_employer_contribution", { precision: 15, scale: 2 }),
+  esicEmployeeContribution: decimal("esic_employee_contribution", { precision: 15, scale: 2 }),
+  esicEmployerContribution: decimal("esic_employer_contribution", { precision: 15, scale: 2 }),
+  specialAllowance: decimal("special_allowance", { precision: 15, scale: 2 }),
+  performanceBonus: decimal("performance_bonus", { precision: 15, scale: 2 }),
+  gratuity: decimal("gratuity", { precision: 15, scale: 2 }),
+  professionalTax: decimal("professional_tax", { precision: 15, scale: 2 }),
+  medicalAllowance: decimal("medical_allowance", { precision: 15, scale: 2 }),
+  conveyanceAllowance: decimal("conveyance_allowance", { precision: 15, scale: 2 }),
+  foodCoupons: decimal("food_coupons", { precision: 15, scale: 2 }),
+  lta: decimal("lta", { precision: 15, scale: 2 }),
+  shiftAllowance: decimal("shift_allowance", { precision: 15, scale: 2 }),
+  overtimePay: decimal("overtime_pay", { precision: 15, scale: 2 }),
+  attendanceBonus: decimal("attendance_bonus", { precision: 15, scale: 2 }),
+  joiningBonus: decimal("joining_bonus", { precision: 15, scale: 2 }),
+  retentionBonus: decimal("retention_bonus", { precision: 15, scale: 2 }),
   
   // Status
   onboardingCompleted: boolean("onboarding_completed").default(false),
@@ -316,6 +338,26 @@ export const updateEmployeeSchema = z.object({
   bankAccountNumber: z.string().optional(),
   ifscCode: z.string().optional(),
   bankName: z.string().optional(),
+  // Salary structure
+  basicSalary: z.string().optional(),
+  hra: z.string().optional(),
+  pfEmployeeContribution: z.string().optional(),
+  pfEmployerContribution: z.string().optional(),
+  esicEmployeeContribution: z.string().optional(),
+  esicEmployerContribution: z.string().optional(),
+  specialAllowance: z.string().optional(),
+  performanceBonus: z.string().optional(),
+  gratuity: z.string().optional(),
+  professionalTax: z.string().optional(),
+  medicalAllowance: z.string().optional(),
+  conveyanceAllowance: z.string().optional(),
+  foodCoupons: z.string().optional(),
+  lta: z.string().optional(),
+  shiftAllowance: z.string().optional(),
+  overtimePay: z.string().optional(),
+  attendanceBonus: z.string().optional(),
+  joiningBonus: z.string().optional(),
+  retentionBonus: z.string().optional(),
 });
 
 export const registerUserSchema = z.object({
