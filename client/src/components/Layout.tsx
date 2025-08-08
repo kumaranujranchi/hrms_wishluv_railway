@@ -1,7 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import NotificationSystem from "./NotificationSystem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Search, 
   Bell, 
-  User, 
   LayoutDashboard, 
   Clock, 
   Calendar, 
@@ -19,7 +17,6 @@ import {
   UserPlus, 
   BarChart3, 
   Settings,
-  Plus,
   LogOut,
   Building,
   Briefcase
@@ -83,14 +80,12 @@ export default function Layout({ children }: LayoutProps) {
         name: "Attendance", 
         href: "/attendance", 
         icon: Clock, 
-        badge: "3",
         current: location === "/attendance" 
       },
       {
         name: "Leave Management", 
         href: "/leave-management", 
         icon: Calendar, 
-        badge: "7",
         current: location === "/leave-management" 
       },
       {
@@ -104,7 +99,6 @@ export default function Layout({ children }: LayoutProps) {
       name: "Expenses", 
       href: "/expenses", 
       icon: Receipt, 
-      badge: "2",
       current: location === "/expenses" 
     },
     { 
@@ -131,69 +125,65 @@ export default function Layout({ children }: LayoutProps) {
   ];
 
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen" style={{ backgroundColor: 'hsl(var(--background))' }}>
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col">
+      <aside className="w-64 flex flex-col" style={{ backgroundColor: 'hsl(var(--sidebar-bg))' }}>
         {/* Logo and Company */}
-        <div className="p-6 border-b border-neutral-200">
+        <div className="p-6">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'hsl(var(--primary))' }}>
               <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-neutral-900">Wishluv Buildcon Pvt ltd</h1>
-              <p className="text-sm text-neutral-600">HR Management</p>
+              <h1 className="text-white font-semibold text-sm">Wishluv Buildcon</h1>
+              <p className="text-gray-400 text-xs">Welcome back.</p>
             </div>
           </div>
         </div>
 
         {/* User Profile */}
-        <div className="p-4 border-b border-neutral-200">
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.profileImageUrl || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} alt="Profile" />
-              <AvatarFallback>
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900 truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-neutral-600 truncate capitalize">
-                {user?.role || "Employee"}
-              </p>
+        <div className="px-6 pb-6">
+          <div className="bg-card rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <Avatar className="w-12 h-12">
+                <AvatarImage src={user?.profileImageUrl || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} alt="Profile" />
+                <AvatarFallback className="bg-primary text-white font-medium">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-medium text-sm truncate">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-gray-400 text-xs truncate capitalize">
+                  {user?.role === 'admin' ? 'Admin Dashboard' : 'Employee'}
+                </p>
+              </div>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             </div>
-            <span className="w-3 h-3 bg-success-500 rounded-full"></span>
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
+        <nav className="flex-1 px-6 space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
-            // All navigation items are now role-specific
             return (
               <Link 
                 key={item.name} 
                 href={item.href}
                 className={`sidebar-item ${item.current ? 'active' : ''}`}
               >
-                <Icon className="text-xl mr-3" />
-                <span className="font-medium">{item.name}</span>
-                {item.badge && (
-                  <Badge className="ml-auto bg-warning-500 text-white">
-                    {item.badge}
-                  </Badge>
-                )}
+                <Icon className="w-5 h-5 mr-3" />
+                <span className="text-sm font-medium">{item.name}</span>
               </Link>
             );
           })}
           
-          <div className="space-y-1 pt-4">
-            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wide px-3 py-2">
+          <div className="pt-6">
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide px-4 pb-3">
               Management
-            </p>
+            </div>
             {managementNavigation.map((item) => {
               const Icon = item.icon;
               return (
@@ -202,33 +192,20 @@ export default function Layout({ children }: LayoutProps) {
                   href={item.href}
                   className={`sidebar-item ${item.current ? 'active' : ''}`}
                 >
-                  <Icon className="text-xl mr-3" />
-                  <span>{item.name}</span>
+                  <Icon className="w-5 h-5 mr-3" />
+                  <span className="text-sm font-medium">{item.name}</span>
                 </Link>
               );
             })}
           </div>
         </nav>
 
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-neutral-200 space-y-3">
-          <div className="flex items-center space-x-3 text-sm">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary-100 text-primary-600 text-xs font-semibold">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-neutral-900 truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-neutral-500 capitalize">{user?.role}</p>
-            </div>
-          </div>
+        {/* Logout */}
+        <div className="p-6">
           <Button 
             variant="outline" 
             size="sm"
-            className="w-full text-red-600 border-red-200 hover:bg-red-50"
+            className="w-full text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-white bg-transparent"
             onClick={async () => {
               try {
                 await fetch('/api/auth/logout', { method: 'POST' });
@@ -243,19 +220,21 @@ export default function Layout({ children }: LayoutProps) {
           </Button>
         </div>
       </aside>
+
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-neutral-200 px-6 py-4">
+        <header className="px-6 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-neutral-900">
-                {navigation.find(item => item.current)?.name || 
-                 managementNavigation.find(item => item.current)?.name || 
-                 "Dashboard"}
+              <h1 className="text-2xl font-bold text-white mb-1">
+                {user?.role === 'admin' ? 'Admin Dashboard' : 'Dashboard'}
               </h1>
-              <p className="text-sm text-neutral-600 mt-1">
-                Welcome back, {user?.firstName}! Here's what's happening today.
+              <p className="text-gray-400 text-sm">
+                {user?.role === 'admin' 
+                  ? 'Welcome to the admin portal. Manage your organization from here.'
+                  : `Welcome back, ${user?.firstName}! Here's what's happening today.`
+                }
               </p>
             </div>
             
@@ -267,39 +246,32 @@ export default function Layout({ children }: LayoutProps) {
                   placeholder="Search..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64"
+                  className="pl-10 pr-4 py-2 w-80 bg-card border-border text-white placeholder-gray-400"
                 />
-                <Search className="absolute left-3 top-2.5 text-neutral-400 h-4 w-4" />
+                <Search className="absolute left-3 top-2.5 text-gray-400 h-4 w-4" />
               </div>
               
-              {/* Notifications - Temporarily disabled to fix department/designation creation */}
-              {/* {user?.id && <NotificationSystem userId={user.id} />} */}
-              
-              {/* Profile Menu with Logout */}
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                  <User className="h-4 w-4" />
-                  <span>{user?.firstName} {user?.lastName}</span>
-                  <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
-                    {user?.role === 'admin' ? 'Admin' : 'Employee'}
-                  </span>
+              {/* Notifications */}
+              <Button variant="ghost" size="sm" className="relative text-gray-400 hover:text-white">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-[10px] flex items-center justify-center text-white">
+                  3
+                </span>
+              </Button>
+
+              {/* Profile */}
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-white text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      await fetch('/api/auth/logout', { method: 'POST' });
-                      window.location.reload();
-                    } catch (error) {
-                      console.error('Logout failed:', error);
-                    }
-                  }}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Logout
-                </Button>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={user?.profileImageUrl || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} alt="Profile" />
+                  <AvatarFallback className="bg-primary text-white text-xs">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               </div>
             </div>
           </div>
