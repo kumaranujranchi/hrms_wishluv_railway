@@ -5,7 +5,7 @@ import { Building2, LogIn, Users, Calendar, DollarSign, BarChart3 } from 'lucide
 
 export default function LandingPage() {
   const handleLogin = () => {
-    window.location.href = '/api/login';
+    window.location.href = '/login';
   };
 
   return (
@@ -36,11 +36,11 @@ export default function LandingPage() {
         
         {/* Login Instructions */}
         <div className="bg-white border border-primary-200 rounded-lg p-6 mb-8 max-w-lg mx-auto">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-3">Login Instructions</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 mb-3">Admin Login</h3>
           <div className="text-sm text-neutral-600 space-y-2">
-            <p><strong>Admin Access:</strong> Use synergybrandarchitect@gmail.com to access admin features</p>
-            <p><strong>Employee Access:</strong> Other email addresses will have employee access</p>
-            <p>Login using your Replit account when prompted</p>
+            <p><strong>Email:</strong> anuj.kumar@wishluvbuildcon.com</p>
+            <p><strong>Password:</strong> admin123</p>
+            <p>Use the above credentials to access the admin panel</p>
           </div>
         </div>
         
@@ -49,7 +49,7 @@ export default function LandingPage() {
           size="lg" 
           className="bg-primary-600 hover:bg-primary-700 text-lg px-8 py-3"
         >
-          Sign In with Replit
+          Admin Login
         </Button>
       </div>
 

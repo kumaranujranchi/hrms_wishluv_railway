@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import Login from "@/pages/login";
+import Register from "@/pages/register";
 import AdminDashboard from "@/pages/admin-dashboard";
 import EmployeeDashboard from "@/pages/employee-dashboard";
 import Attendance from "@/pages/attendance";
@@ -35,11 +37,13 @@ function Router() {
     );
   }
 
-  // Not authenticated - show landing page
+  // Not authenticated - show login/register pages
   if (!isAuthenticated) {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
         <Route component={Landing} />
       </Switch>
     );

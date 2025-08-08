@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, requireAdmin } from "./replitAuth";
-import { createEmployeeByAdmin } from "./auth";
+import { setupAuth, isAuthenticated, requireAdmin } from "./auth";
+import { createEmployeeByAdmin, registerUser, loginUser } from "./auth";
 import { ObjectStorageService } from "./objectStorage";
 import { 
   insertAttendanceSchema,
@@ -24,13 +24,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  // Login route
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const credentials = loginUserSchema.parse(req.body);
+      const user = await loginUser(credentials);
+      
+      // Store user in session
+      (req.session as any).user = user;
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Login failed" 
+      });
+    }
+  });
+
+  // Register route
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const userData = registerUserSchema.parse(req.body);
+      const user = await registerUser(userData);
+      
+      // Store user in session
+      (req.session as any).user = user;
+      
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Registration failed" 
+      });
+    }
+  });
+
+  // Logout route
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        return res.status(500).json({ message: "Could not log out" });
+      }
+      res.clearCookie('connect.sid');
+      res.json({ message: "Logged out successfully" });
+    });
   });
 
   // Admin creates employee account
