@@ -66,14 +66,7 @@ export default function LoginPage() {
             <Building2 className="h-10 w-10 text-primary-600 mr-3" />
             <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
-          <p className="text-neutral-600">Admin Panel Access</p>
-          <div className="mt-4 p-3 bg-primary-50 border border-primary-200 rounded-md">
-            <p className="text-sm text-primary-800">
-              <strong>Admin Login:</strong><br />
-              Email: anuj.kumar@wishluvbuildcon.com<br />
-              Password: admin123
-            </p>
-          </div>
+          <p className="text-neutral-600">Login to access your account</p>
         </div>
 
         <Card className="shadow-lg border-0">
