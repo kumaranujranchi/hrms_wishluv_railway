@@ -19,7 +19,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16 text-center">
         <h2 className="text-5xl font-bold text-neutral-900 mb-6">
@@ -38,7 +37,6 @@ export default function LandingPage() {
           Login
         </Button>
       </div>
-
       {/* Features Grid */}
       <div className="container mx-auto px-4 py-16">
         <h3 className="text-3xl font-bold text-center text-neutral-900 mb-12">
@@ -94,7 +92,6 @@ export default function LandingPage() {
           </Card>
         </div>
       </div>
-
       {/* Call to Action */}
       <div className="bg-primary-600 text-white py-16">
         <div className="container mx-auto px-4 text-center">
@@ -112,13 +109,12 @@ export default function LandingPage() {
           </Button>
         </div>
       </div>
-
       {/* Footer */}
       <div className="bg-neutral-900 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-4">
             <Building2 className="h-6 w-6 text-primary-400 mr-2" />
-            <span className="text-lg font-semibold">Synergy HRMS Pro</span>
+            <span className="text-lg font-semibold">Wishluv Buildcon Pvt Ltd</span>
           </div>
           <p className="text-neutral-400 text-sm">
             © 2024 Synergy HRMS Pro. All rights reserved.
