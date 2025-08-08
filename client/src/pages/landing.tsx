@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Building2, LogIn, Users, Calendar, DollarSign, BarChart3 } from 'lucide-react';
+import { LogIn, Users, Calendar, DollarSign, BarChart3 } from 'lucide-react';
 
 export default function LandingPage() {
   const handleLogin = () => {
@@ -14,7 +14,7 @@ export default function LandingPage() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <Building2 className="h-8 w-8 text-primary-600 mr-3" />
+            <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-8 w-8 mr-3" />
             <h1 className="text-2xl font-bold text-neutral-900">Wishluv Buildcon Pvt Ltd</h1>
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function LandingPage() {
       <div className="bg-neutral-900 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-6 w-6 text-primary-400 mr-2" />
+            <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6 mr-2" />
             <span className="text-lg font-semibold">Wishluv Buildcon Pvt Ltd</span>
           </div>
           <p className="text-neutral-400 text-sm">© 2025 Wishluv Buildcon Pvt Ltd. All rights reserved.</p>

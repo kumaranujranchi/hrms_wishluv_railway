@@ -19,7 +19,6 @@ import {
   UserPlus, 
   BarChart3, 
   Settings,
-  Building2,
   Plus,
   LogOut,
   Building,
@@ -139,7 +138,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="p-6 border-b border-neutral-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-              <Building2 className="text-white text-xl" />
+              <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6" />
             </div>
             <div>
               <h1 className="text-lg font-semibold text-neutral-900">Wishluv Buildcon Pvt ltd</h1>

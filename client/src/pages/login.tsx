@@ -10,7 +10,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Link, useLocation } from 'wouter';
-import { LogIn, Building2, Mail, Lock } from 'lucide-react';
+import { LogIn, Mail, Lock } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -63,7 +63,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-10 w-10 text-primary-600 mr-3" />
+            <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-10 w-10 mr-3" />
             <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
           <p className="text-neutral-600">Login to access your account</p>
