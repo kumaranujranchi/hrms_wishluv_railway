@@ -39,7 +39,9 @@ export default function AdminDepartmentsPage() {
   const createMutation = useMutation({
     mutationFn: async (data: InsertDepartment) => {
       const payload = { ...data, name: data.name.trim() } as InsertDepartment;
+      console.log("Creating department with payload:", payload);
       const response = await apiRequest("POST", "/api/departments", payload);
+      console.log("Department creation response:", response);
       return response.json();
     },
     onSuccess: () => {
@@ -52,6 +54,7 @@ export default function AdminDepartmentsPage() {
       form.reset();
     },
     onError: (error) => {
+      console.error("Department creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create department",

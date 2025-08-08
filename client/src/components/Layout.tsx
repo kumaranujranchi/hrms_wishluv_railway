@@ -258,8 +258,8 @@ export default function Layout({ children }: LayoutProps) {
                 <Search className="absolute left-3 top-2.5 text-neutral-400 h-4 w-4" />
               </div>
               
-              {/* Notifications */}
-              {user?.id && <NotificationSystem userId={user.id} />}
+              {/* Notifications - Temporarily disabled to fix department/designation creation */}
+              {/* {user?.id && <NotificationSystem userId={user.id} />} */}
               
               {/* Profile Menu with Logout */}
               <div className="flex items-center space-x-2">

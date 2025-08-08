@@ -48,7 +48,9 @@ export default function AdminDesignationsPage() {
       if (!payload.departmentId || payload.departmentId === "") {
         delete payload.departmentId; // avoid sending empty string that violates FK
       }
+      console.log("Creating designation with payload:", payload);
       const response = await apiRequest("POST", "/api/designations", payload);
+      console.log("Designation creation response:", response);
       return response.json();
     },
     onSuccess: () => {
@@ -61,6 +63,7 @@ export default function AdminDesignationsPage() {
       form.reset();
     },
     onError: (error) => {
+      console.error("Designation creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create designation",

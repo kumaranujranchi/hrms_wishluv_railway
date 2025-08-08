@@ -804,19 +804,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/departments", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
+      console.log("Received department creation request:", req.body);
       const result = insertDepartmentSchema.safeParse(req.body);
       if (!result.success) {
+        console.log("Department validation failed:", result.error.issues);
         return res.status(400).json({ 
           message: "Invalid department data", 
           errors: result.error.issues 
         });
       }
 
+      console.log("Creating department with data:", result.data);
       const department = await storage.createDepartment({
         ...result.data,
         createdBy: req.user?.id
       });
 
+      console.log("Department created successfully:", department);
       res.status(201).json(department);
     } catch (error) {
       console.error("Error creating department:", error);
@@ -873,19 +877,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/designations", isAuthenticated, requireAdmin, async (req: any, res) => {
     try {
+      console.log("Received designation creation request:", req.body);
       const result = insertDesignationSchema.safeParse(req.body);
       if (!result.success) {
+        console.log("Designation validation failed:", result.error.issues);
         return res.status(400).json({ 
           message: "Invalid designation data", 
           errors: result.error.issues 
         });
       }
 
+      console.log("Creating designation with data:", result.data);
       const designation = await storage.createDesignation({
         ...result.data,
         createdBy: req.user?.id
       });
 
+      console.log("Designation created successfully:", designation);
       res.status(201).json(designation);
     } catch (error) {
       console.error("Error creating designation:", error);
