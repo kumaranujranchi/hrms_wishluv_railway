@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Briefcase, Plus, Pencil, Building, Users } from "lucide-react";
+import { Briefcase, Plus, Pencil, Building, Users, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { Designation, InsertDesignation, Department } from "@shared/schema";
 import { insertDesignationSchema } from "@shared/schema";
@@ -44,13 +44,16 @@ export default function AdminDesignationsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertDesignation) => {
-      const payload: any = { ...data };
-      if (!payload.departmentId || payload.departmentId === "") {
-        delete payload.departmentId; // avoid sending empty string that violates FK
-      }
-      console.log("Creating designation with payload:", payload);
+      const payload = {
+        name: data.name.trim(),
+        description: data.description?.trim() || "",
+        departmentId: data.departmentId || undefined
+      };
       const response = await apiRequest("POST", "/api/designations", payload);
-      console.log("Designation creation response:", response);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create designation");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -59,11 +62,9 @@ export default function AdminDesignationsPage() {
         description: "Designation created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/designations"] });
-      setIsDialogOpen(false);
-      form.reset();
+      handleDialogClose();
     },
-    onError: (error) => {
-      console.error("Designation creation error:", error);
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create designation",
@@ -75,11 +76,16 @@ export default function AdminDesignationsPage() {
   const updateMutation = useMutation({
     mutationFn: async (data: InsertDesignation & { id: string }) => {
       const { id, ...rest } = data;
-      const updateData: any = { ...rest };
-      if (!updateData.departmentId || updateData.departmentId === "") {
-        delete updateData.departmentId;
+      const payload = {
+        name: rest.name.trim(),
+        description: rest.description?.trim() || "",
+        departmentId: rest.departmentId || undefined
+      };
+      const response = await apiRequest("PUT", `/api/designations/${id}`, payload);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update designation");
       }
-      const response = await apiRequest("PUT", `/api/designations/${id}`, updateData);
       return response.json();
     },
     onSuccess: () => {
@@ -88,11 +94,9 @@ export default function AdminDesignationsPage() {
         description: "Designation updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/designations"] });
-      setIsDialogOpen(false);
-      setEditingDesignation(null);
-      form.reset();
+      handleDialogClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update designation",
@@ -104,6 +108,10 @@ export default function AdminDesignationsPage() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiRequest("DELETE", `/api/designations/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete designation");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -113,7 +121,7 @@ export default function AdminDesignationsPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/designations"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to delete designation",
@@ -132,9 +140,11 @@ export default function AdminDesignationsPage() {
 
   const handleEdit = (designation: Designation) => {
     setEditingDesignation(designation);
-    form.setValue("name", designation.name);
-    form.setValue("description", designation.description || "");
-    form.setValue("departmentId", designation.departmentId || "");
+    form.reset({
+      name: designation.name,
+      description: designation.description || "",
+      departmentId: designation.departmentId || "",
+    });
     setIsDialogOpen(true);
   };
 
@@ -147,7 +157,11 @@ export default function AdminDesignationsPage() {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setEditingDesignation(null);
-    form.reset();
+    form.reset({
+      name: "",
+      description: "",
+      departmentId: "",
+    });
   };
 
   if (user?.role !== 'admin') {
@@ -219,7 +233,7 @@ export default function AdminDesignationsPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Department</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select department" />
@@ -250,7 +264,10 @@ export default function AdminDesignationsPage() {
                         <FormControl>
                           <Textarea 
                             placeholder="Brief description of the role and responsibilities"
-                            {...field}
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormDescription>
@@ -353,6 +370,7 @@ export default function AdminDesignationsPage() {
                         onClick={() => handleDelete(designation.id)}
                         className="text-red-600 border-red-200 hover:bg-red-50"
                       >
+                        <Trash2 className="h-3 w-3 mr-1" />
                         Delete
                       </Button>
                     </div>

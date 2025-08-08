@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building, Plus, Pencil, Users, Calendar } from "lucide-react";
+import { Building, Plus, Pencil, Users, Trash2 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { Department, InsertDepartment } from "@shared/schema";
 import { insertDepartmentSchema } from "@shared/schema";
@@ -38,10 +38,15 @@ export default function AdminDepartmentsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertDepartment) => {
-      const payload = { ...data, name: data.name.trim() } as InsertDepartment;
-      console.log("Creating department with payload:", payload);
+      const payload = {
+        name: data.name.trim(),
+        description: data.description?.trim() || ""
+      };
       const response = await apiRequest("POST", "/api/departments", payload);
-      console.log("Department creation response:", response);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create department");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -50,13 +55,11 @@ export default function AdminDepartmentsPage() {
         description: "Department created successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
-      setIsDialogOpen(false);
-      form.reset();
+      handleDialogClose();
     },
-    onError: (error) => {
-      console.error("Department creation error:", error);
+    onError: (error: any) => {
       toast({
-        title: "Error",
+        title: "Error", 
         description: error.message || "Failed to create department",
         variant: "destructive",
       });
@@ -66,8 +69,15 @@ export default function AdminDepartmentsPage() {
   const updateMutation = useMutation({
     mutationFn: async (data: InsertDepartment & { id: string }) => {
       const { id, ...rest } = data;
-      const updateData = { ...rest, name: rest.name.trim() } as InsertDepartment;
-      const response = await apiRequest("PUT", `/api/departments/${id}`, updateData);
+      const payload = {
+        name: rest.name.trim(),
+        description: rest.description?.trim() || ""
+      };
+      const response = await apiRequest("PUT", `/api/departments/${id}`, payload);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update department");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -76,11 +86,9 @@ export default function AdminDepartmentsPage() {
         description: "Department updated successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
-      setIsDialogOpen(false);
-      setEditingDepartment(null);
-      form.reset();
+      handleDialogClose();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to update department",
@@ -92,6 +100,10 @@ export default function AdminDepartmentsPage() {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await apiRequest("DELETE", `/api/departments/${id}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete department");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -101,7 +113,7 @@ export default function AdminDepartmentsPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/departments"] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to delete department",
@@ -120,8 +132,10 @@ export default function AdminDepartmentsPage() {
 
   const handleEdit = (department: Department) => {
     setEditingDepartment(department);
-    form.setValue("name", department.name);
-    form.setValue("description", department.description || "");
+    form.reset({
+      name: department.name,
+      description: department.description || "",
+    });
     setIsDialogOpen(true);
   };
 
@@ -134,7 +148,10 @@ export default function AdminDepartmentsPage() {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setEditingDepartment(null);
-    form.reset();
+    form.reset({
+      name: "",
+      description: "",
+    });
   };
 
   if (user?.role !== 'admin') {
@@ -209,7 +226,10 @@ export default function AdminDepartmentsPage() {
                         <FormControl>
                           <Textarea 
                             placeholder="Brief description of the department's role and responsibilities"
-                            {...field}
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormDescription>
@@ -297,6 +317,7 @@ export default function AdminDepartmentsPage() {
                         onClick={() => handleDelete(department.id)}
                         className="text-red-600 border-red-200 hover:bg-red-50"
                       >
+                        <Trash2 className="h-3 w-3 mr-1" />
                         Delete
                       </Button>
                     </div>
