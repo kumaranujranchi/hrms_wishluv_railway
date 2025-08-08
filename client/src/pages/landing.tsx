@@ -15,18 +15,19 @@ export default function LandingPage() {
         <div className="flex justify-between items-center">
           <div className="flex items-center">
             <Building2 className="h-8 w-8 text-primary-600 mr-3" />
-            <h1 className="text-2xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
+            <h1 className="text-2xl font-bold text-neutral-900">Wishluv Buildcon Pvt Ltd</h1>
           </div>
         </div>
       </div>
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16 text-center">
         <h2 className="text-5xl font-bold text-neutral-900 mb-6">
-          Comprehensive HR Management
+          Your Complete HR Solution
         </h2>
         <p className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
-          Streamline your human resources operations with our powerful HRMS platform. 
-          From attendance tracking to payroll management, we've got you covered.
+          Everything you need for your workplace needs in one place. Mark attendance, 
+          apply for leave, check payroll, submit expenses, and stay updated with company announcements. 
+          Manage your professional life effortlessly.
         </p>
         
         <Button 
