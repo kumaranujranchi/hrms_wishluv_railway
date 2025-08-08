@@ -38,7 +38,8 @@ export default function AdminDepartmentsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertDepartment) => {
-      const response = await apiRequest("POST", "/api/departments", data);
+      const payload = { ...data, name: data.name.trim() } as InsertDepartment;
+      const response = await apiRequest("POST", "/api/departments", payload);
       return response.json();
     },
     onSuccess: () => {
@@ -61,7 +62,8 @@ export default function AdminDepartmentsPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertDepartment & { id: string }) => {
-      const { id, ...updateData } = data;
+      const { id, ...rest } = data;
+      const updateData = { ...rest, name: rest.name.trim() } as InsertDepartment;
       const response = await apiRequest("PUT", `/api/departments/${id}`, updateData);
       return response.json();
     },

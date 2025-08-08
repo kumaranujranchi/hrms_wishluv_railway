@@ -44,7 +44,11 @@ export default function AdminDesignationsPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertDesignation) => {
-      const response = await apiRequest("POST", "/api/designations", data);
+      const payload: any = { ...data };
+      if (!payload.departmentId || payload.departmentId === "") {
+        delete payload.departmentId; // avoid sending empty string that violates FK
+      }
+      const response = await apiRequest("POST", "/api/designations", payload);
       return response.json();
     },
     onSuccess: () => {
@@ -67,7 +71,11 @@ export default function AdminDesignationsPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertDesignation & { id: string }) => {
-      const { id, ...updateData } = data;
+      const { id, ...rest } = data;
+      const updateData: any = { ...rest };
+      if (!updateData.departmentId || updateData.departmentId === "") {
+        delete updateData.departmentId;
+      }
       const response = await apiRequest("PUT", `/api/designations/${id}`, updateData);
       return response.json();
     },
