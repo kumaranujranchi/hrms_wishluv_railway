@@ -36,31 +36,71 @@ export default function Layout({ children }: LayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const navigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard, current: location === "/" },
-    ...(user?.role === 'admin' ? [{
-      name: "Attendance Management", 
-      href: "/admin/attendance", 
-      icon: Clock, 
-      current: location === "/admin/attendance" 
-    }] : [{
-      name: "Attendance", 
-      href: "/attendance", 
-      icon: Clock, 
-      badge: "3",
-      current: location === "/attendance" 
-    }]),
-    ...(user?.role === 'admin' ? [{
-      name: "Leave Management", 
-      href: "/admin/leave-management", 
-      icon: Calendar, 
-      current: location === "/admin/leave-management" 
-    }] : [{
-      name: "Leave Management", 
-      href: "/leave-management", 
-      icon: Calendar, 
-      badge: "7",
-      current: location === "/leave-management" 
-    }]),
+    { 
+      name: "Dashboard", 
+      href: user?.role === 'admin' ? "/admin" : "/employee", 
+      icon: LayoutDashboard, 
+      current: (user?.role === 'admin' && location === "/admin") || (user?.role !== 'admin' && location === "/employee")
+    },
+    ...(user?.role === 'admin' ? [
+      {
+        name: "Attendance Management", 
+        href: "/admin/attendance", 
+        icon: Clock, 
+        current: location === "/admin/attendance" 
+      },
+      {
+        name: "Leave Management", 
+        href: "/admin/leave-management", 
+        icon: Calendar, 
+        current: location === "/admin/leave-management" 
+      },
+      {
+        name: "Payroll Management", 
+        href: "/admin/payroll", 
+        icon: DollarSign,
+        current: location === "/admin/payroll" 
+      },
+      { 
+        name: "Departments", 
+        href: "/admin/departments", 
+        icon: Building,
+        current: location === "/admin/departments"
+      },
+      { 
+        name: "Designations", 
+        href: "/admin/designations", 
+        icon: Briefcase,
+        current: location === "/admin/designations"
+      },
+      {
+        name: "Create Employee",
+        href: "/admin/create-employee",
+        icon: UserPlus,
+        current: location === "/admin/create-employee"
+      }
+    ] : [
+      {
+        name: "Attendance", 
+        href: "/attendance", 
+        icon: Clock, 
+        badge: "3",
+        current: location === "/attendance" 
+      },
+      {
+        name: "Leave Management", 
+        href: "/leave-management", 
+        icon: Calendar, 
+        badge: "7",
+        current: location === "/leave-management" 
+      },
+      {
+        name: "Payroll", 
+        href: "/payroll", 
+        icon: DollarSign,
+        current: location === "/payroll" 
+      }
+    ]),
     { 
       name: "Expenses", 
       href: "/expenses", 
@@ -68,37 +108,12 @@ export default function Layout({ children }: LayoutProps) {
       badge: "2",
       current: location === "/expenses" 
     },
-    ...(user?.role === 'admin' ? [{
-      name: "Payroll Management", 
-      href: "/admin/payroll", 
-      icon: DollarSign,
-      current: location === "/admin/payroll" 
-    }] : [{
-      name: "Payroll", 
-      href: "/payroll", 
-      icon: DollarSign,
-      current: location === "/payroll" 
-    }]),
     { 
       name: "Employee Directory", 
       href: "/employee-directory", 
       icon: Users,
       current: location === "/employee-directory" 
-    },
-    { 
-      name: "Departments", 
-      href: "/admin/departments", 
-      icon: Building,
-      current: location === "/admin/departments",
-      adminOnly: true
-    },
-    { 
-      name: "Designations", 
-      href: "/admin/designations", 
-      icon: Briefcase,
-      current: location === "/admin/designations",
-      adminOnly: true
-    },
+    }
   ];
 
   const managementNavigation = [
@@ -158,10 +173,7 @@ export default function Layout({ children }: LayoutProps) {
         <nav className="flex-1 px-4 py-6 space-y-2">
           {navigation.map((item) => {
             const Icon = item.icon;
-            // Hide admin-only items for non-admins
-            if ((item as any).adminOnly && user?.role !== 'admin') {
-              return null;
-            }
+            // All navigation items are now role-specific
             return (
               <Link 
                 key={item.name} 
