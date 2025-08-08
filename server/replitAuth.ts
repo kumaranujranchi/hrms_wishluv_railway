@@ -63,7 +63,7 @@ async function upsertUser(
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
   };
-  await storage.upsertUser(claims["sub"], userData);
+  return await storage.upsertUser(claims["sub"], userData);
 }
 
 export async function setupAuth(app: Express) {
@@ -78,10 +78,9 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    const user = await upsertUser(tokens.claims());
+    updateUserSession(user as any, tokens);
+    verified(null, user as any);
   };
 
   for (const domain of process.env

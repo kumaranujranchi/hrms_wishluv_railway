@@ -45,6 +45,7 @@ export interface IStorage {
   createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string; }): Promise<User>;
   createEmployeeByAdmin(userData: { email: string; passwordHash: string; firstName: string; lastName: string; department?: string; position?: string; needsPasswordReset?: boolean; }): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
+  upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; }): Promise<User>;
   
   // Employee operations
   getAllEmployees(): Promise<User[]>;
@@ -182,6 +183,42 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; }): Promise<User> {
+    const existingUser = await this.getUser(id);
+    
+    if (existingUser) {
+      // Update existing user
+      const [updated] = await db
+        .update(users)
+        .set({ 
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return updated;
+    } else {
+      // Create new user with a placeholder password hash
+      const [created] = await db
+        .insert(users)
+        .values({
+          id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          profileImageUrl: userData.profileImageUrl,
+          passwordHash: 'oauth-placeholder', // This user will authenticate via OAuth
+          needsPasswordReset: false,
+          role: 'employee'
+        })
+        .returning();
+      return created;
+    }
+  }
+
   // Attendance operations
   async markAttendance(attendanceData: InsertAttendance): Promise<Attendance> {
     const [result] = await db
@@ -192,18 +229,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAttendanceByUser(userId: string, startDate?: Date, endDate?: Date): Promise<Attendance[]> {
-    let query = db.select().from(attendance).where(eq(attendance.userId, userId));
-    
     if (startDate && endDate) {
-      query = query.where(
-        and(
-          gte(attendance.date, startDate),
-          lte(attendance.date, endDate)
+      return await db.select().from(attendance)
+        .where(
+          and(
+            eq(attendance.userId, userId),
+            gte(attendance.date, startDate),
+            lte(attendance.date, endDate)
+          )
         )
-      );
+        .orderBy(desc(attendance.date));
     }
     
-    return await query.orderBy(desc(attendance.date));
+    return await db.select().from(attendance)
+      .where(eq(attendance.userId, userId))
+      .orderBy(desc(attendance.date));
   }
 
   async getTodayAttendance(userId: string): Promise<Attendance | undefined> {
@@ -308,7 +348,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingLeaveRequests(approverId?: string): Promise<LeaveRequest[]> {
-    let query = db
+    if (approverId) {
+      return await db
+        .select({
+          id: leaveRequests.id,
+          userId: leaveRequests.userId,
+          type: leaveRequests.type,
+          startDate: leaveRequests.startDate,
+          endDate: leaveRequests.endDate,
+          days: leaveRequests.days,
+          reason: leaveRequests.reason,
+          status: leaveRequests.status,
+          createdAt: leaveRequests.createdAt,
+          updatedAt: leaveRequests.updatedAt,
+          approverId: leaveRequests.approverId,
+          approverNotes: leaveRequests.approverNotes,
+          user: {
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            department: users.department,
+          },
+        })
+        .from(leaveRequests)
+        .innerJoin(users, eq(leaveRequests.userId, users.id))
+        .where(
+          and(
+            eq(leaveRequests.status, 'pending'),
+            eq(users.managerId, approverId)
+          )
+        )
+        .orderBy(desc(leaveRequests.createdAt));
+    }
+
+    return await db
       .select({
         id: leaveRequests.id,
         userId: leaveRequests.userId,
@@ -331,13 +404,8 @@ export class DatabaseStorage implements IStorage {
       })
       .from(leaveRequests)
       .innerJoin(users, eq(leaveRequests.userId, users.id))
-      .where(eq(leaveRequests.status, 'pending'));
-
-    if (approverId) {
-      query = query.where(eq(users.managerId, approverId));
-    }
-
-    return await query.orderBy(desc(leaveRequests.createdAt));
+      .where(eq(leaveRequests.status, 'pending'))
+      .orderBy(desc(leaveRequests.createdAt));
   }
 
   async updateLeaveRequestStatus(id: string, status: string, approverId: string, notes?: string): Promise<LeaveRequest> {
@@ -372,7 +440,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPendingExpenseClaims(approverId?: string): Promise<ExpenseClaim[]> {
-    let query = db
+    if (approverId) {
+      return await db
+        .select({
+          id: expenseClaims.id,
+          userId: expenseClaims.userId,
+          title: expenseClaims.title,
+          amount: expenseClaims.amount,
+          category: expenseClaims.category,
+          description: expenseClaims.description,
+          receiptUrl: expenseClaims.receiptUrl,
+          status: expenseClaims.status,
+          submissionDate: expenseClaims.submissionDate,
+          approverId: expenseClaims.approverId,
+          approverNotes: expenseClaims.approverNotes,
+          approvalDate: expenseClaims.approvalDate,
+          reimbursementDate: expenseClaims.reimbursementDate,
+          user: {
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            department: users.department,
+          },
+        })
+        .from(expenseClaims)
+        .innerJoin(users, eq(expenseClaims.userId, users.id))
+        .where(
+          and(
+            eq(expenseClaims.status, 'submitted'),
+            eq(users.managerId, approverId)
+          )
+        )
+        .orderBy(desc(expenseClaims.submissionDate));
+    }
+
+    return await db
       .select({
         id: expenseClaims.id,
         userId: expenseClaims.userId,
@@ -396,13 +498,8 @@ export class DatabaseStorage implements IStorage {
       })
       .from(expenseClaims)
       .innerJoin(users, eq(expenseClaims.userId, users.id))
-      .where(eq(expenseClaims.status, 'submitted'));
-
-    if (approverId) {
-      query = query.where(eq(users.managerId, approverId));
-    }
-
-    return await query.orderBy(desc(expenseClaims.submissionDate));
+      .where(eq(expenseClaims.status, 'submitted'))
+      .orderBy(desc(expenseClaims.submissionDate));
   }
 
   async updateExpenseClaimStatus(id: string, status: string, approverId: string, notes?: string): Promise<ExpenseClaim> {
@@ -770,7 +867,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPayrollRecords(month?: number, year?: number): Promise<any[]> {
-    let query = db
+    if (month && year) {
+      return await db
+        .select({
+          id: payroll.id,
+          userId: payroll.userId,
+          month: payroll.month,
+          year: payroll.year,
+          basicSalary: payroll.basicSalary,
+          allowances: payroll.allowances,
+          deductions: payroll.deductions,
+          grossSalary: payroll.grossSalary,
+          netSalary: payroll.netSalary,
+          salaryBreakup: payroll.salaryBreakup,
+          status: payroll.status,
+          processedAt: payroll.processedAt,
+          createdAt: payroll.createdAt,
+          user: {
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+            department: users.department,
+          },
+        })
+        .from(payroll)
+        .innerJoin(users, eq(payroll.userId, users.id))
+        .where(
+          and(
+            eq(payroll.month, month),
+            eq(payroll.year, year)
+          )
+        )
+        .orderBy(desc(payroll.createdAt));
+    }
+
+    return await db
       .select({
         id: payroll.id,
         userId: payroll.userId,
@@ -793,18 +924,8 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(payroll)
-      .innerJoin(users, eq(payroll.userId, users.id));
-
-    if (month && year) {
-      query = query.where(
-        and(
-          eq(payroll.month, month),
-          eq(payroll.year, year)
-        )
-      );
-    }
-
-    return await query.orderBy(desc(payroll.createdAt));
+      .innerJoin(users, eq(payroll.userId, users.id))
+      .orderBy(desc(payroll.createdAt));
   }
 
   async processPayrollRecord(recordId: string): Promise<Payroll> {
