@@ -154,10 +154,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-8 text-center">
-          <p className="text-xs text-neutral-500">
-            This is the admin panel for Synergy HRMS Pro. If you're an employee,
-            please contact your HR department for access.
-          </p>
+          <p className="text-xs text-neutral-500">This is the HRMS Portal for Wishluv Buildcon. If you're an employee, please contact your HR department for access.</p>
         </div>
       </div>
     </div>
