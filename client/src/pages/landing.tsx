@@ -116,9 +116,7 @@ export default function LandingPage() {
             <Building2 className="h-6 w-6 text-primary-400 mr-2" />
             <span className="text-lg font-semibold">Wishluv Buildcon Pvt Ltd</span>
           </div>
-          <p className="text-neutral-400 text-sm">
-            © 2024 Synergy HRMS Pro. All rights reserved.
-          </p>
+          <p className="text-neutral-400 text-sm">© 2025 Wishluv Buildcon Pvt Ltd. All rights reserved.</p>
         </div>
       </div>
     </div>
