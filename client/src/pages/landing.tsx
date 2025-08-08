@@ -21,7 +21,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16 text-center">
         <h2 className="text-5xl font-bold text-white mb-6">
@@ -42,7 +41,6 @@ export default function LandingPage() {
           Login
         </Button>
       </div>
-
       {/* Features Grid */}
       <div className="container mx-auto px-4 py-16">
         <h3 className="text-3xl font-bold text-center text-white mb-12">
@@ -98,7 +96,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
       {/* Additional Features */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
@@ -154,7 +151,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
       {/* Call to Action */}
       <div className="py-16" style={{ backgroundColor: 'hsl(var(--primary))' }}>
         <div className="container mx-auto px-4 text-center">
@@ -171,7 +167,6 @@ export default function LandingPage() {
           </Button>
         </div>
       </div>
-
       {/* Footer */}
       <div className="py-8" style={{ backgroundColor: 'hsl(var(--sidebar-bg))' }}>
         <div className="container mx-auto px-4 text-center">
@@ -179,7 +174,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg flex items-center justify-center mr-3" style={{ backgroundColor: 'hsl(var(--primary))' }}>
               <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-5 w-5" />
             </div>
-            <span className="text-lg font-semibold text-white">Synergy HRMS Pro</span>
+            <span className="text-lg font-semibold text-white">Wishluv Buildcon</span>
           </div>
           <p className="text-gray-400 text-sm">© 2025 Wishluv Buildcon Pvt Ltd. All rights reserved.</p>
         </div>
