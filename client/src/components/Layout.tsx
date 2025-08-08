@@ -230,9 +230,8 @@ export default function Layout({ children }: LayoutProps) {
             variant="outline" 
             size="sm"
             className="w-full text-red-600 border-red-200 hover:bg-red-50"
-            onClick={async () => {
-              await fetch('/api/auth/logout', { method: 'POST' });
-              window.location.href = "/";
+            onClick={() => {
+              window.location.href = '/api/logout';
             }}
           >
             <LogOut className="h-4 w-4 mr-2" />
@@ -284,9 +283,8 @@ export default function Layout({ children }: LayoutProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={async () => {
-                    await fetch('/api/auth/logout', { method: 'POST' });
-                    window.location.href = "/";
+                  onClick={() => {
+                    window.location.href = '/api/logout';
                   }}
                   className="text-red-600 border-red-200 hover:bg-red-50"
                 >
