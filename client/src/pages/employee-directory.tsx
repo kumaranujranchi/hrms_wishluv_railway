@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import type { Department, Designation } from "@shared/schema";
 import { 
   Search, 
   Users, 
@@ -112,6 +113,14 @@ export default function EmployeeDirectoryPage() {
 
   const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
+  });
+
+  // Options for Department and Designation dropdowns
+  const { data: departmentsData } = useQuery<Department[]>({
+    queryKey: ["/api/departments"],
+  });
+  const { data: designationsData } = useQuery<(Designation & { department?: Department })[]>({
+    queryKey: ["/api/designations"],
   });
 
   const form = useForm<EditEmployeeFormData>({
@@ -576,12 +585,20 @@ export default function EmployeeDirectoryPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Department</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input placeholder="Engineering" className="pl-10" {...field} />
-                            </div>
-                          </FormControl>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select department" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {departmentsData?.map((dept) => (
+                                <SelectItem key={dept.id} value={dept.name}>
+                                  {dept.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -592,13 +609,21 @@ export default function EmployeeDirectoryPage() {
                       name="position"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel>Position</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                              <Input placeholder="Software Engineer" className="pl-10" {...field} />
-                            </div>
-                          </FormControl>
+                          <FormLabel>Designation</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select designation" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {designationsData?.map((des) => (
+                                <SelectItem key={des.id} value={des.name}>
+                                  {des.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
