@@ -33,12 +33,23 @@ export default function LandingPage() {
           Streamline your human resources operations with our powerful HRMS platform. 
           From attendance tracking to payroll management, we've got you covered.
         </p>
+        
+        {/* Login Instructions */}
+        <div className="bg-white border border-primary-200 rounded-lg p-6 mb-8 max-w-lg mx-auto">
+          <h3 className="text-lg font-semibold text-neutral-900 mb-3">Login Instructions</h3>
+          <div className="text-sm text-neutral-600 space-y-2">
+            <p><strong>Admin Access:</strong> Use synergybrandarchitect@gmail.com to access admin features</p>
+            <p><strong>Employee Access:</strong> Other email addresses will have employee access</p>
+            <p>Login using your Replit account when prompted</p>
+          </div>
+        </div>
+        
         <Button 
           onClick={handleLogin} 
           size="lg" 
           className="bg-primary-600 hover:bg-primary-700 text-lg px-8 py-3"
         >
-          Get Started
+          Sign In with Replit
         </Button>
       </div>
 

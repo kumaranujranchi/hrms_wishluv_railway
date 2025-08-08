@@ -45,7 +45,7 @@ export interface IStorage {
   createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string; }): Promise<User>;
   createEmployeeByAdmin(userData: { email: string; passwordHash: string; firstName: string; lastName: string; department?: string; position?: string; needsPasswordReset?: boolean; }): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
-  upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; }): Promise<User>;
+  upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; role?: string; }): Promise<User>;
   
   // Employee operations
   getAllEmployees(): Promise<User[]>;
@@ -183,7 +183,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; }): Promise<User> {
+  async upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; role?: string; }): Promise<User> {
     const existingUser = await this.getUser(id);
     
     if (existingUser) {
@@ -195,6 +195,7 @@ export class DatabaseStorage implements IStorage {
           firstName: userData.firstName,
           lastName: userData.lastName,
           profileImageUrl: userData.profileImageUrl,
+          ...(userData.role && { role: userData.role as 'admin' | 'manager' | 'employee' }),
           updatedAt: new Date()
         })
         .where(eq(users.id, id))
@@ -212,7 +213,7 @@ export class DatabaseStorage implements IStorage {
           profileImageUrl: userData.profileImageUrl,
           passwordHash: 'oauth-placeholder', // This user will authenticate via OAuth
           needsPasswordReset: false,
-          role: 'employee'
+          role: (userData.role as 'admin' | 'manager' | 'employee') || 'employee'
         })
         .returning();
       return created;

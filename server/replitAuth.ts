@@ -57,11 +57,22 @@ function updateUserSession(
 async function upsertUser(
   claims: any,
 ) {
+  // Define admin email addresses that should automatically get admin role
+  const adminEmails = [
+    'synergybrandarchitect@gmail.com',
+    'admin@synergyhrmspro.com',
+    // Add more admin emails as needed
+  ];
+  
+  const email = claims["email"];
+  const role = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'employee';
+  
   const userData = {
-    email: claims["email"],
+    email: email,
     firstName: claims["first_name"],
     lastName: claims["last_name"],
     profileImageUrl: claims["profile_image_url"],
+    role: role,
   };
   return await storage.upsertUser(claims["sub"], userData);
 }
