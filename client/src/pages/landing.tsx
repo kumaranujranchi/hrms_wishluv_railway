@@ -1,108 +1,131 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, Clock, Calendar, Receipt, BarChart3, LogIn, UserPlus } from "lucide-react";
-import { Link } from "wouter";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Building2, LogIn, Users, Calendar, DollarSign, BarChart3 } from 'lucide-react';
 
-export default function Landing() {
-  const features = [
-    {
-      icon: Clock,
-      title: "Attendance Tracking",
-      description: "Smart geo-fenced attendance with real-time tracking and automated reports."
-    },
-    {
-      icon: Calendar,
-      title: "Leave Management",
-      description: "Streamlined leave requests with approval workflows and balance tracking."
-    },
-    {
-      icon: Receipt,
-      title: "Expense Management",
-      description: "Easy expense claims with receipt uploads and approval processes."
-    },
-    {
-      icon: Users,
-      title: "Employee Directory",
-      description: "Complete employee database with role-based access and org charts."
-    },
-    {
-      icon: BarChart3,
-      title: "Analytics & Reports",
-      description: "Comprehensive reporting with insights into attendance, payroll, and performance."
-    },
-    {
-      icon: Building2,
-      title: "Multi-location Support",
-      description: "Manage multiple office locations with customizable geo-fencing."
-    }
-  ];
+export default function LandingPage() {
+  const handleLogin = () => {
+    window.location.href = '/api/login';
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Header */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <Building2 className="h-8 w-8 text-blue-600 mr-3" />
+            <h1 className="text-2xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
+          </div>
+          <Button onClick={handleLogin} className="bg-blue-600 hover:bg-blue-700">
+            <LogIn className="h-4 w-4 mr-2" />
+            Sign In
+          </Button>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-16 text-center">
+        <h2 className="text-5xl font-bold text-neutral-900 mb-6">
+          Comprehensive HR Management
+        </h2>
+        <p className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
+          Streamline your human resources operations with our powerful HRMS platform. 
+          From attendance tracking to payroll management, we've got you covered.
+        </p>
+        <Button 
+          onClick={handleLogin} 
+          size="lg" 
+          className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
+        >
+          Get Started
+        </Button>
+      </div>
+
+      {/* Features Grid */}
       <div className="container mx-auto px-4 py-16">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-primary-500 rounded-2xl flex items-center justify-center">
-              <Building2 className="text-white h-10 w-10" />
-            </div>
-          </div>
-          <h1 className="text-5xl font-bold text-neutral-900 mb-4">
-            Synergy HRMS Pro
-          </h1>
-          <p className="text-xl text-neutral-600 mb-8 max-w-2xl mx-auto">
-            Complete Human Resource Management System with attendance tracking, 
-            leave management, expense claims, and comprehensive reporting.
-          </p>
-          <div className="flex justify-center">
-            <Link href="/login">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-lg font-semibold transition-colors text-lg">
-                <LogIn className="mr-3 h-6 w-6" />
-                Sign In to HRMS
-              </Button>
-            </Link>
-          </div>
-        </div>
+        <h3 className="text-3xl font-bold text-center text-neutral-900 mb-12">
+          Key Features
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Users className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <CardTitle>Employee Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-neutral-600">
+                Complete employee directory with profiles, onboarding, and organizational structure.
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <Card key={index} className="border-neutral-200 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center mb-4">
-                    <Icon className="text-primary-600 h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Calendar className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <CardTitle>Attendance Tracking</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-neutral-600">
+                Real-time attendance monitoring with geo-fencing and comprehensive reporting.
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* CTA Section */}
-        <div className="text-center bg-white rounded-2xl shadow-lg p-12">
-          <h2 className="text-3xl font-bold text-neutral-900 mb-4">
-            Ready to Transform Your HR Management?
-          </h2>
-          <p className="text-lg text-neutral-600 mb-8 max-w-2xl mx-auto">
-            Secure access to your HR management dashboard. Sign in with your credentials to manage attendance, 
-            leave requests, expenses, and more.
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <DollarSign className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+              <CardTitle>Payroll Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-neutral-600">
+                Automated payroll processing with detailed salary breakdowns and tax calculations.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <BarChart3 className="h-12 w-12 text-orange-600 mx-auto mb-4" />
+              <CardTitle>Analytics & Reports</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-neutral-600">
+                Comprehensive reporting and analytics for data-driven HR decisions.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="bg-blue-600 text-white py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h3 className="text-3xl font-bold mb-6">Ready to Get Started?</h3>
+          <p className="text-xl mb-8 opacity-90">
+            Transform your HR operations with Synergy HRMS Pro
           </p>
-          <div className="flex justify-center">
-            <Link href="/login">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                <LogIn className="mr-2 h-5 w-5" />
-                Access HRMS Pro
-              </Button>
-            </Link>
+          <Button 
+            onClick={handleLogin}
+            size="lg" 
+            variant="secondary"
+            className="bg-white text-blue-600 hover:bg-neutral-100 text-lg px-8 py-3"
+          >
+            Sign In Now
+          </Button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-neutral-900 text-white py-8">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center mb-4">
+            <Building2 className="h-6 w-6 text-blue-400 mr-2" />
+            <span className="text-lg font-semibold">Synergy HRMS Pro</span>
           </div>
+          <p className="text-neutral-400 text-sm">
+            © 2024 Synergy HRMS Pro. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

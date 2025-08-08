@@ -6,8 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import Attendance from "@/pages/attendance";
 import LeaveManagement from "@/pages/leave-management";
@@ -34,11 +32,7 @@ function Router() {
           </div>
         </Route>
       ) : !isAuthenticated ? (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-        </>
+        <Route path="/" component={Landing} />
       ) : (
         <>
           <Route path="/" component={Dashboard} />
