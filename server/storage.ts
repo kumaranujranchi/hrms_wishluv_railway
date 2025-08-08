@@ -319,6 +319,9 @@ export class DatabaseStorage implements IStorage {
         reason: leaveRequests.reason,
         status: leaveRequests.status,
         createdAt: leaveRequests.createdAt,
+        updatedAt: leaveRequests.updatedAt,
+        approverId: leaveRequests.approverId,
+        approverNotes: leaveRequests.approverNotes,
         user: {
           firstName: users.firstName,
           lastName: users.lastName,
@@ -380,6 +383,10 @@ export class DatabaseStorage implements IStorage {
         receiptUrl: expenseClaims.receiptUrl,
         status: expenseClaims.status,
         submissionDate: expenseClaims.submissionDate,
+        approverId: expenseClaims.approverId,
+        approverNotes: expenseClaims.approverNotes,
+        approvalDate: expenseClaims.approvalDate,
+        reimbursementDate: expenseClaims.reimbursementDate,
         user: {
           firstName: users.firstName,
           lastName: users.lastName,
@@ -452,6 +459,8 @@ export class DatabaseStorage implements IStorage {
         content: announcements.content,
         priority: announcements.priority,
         createdAt: announcements.createdAt,
+        isActive: announcements.isActive,
+        authorId: announcements.authorId,
         author: {
           firstName: users.firstName,
           lastName: users.lastName,
@@ -465,7 +474,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Employee profile management
-  async updateEmployeeProfile(employeeId: string, profileData: any): Promise<User> {
+  async updateEmployeeProfile(employeeId: string, profileData: any): Promise<EmployeeProfile> {
     // First update the user table with basic info
     const [updatedUser] = await db
       .update(users)
@@ -538,7 +547,7 @@ export class DatabaseStorage implements IStorage {
         });
     }
 
-    return updatedUser;
+    return existingProfile || await this.createEmployeeProfile(profileUpdate);
   }
 
   async getEmployeeProfile(employeeId: string): Promise<EmployeeProfile | undefined> {
@@ -574,30 +583,12 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Employee Profile operations
-  async getEmployeeProfile(userId: string): Promise<EmployeeProfile | undefined> {
-    const [profile] = await db
-      .select()
-      .from(employeeProfiles)
-      .where(eq(employeeProfiles.userId, userId));
-    return profile;
-  }
-
   async createEmployeeProfile(profile: InsertEmployeeProfile): Promise<EmployeeProfile> {
     const [newProfile] = await db
       .insert(employeeProfiles)
       .values(profile)
       .returning();
     return newProfile;
-  }
-
-  async updateEmployeeProfile(userId: string, updates: Partial<EmployeeProfile>): Promise<EmployeeProfile> {
-    const [updated] = await db
-      .update(employeeProfiles)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(eq(employeeProfiles.userId, userId))
-      .returning();
-    return updated;
   }
 
   // Department operations
@@ -631,12 +622,12 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDepartment(id: string): Promise<boolean> {
     const result = await db.delete(departments).where(eq(departments.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Designation operations
   async getDesignations(): Promise<(Designation & { department?: Department })[]> {
-    return await db
+    const result = await db
       .select({
         id: designations.id,
         name: designations.name,
@@ -657,6 +648,11 @@ export class DatabaseStorage implements IStorage {
       .from(designations)
       .leftJoin(departments, eq(designations.departmentId, departments.id))
       .orderBy(desc(designations.createdAt));
+    
+    return result.map(row => ({
+      ...row,
+      department: (row.department && row.department.id) ? row.department : undefined
+    }));
   }
 
   async createDesignation(designation: InsertDesignation & { createdBy: string }): Promise<Designation> {
@@ -685,7 +681,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDesignation(id: string): Promise<boolean> {
     const result = await db.delete(designations).where(eq(designations.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Admin attendance operations
