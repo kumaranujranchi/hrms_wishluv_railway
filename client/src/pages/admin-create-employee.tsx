@@ -86,9 +86,9 @@ export default function AdminCreateEmployeePage() {
           <p className="text-muted-foreground">Add a new employee to the system with basic details. The employee can complete their profile later, or you can edit their details from the Employee Directory.</p>
         </div>
 
-        <Alert className="mb-6 border-blue-200 bg-blue-50">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800">
+        <Alert className="mb-6 border-primary-200 bg-primary-50">
+          <Info className="h-4 w-4 text-primary-600" />
+          <AlertDescription className="text-primary-800">
             <strong>Two Options Available:</strong>
             <br />
             1. <strong>Create Basic Profile:</strong> Employee can log in and complete their details from their dashboard
@@ -119,7 +119,7 @@ export default function AdminCreateEmployeePage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <UserPlus className="h-5 w-5 text-blue-600" />
+            <UserPlus className="h-5 w-5 text-primary-600" />
             <span>Employee Information</span>
           </CardTitle>
         </CardHeader>
@@ -256,7 +256,7 @@ export default function AdminCreateEmployeePage() {
 
               <Button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-primary-600 hover:bg-primary-700"
                 disabled={createEmployeeMutation.isPending}
               >
                 {createEmployeeMutation.isPending ? (

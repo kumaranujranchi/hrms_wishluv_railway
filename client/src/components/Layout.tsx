@@ -265,7 +265,7 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="flex items-center space-x-2 text-sm text-neutral-600">
                   <User className="h-4 w-4" />
                   <span>{user?.firstName} {user?.lastName}</span>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
                     {user?.role === 'admin' ? 'Admin' : 'Employee'}
                   </span>
                 </div>

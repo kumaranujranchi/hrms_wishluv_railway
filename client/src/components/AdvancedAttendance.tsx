@@ -66,12 +66,9 @@ export default function AdvancedAttendance() {
 
   const checkInMutation = useMutation({
     mutationFn: async (locationData: any) => {
-      return apiRequest('/api/attendance/check-in', {
-        method: 'POST',
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          location: locationData,
-        }),
+      return apiRequest('POST', '/api/attendance/check-in', {
+        timestamp: new Date().toISOString(),
+        location: locationData,
       });
     },
     onSuccess: () => {
@@ -86,12 +83,9 @@ export default function AdvancedAttendance() {
 
   const checkOutMutation = useMutation({
     mutationFn: async (locationData: any) => {
-      return apiRequest('/api/attendance/check-out', {
-        method: 'POST',
-        body: JSON.stringify({
-          timestamp: new Date().toISOString(),
-          location: locationData,
-        }),
+      return apiRequest('POST', '/api/attendance/check-out', {
+        timestamp: new Date().toISOString(),
+        location: locationData,
       });
     },
     onSuccess: () => {
@@ -222,7 +216,7 @@ export default function AdvancedAttendance() {
 
             {/* Working Hours */}
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-primary-600">
                 {workingHours.toFixed(1)}h
               </div>
               <p className="text-sm text-neutral-600">Working Hours Today</p>
@@ -284,11 +278,11 @@ export default function AdvancedAttendance() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-neutral-600">Present Days</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-primary-600">
                     {attendanceStats.presentDays}
                   </p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-blue-500" />
+                <CheckCircle className="h-8 w-8 text-primary-500" />
               </div>
             </CardContent>
           </Card>
@@ -312,11 +306,11 @@ export default function AdvancedAttendance() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-neutral-600">Avg Hours</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-warning-600">
                     {attendanceStats.averageHours.toFixed(1)}h
                   </p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-purple-500" />
+                <BarChart3 className="h-8 w-8 text-warning-500" />
               </div>
             </CardContent>
           </Card>

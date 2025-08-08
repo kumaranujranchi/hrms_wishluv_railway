@@ -123,7 +123,7 @@ export default function AdminAttendancePage() {
       if (checkOut) {
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-200"><CheckCircle className="h-3 w-3 mr-1" />Complete</Badge>;
       } else if (checkIn) {
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200"><Clock className="h-3 w-3 mr-1" />Checked In</Badge>;
+        return <Badge className="bg-primary-100 text-primary-800 hover:bg-primary-200"><Clock className="h-3 w-3 mr-1" />Checked In</Badge>;
       }
     } else if (status === 'late') {
       return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200"><AlertCircle className="h-3 w-3 mr-1" />Late</Badge>;
@@ -175,7 +175,7 @@ export default function AdminAttendancePage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center">
-                <Users className="h-8 w-8 text-blue-500" />
+                <Users className="h-8 w-8 text-primary-500" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Employees</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">

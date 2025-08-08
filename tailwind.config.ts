@@ -23,11 +23,11 @@ export default {
         },
         primary: {
           DEFAULT: "var(--primary)",
-          50: "#E3F2FD",
-          100: "#BBDEFB",
-          500: "#1565C0",
-          600: "#0D47A1",
-          700: "#1976D2",
+          50: "#E8F5E8",
+          100: "#C8E6C8",
+          500: "#347433",
+          600: "#2E6B2F",
+          700: "#1B5E20",
           foreground: "var(--primary-foreground)",
         },
         secondary: {
@@ -49,15 +49,15 @@ export default {
         success: {
           DEFAULT: "var(--success)",
           50: "#E8F5E8",
-          500: "#2E7D32",
-          600: "#388E3C",
+          500: "#347433",
+          600: "#2E6B2F",
           foreground: "var(--success-foreground)",
         },
         warning: {
           DEFAULT: "var(--warning)",
-          50: "#FFF3E0",
-          500: "#FF6F00",
-          600: "#F57C00",
+          50: "#FFFBEA",
+          500: "#FFC107",
+          600: "#FFB300",
           foreground: "var(--warning-foreground)",
         },
         neutral: {

@@ -9,15 +9,15 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
       {/* Header */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <Building2 className="h-8 w-8 text-blue-600 mr-3" />
+            <Building2 className="h-8 w-8 text-primary-600 mr-3" />
             <h1 className="text-2xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
-          <Button onClick={handleLogin} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={handleLogin} className="bg-primary-600 hover:bg-primary-700">
             <LogIn className="h-4 w-4 mr-2" />
             Sign In
           </Button>
@@ -36,7 +36,7 @@ export default function LandingPage() {
         <Button 
           onClick={handleLogin} 
           size="lg" 
-          className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
+          className="bg-primary-600 hover:bg-primary-700 text-lg px-8 py-3"
         >
           Get Started
         </Button>
@@ -50,7 +50,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <Card className="text-center hover:shadow-lg transition-shadow">
             <CardHeader>
-              <Users className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <Users className="h-12 w-12 text-primary-600 mx-auto mb-4" />
               <CardTitle>Employee Management</CardTitle>
             </CardHeader>
             <CardContent>
@@ -99,7 +99,7 @@ export default function LandingPage() {
       </div>
 
       {/* Call to Action */}
-      <div className="bg-blue-600 text-white py-16">
+      <div className="bg-primary-600 text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-3xl font-bold mb-6">Ready to Get Started?</h3>
           <p className="text-xl mb-8 opacity-90">
@@ -109,7 +109,7 @@ export default function LandingPage() {
             onClick={handleLogin}
             size="lg" 
             variant="secondary"
-            className="bg-white text-blue-600 hover:bg-neutral-100 text-lg px-8 py-3"
+            className="bg-white text-primary-600 hover:bg-neutral-100 text-lg px-8 py-3"
           >
             Sign In Now
           </Button>
@@ -120,7 +120,7 @@ export default function LandingPage() {
       <div className="bg-neutral-900 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-6 w-6 text-blue-400 mr-2" />
+            <Building2 className="h-6 w-6 text-primary-400 mr-2" />
             <span className="text-lg font-semibold">Synergy HRMS Pro</span>
           </div>
           <p className="text-neutral-400 text-sm">

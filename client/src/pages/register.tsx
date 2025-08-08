@@ -63,11 +63,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-10 w-10 text-blue-600 mr-3" />
+            <Building2 className="h-10 w-10 text-primary-600 mr-3" />
             <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
           <p className="text-neutral-600">Create your admin account</p>
@@ -76,7 +76,7 @@ export default function RegisterPage() {
         <Card className="shadow-lg border-0">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-center">
-              <UserPlus className="h-5 w-5 text-blue-600" />
+              <UserPlus className="h-5 w-5 text-primary-600" />
               <span>Sign Up</span>
             </CardTitle>
           </CardHeader>
@@ -168,7 +168,7 @@ export default function RegisterPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-primary-600 hover:bg-primary-700"
                   disabled={registerMutation.isPending}
                 >
                   {registerMutation.isPending ? (
@@ -187,7 +187,7 @@ export default function RegisterPage() {
               <p className="text-sm text-neutral-600">
                 Already have an account?{' '}
                 <Link href="/login">
-                  <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
+                  <span className="font-medium text-primary-600 hover:text-primary-500 cursor-pointer">
                     Sign in here
                   </span>
                 </Link>

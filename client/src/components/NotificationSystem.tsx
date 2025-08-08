@@ -34,9 +34,7 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      return apiRequest(`/api/notifications/${notificationId}/read`, {
-        method: 'POST',
-      });
+      return apiRequest('POST', `/api/notifications/${notificationId}/read`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
@@ -49,10 +47,7 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
         ? `/api/leaves/${actionId}/approve`
         : `/api/expenses/${actionId}/approve`;
       
-      return apiRequest(endpoint, {
-        method: 'POST',
-        body: JSON.stringify({ status: 'approved' }),
-      });
+      return apiRequest('POST', endpoint, { status: 'approved' });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
@@ -69,10 +64,7 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
         ? `/api/leaves/${actionId}/reject`
         : `/api/expenses/${actionId}/reject`;
       
-      return apiRequest(endpoint, {
-        method: 'POST',
-        body: JSON.stringify({ status: 'rejected' }),
-      });
+      return apiRequest('POST', endpoint, { status: 'rejected' });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
@@ -94,7 +86,7 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
       case 'error':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
       default:
-        return <Info className="h-4 w-4 text-blue-500" />;
+        return <Info className="h-4 w-4 text-primary-500" />;
     }
   };
 
@@ -179,7 +171,7 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
                     <div
                       key={notification.id}
                       className={`p-4 hover:bg-neutral-50 ${
-                        !notification.read ? 'bg-blue-50' : ''
+                        !notification.read ? 'bg-primary-50' : ''
                       }`}
                     >
                       <div className="flex items-start space-x-3">
@@ -225,7 +217,7 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
                             variant="ghost"
                             size="sm"
                             onClick={() => handleMarkAsRead(notification.id)}
-                            className="text-blue-600 hover:text-blue-700"
+                            className="text-primary-600 hover:text-primary-700"
                           >
                             <Check className="h-4 w-4" />
                           </Button>

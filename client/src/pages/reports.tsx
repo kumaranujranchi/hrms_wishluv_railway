@@ -343,11 +343,11 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-neutral-600">Avg. Leave Days</p>
-                      <p className="text-2xl font-bold text-blue-600">
+                      <p className="text-2xl font-bold text-primary-600">
                         {leaveReport?.averageLeaveDays || 0}
                       </p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-blue-500" />
+                    <TrendingUp className="h-8 w-8 text-primary-500" />
                   </div>
                 </CardContent>
               </Card>
@@ -447,11 +447,11 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-neutral-600">Avg. Claim</p>
-                      <p className="text-2xl font-bold text-blue-600">
+                      <p className="text-2xl font-bold text-primary-600">
                         ${expenseReport?.averageClaimAmount.toFixed(2) || 0}
                       </p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-blue-500" />
+                    <TrendingUp className="h-8 w-8 text-primary-500" />
                   </div>
                 </CardContent>
               </Card>

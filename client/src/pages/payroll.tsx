@@ -139,11 +139,11 @@ export default function PayrollPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-neutral-600">Net Salary</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-primary-600">
                     ${yearlyTotals?.netSalary.toLocaleString() || '0'}
                   </p>
                 </div>
-                <PiggyBank className="h-8 w-8 text-blue-500" />
+                <PiggyBank className="h-8 w-8 text-primary-500" />
               </div>
             </CardContent>
           </Card>
@@ -215,9 +215,9 @@ export default function PayrollPage() {
                           +${parseFloat(record.hra).toLocaleString()}
                         </p>
                       </div>
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-600">Bonus</p>
-                        <p className="text-lg font-semibold text-blue-700">
+                      <div className="text-center p-3 bg-primary-50 rounded-lg">
+                        <p className="text-sm text-primary-600">Bonus</p>
+                        <p className="text-lg font-semibold text-primary-700">
                           +${parseFloat(record.bonus).toLocaleString()}
                         </p>
                       </div>
@@ -294,9 +294,9 @@ export default function PayrollPage() {
                       +${yearlyTotals?.hra.toLocaleString() || '0'}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="text-sm text-blue-600">Performance Bonus</span>
-                    <span className="font-medium text-blue-700">
+                  <div className="flex justify-between items-center p-3 bg-primary-50 rounded-lg">
+                    <span className="text-sm text-primary-600">Performance Bonus</span>
+                    <span className="font-medium text-primary-700">
                       +${yearlyTotals?.bonus.toLocaleString() || '0'}
                     </span>
                   </div>

@@ -91,7 +91,12 @@ export default function OnboardingPage() {
     },
   });
 
-  const { data: employeeProfile, isLoading } = useQuery({
+  interface EmployeeProfile {
+    onboardingCompleted?: boolean;
+    approvedAt?: string;
+  }
+
+  const { data: employeeProfile, isLoading } = useQuery<EmployeeProfile>({
     queryKey: ['/api/employee/profile'],
   });
 
@@ -186,14 +191,14 @@ export default function OnboardingPage() {
     return (
       <Layout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
         </div>
       </Layout>
     );
   }
 
   // If onboarding is already completed, show status
-  if (employeeProfile?.onboardingCompleted) {
+  if (employeeProfile && employeeProfile.onboardingCompleted) {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto">
@@ -212,7 +217,7 @@ export default function OnboardingPage() {
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span className="text-green-800 font-medium">
-                    Approved on {employeeProfile.approvedAt ? format(new Date(employeeProfile.approvedAt), 'MMM dd, yyyy') : 'N/A'}
+                    Approved on {employeeProfile && employeeProfile.approvedAt ? format(new Date(employeeProfile.approvedAt), 'MMM dd, yyyy') : 'N/A'}
                   </span>
                 </div>
               </div>
@@ -241,7 +246,7 @@ export default function OnboardingPage() {
                 <div
                   className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
                     step <= currentStep
-                      ? 'bg-blue-600 border-blue-600 text-white'
+                      ? 'bg-primary-600 border-primary-600 text-white'
                       : 'bg-white border-neutral-300 text-neutral-400'
                   }`}
                 >
@@ -254,7 +259,7 @@ export default function OnboardingPage() {
                 {step < totalSteps && (
                   <div
                     className={`w-24 h-1 mx-2 ${
-                      step < currentStep ? 'bg-blue-600' : 'bg-neutral-200'
+                      step < currentStep ? 'bg-primary-600' : 'bg-neutral-200'
                     }`}
                   />
                 )}

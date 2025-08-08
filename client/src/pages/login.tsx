@@ -59,16 +59,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-10 w-10 text-blue-600 mr-3" />
+            <Building2 className="h-10 w-10 text-primary-600 mr-3" />
             <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
           <p className="text-neutral-600">Admin Panel Access</p>
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-            <p className="text-sm text-blue-800">
+          <div className="mt-4 p-3 bg-primary-50 border border-primary-200 rounded-md">
+            <p className="text-sm text-primary-800">
               <strong>Admin Login:</strong><br />
               Email: anuj.kumar@wishluvbuildcon.com<br />
               Password: admin123
@@ -79,7 +79,7 @@ export default function LoginPage() {
         <Card className="shadow-lg border-0">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-center">
-              <LogIn className="h-5 w-5 text-blue-600" />
+              <LogIn className="h-5 w-5 text-primary-600" />
               <span>Sign In</span>
             </CardTitle>
           </CardHeader>
@@ -132,7 +132,7 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-primary-600 hover:bg-primary-700"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? (
@@ -151,7 +151,7 @@ export default function LoginPage() {
               <p className="text-sm text-neutral-600">
                 Need to create an account?{' '}
                 <Link href="/register">
-                  <span className="font-medium text-blue-600 hover:text-blue-500 cursor-pointer">
+                  <span className="font-medium text-primary-600 hover:text-primary-500 cursor-pointer">
                     Sign up here
                   </span>
                 </Link>
