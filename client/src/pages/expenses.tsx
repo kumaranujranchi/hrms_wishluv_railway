@@ -225,160 +225,162 @@ export default function ExpensesPage() {
           </Card>
         </div>
 
-        {/* My Expense Claims */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>My Expense Claims</CardTitle>
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Submit Expense
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Submit Expense Claim</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="title">Expense Title</Label>
-                        <Input
-                          id="title"
-                          placeholder="e.g., Business lunch with client"
-                          value={formData.title}
-                          onChange={(e) => setFormData({...formData, title: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="amount">Amount ($)</Label>
-                        <Input
-                          id="amount"
-                          type="number"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={formData.amount}
-                          onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="category">Category</Label>
-                      <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select expense category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {expenseCategories.map(category => (
-                            <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        placeholder="Provide details about the expense"
-                        value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      />
-                    </div>
-                    <div>
-                      <Label>Receipt</Label>
-                      <div className="flex items-center space-x-2">
-                        <ObjectUploader
-                          maxNumberOfFiles={1}
-                          maxFileSize={5242880} // 5MB
-                          onGetUploadParameters={handleGetUploadParameters}
-                          onComplete={handleUploadComplete}
-                          buttonClassName="w-full"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {formData.receiptUrl ? "Receipt Uploaded ✓" : "Upload Receipt"}
-                        </ObjectUploader>
-                      </div>
-                      <p className="text-xs text-neutral-500 mt-1">
-                        Upload a photo or scan of your receipt (Max 5MB)
-                      </p>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={createExpenseMutation.isPending}>
-                        {createExpenseMutation.isPending ? "Submitting..." : "Submit Claim"}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {myExpensesLoading ? (
-                <div className="animate-pulse space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="h-20 bg-neutral-200 rounded-lg"></div>
-                  ))}
-                </div>
-              ) : myExpenses?.length === 0 ? (
-                <div className="text-center py-8">
-                  <Receipt className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
-                  <p className="text-neutral-600">No expense claims found</p>
-                  <p className="text-sm text-neutral-500">Click "Submit Expense" to create your first claim</p>
-                </div>
-              ) : (
-                myExpenses?.map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:bg-neutral-50">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <Receipt className="h-6 w-6 text-primary-600" />
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h3 className="text-sm font-medium text-neutral-900">{expense.title}</h3>
-                          {getStatusBadge(expense.status)}
+        {/* My Expense Claims - hidden for admin users */}
+        {user?.role !== 'admin' && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>My Expense Claims</CardTitle>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Submit Expense
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Submit Expense Claim</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="title">Expense Title</Label>
+                          <Input
+                            id="title"
+                            placeholder="e.g., Business lunch with client"
+                            value={formData.title}
+                            onChange={(e) => setFormData({...formData, title: e.target.value})}
+                            required
+                          />
                         </div>
-                        <div className="flex items-center space-x-4 text-sm text-neutral-600">
-                          <span className="font-medium">${parseFloat(expense.amount).toFixed(2)}</span>
-                          <span className="capitalize">{expense.category}</span>
-                          <span>{format(new Date(expense.submissionDate), 'MMM dd, yyyy')}</span>
-                          {expense.receiptUrl && (
-                            <div className="flex items-center space-x-1">
-                              <FileText className="h-3 w-3" />
-                              <span>Receipt</span>
-                            </div>
+                        <div>
+                          <Label htmlFor="amount">Amount ($)</Label>
+                          <Input
+                            id="amount"
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            value={formData.amount}
+                            onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="category">Category</Label>
+                        <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select expense category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {expenseCategories.map(category => (
+                              <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
+                          id="description"
+                          placeholder="Provide details about the expense"
+                          value={formData.description}
+                          onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Receipt</Label>
+                        <div className="flex items-center space-x-2">
+                          <ObjectUploader
+                            maxNumberOfFiles={1}
+                            maxFileSize={5242880} // 5MB
+                            onGetUploadParameters={handleGetUploadParameters}
+                            onComplete={handleUploadComplete}
+                            buttonClassName="w-full"
+                          >
+                            <Upload className="h-4 w-4 mr-2" />
+                            {formData.receiptUrl ? "Receipt Uploaded ✓" : "Upload Receipt"}
+                          </ObjectUploader>
+                        </div>
+                        <p className="text-xs text-neutral-500 mt-1">
+                          Upload a photo or scan of your receipt (Max 5MB)
+                        </p>
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={createExpenseMutation.isPending}>
+                          {createExpenseMutation.isPending ? "Submitting..." : "Submit Claim"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {myExpensesLoading ? (
+                  <div className="animate-pulse space-y-4">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-20 bg-neutral-200 rounded-lg"></div>
+                    ))}
+                  </div>
+                ) : myExpenses?.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Receipt className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
+                    <p className="text-neutral-600">No expense claims found</p>
+                    <p className="text-sm text-neutral-500">Click "Submit Expense" to create your first claim</p>
+                  </div>
+                ) : (
+                  myExpenses?.map((expense) => (
+                    <div key={expense.id} className="flex items-center justify-between p-4 border border-neutral-200 rounded-lg hover:bg-neutral-50">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                          <Receipt className="h-6 w-6 text-primary-600" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h3 className="text-sm font-medium text-neutral-900">{expense.title}</h3>
+                            {getStatusBadge(expense.status)}
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-neutral-600">
+                            <span className="font-medium">${parseFloat(expense.amount).toFixed(2)}</span>
+                            <span className="capitalize">{expense.category}</span>
+                            <span>{format(new Date(expense.submissionDate), 'MMM dd, yyyy')}</span>
+                            {expense.receiptUrl && (
+                              <div className="flex items-center space-x-1">
+                                <FileText className="h-3 w-3" />
+                                <span>Receipt</span>
+                              </div>
+                            )}
+                          </div>
+                          {expense.description && (
+                            <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{expense.description}</p>
                           )}
                         </div>
-                        {expense.description && (
-                          <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{expense.description}</p>
+                      </div>
+                      <div className="text-right">
+                        {expense.reimbursementDate && (
+                          <p className="text-xs text-success-600">
+                            Reimbursed {format(new Date(expense.reimbursementDate), 'MMM dd')}
+                          </p>
+                        )}
+                        {expense.approvalDate && !expense.reimbursementDate && (
+                          <p className="text-xs text-primary-600">
+                            Approved {format(new Date(expense.approvalDate), 'MMM dd')}
+                          </p>
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      {expense.reimbursementDate && (
-                        <p className="text-xs text-success-600">
-                          Reimbursed {format(new Date(expense.reimbursementDate), 'MMM dd')}
-                        </p>
-                      )}
-                      {expense.approvalDate && !expense.reimbursementDate && (
-                        <p className="text-xs text-primary-600">
-                          Approved {format(new Date(expense.approvalDate), 'MMM dd')}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Pending Approvals (Managers/Admins only) */}
         {(user?.role === 'manager' || user?.role === 'admin') && (
