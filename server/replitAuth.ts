@@ -127,6 +127,28 @@ export async function setupAuth(app: Express) {
   });
 }
 
+// Helper middleware to require admin role
+export const requireAdmin = async (req: any, res: any, next: any) => {
+  try {
+    const user = req.user as any;
+    if (!user || !user.claims) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const userId = user.claims.sub;
+    const userRecord = await storage.getUser(userId);
+    
+    if (userRecord && userRecord.role === 'admin') {
+      return next();
+    }
+    
+    return res.status(403).json({ message: "Admin access required" });
+  } catch (error) {
+    console.error("Error checking admin role:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 

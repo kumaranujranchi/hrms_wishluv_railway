@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, registerUser, loginUser, createEmployeeByAdmin, requireAdmin } from "./auth";
+import { setupAuth, isAuthenticated, requireAdmin } from "./replitAuth";
 import { ObjectStorageService } from "./objectStorage";
 import { 
   insertAttendanceSchema,
@@ -21,55 +21,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // Auth routes
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const userData = registerUserSchema.parse(req.body);
-      const user = await registerUser(userData);
-      
-      // Log user in automatically after registration
-      (req.session as any).user = user;
-      
-      res.status(201).json(user);
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(400).json({ 
-        message: error instanceof Error ? error.message : "Registration failed" 
-      });
-    }
-  });
-
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const credentials = loginUserSchema.parse(req.body);
-      const user = await loginUser(credentials);
-      
-      // Store user in session
-      (req.session as any).user = user;
-      
-      res.json(user);
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(401).json({ 
-        message: error instanceof Error ? error.message : "Login failed" 
-      });
-    }
-  });
-
-  app.post('/api/auth/logout', (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Logout error:", err);
-        return res.status(500).json({ message: "Logout failed" });
-      }
-      res.clearCookie('connect.sid');
-      res.json({ message: "Logged out successfully" });
-    });
-  });
-
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const user = req.user;
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
