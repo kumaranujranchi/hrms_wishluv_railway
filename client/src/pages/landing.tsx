@@ -115,7 +115,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-4">
             <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6 mr-2" />
-            <span className="text-lg font-semibold">Synergy HRMS Pro</span>
+            <span className="text-lg font-semibold">Wishluv Buildcon</span>
           </div>
           <p className="text-neutral-400 text-sm">© 2025 Wishluv Buildcon Pvt Ltd. All rights reserved.</p>
         </div>

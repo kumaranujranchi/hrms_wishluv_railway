@@ -45,7 +45,7 @@ export default function RegisterPage() {
       queryClient.setQueryData(['/api/auth/user'], user);
       toast({
         title: 'Admin Account Created!',
-        description: 'Welcome to Synergy HRMS Pro Admin Panel.',
+        description: 'Welcome to Wishluv Buildcon Admin Panel.',
       });
       setLocation('/');
     },
@@ -68,7 +68,7 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-10 w-10 mr-3" />
-            <h1 className="text-3xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
+            <h1 className="text-3xl font-bold text-neutral-900">Wishluv Buildcon</h1>
           </div>
           <p className="text-neutral-600">Create your admin account</p>
         </div>

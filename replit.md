@@ -1,8 +1,8 @@
-# Synergy HRMS Pro
+# Wishluv Buildcon
 
 ## Overview
 
-Synergy HRMS Pro is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, comprehensive leave management with admin approval workflows and leave allocation tracking, expense claim processing, employee directory management, advanced payroll processing with detailed salary breakdowns, and comprehensive reporting capabilities. The system supports role-based access control with admin and employee roles, each having appropriate permissions and dashboard views.
+Wishluv Buildcon is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, comprehensive leave management with admin approval workflows and leave allocation tracking, expense claim processing, employee directory management, advanced payroll processing with detailed salary breakdowns, and comprehensive reporting capabilities. The system supports role-based access control with admin and employee roles, each having appropriate permissions and dashboard views.
 
 ## User Preferences
 
