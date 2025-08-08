@@ -17,10 +17,6 @@ export default function LandingPage() {
             <Building2 className="h-8 w-8 text-primary-600 mr-3" />
             <h1 className="text-2xl font-bold text-neutral-900">Synergy HRMS Pro</h1>
           </div>
-          <Button onClick={handleLogin} className="bg-primary-600 hover:bg-primary-700">
-            <LogIn className="h-4 w-4 mr-2" />
-            Sign In
-          </Button>
         </div>
       </div>
 
