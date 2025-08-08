@@ -12,7 +12,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
       {/* Header */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-center items-center">
           <div className="flex items-center">
             <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-8 w-8 mr-3" />
             <h1 className="text-2xl font-bold text-neutral-900">Wishluv Buildcon Pvt Ltd</h1>
