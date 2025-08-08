@@ -137,7 +137,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="p-4 border-b border-neutral-200">
           <div className="flex items-center space-x-3">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.profileImageUrl || ""} alt="Profile" />
+              <AvatarImage src={user?.profileImageUrl || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} alt="Profile" />
               <AvatarFallback>
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </AvatarFallback>

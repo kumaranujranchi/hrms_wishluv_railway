@@ -340,6 +340,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-8 h-8">
+                      <AvatarImage src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" />
                       <AvatarFallback>LW</AvatarFallback>
                     </Avatar>
                     <div>
@@ -353,6 +354,7 @@ export default function Dashboard() {
                 <div className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-8 h-8">
+                      <AvatarImage src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" />
                       <AvatarFallback>MR</AvatarFallback>
                     </Avatar>
                     <div>
