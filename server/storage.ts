@@ -606,11 +606,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDepartment(department: InsertDepartment & { createdBy: string }): Promise<Department> {
-    const [newDepartment] = await db
-      .insert(departments)
-      .values(department)
-      .returning();
-    return newDepartment;
+    try {
+      console.log("Attempting to create department in database:", department);
+      const [newDepartment] = await db
+        .insert(departments)
+        .values(department)
+        .returning();
+      console.log("Department created successfully in database:", newDepartment);
+      return newDepartment;
+    } catch (error) {
+      console.error("Database error creating department:", error);
+      throw error;
+    }
   }
 
   async updateDepartment(id: string, departmentData: InsertDepartment): Promise<Department | null> {
@@ -653,11 +660,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDesignation(designation: InsertDesignation & { createdBy: string }): Promise<Designation> {
-    const [newDesignation] = await db
-      .insert(designations)
-      .values(designation)
-      .returning();
-    return newDesignation;
+    try {
+      console.log("Attempting to create designation in database:", designation);
+      const [newDesignation] = await db
+        .insert(designations)
+        .values(designation)
+        .returning();
+      console.log("Designation created successfully in database:", newDesignation);
+      return newDesignation;
+    } catch (error) {
+      console.error("Database error creating designation:", error);
+      throw error;
+    }
   }
 
   async updateDesignation(id: string, designationData: InsertDesignation): Promise<Designation | null> {
