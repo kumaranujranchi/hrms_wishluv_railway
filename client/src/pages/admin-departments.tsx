@@ -154,6 +154,14 @@ export default function AdminDepartmentsPage() {
     });
   };
 
+  const handleDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      handleDialogClose();
+    } else {
+      setIsDialogOpen(true);
+    }
+  };
+
   if (user?.role !== 'admin') {
     return (
       <Layout>
@@ -181,7 +189,7 @@ export default function AdminDepartmentsPage() {
             </p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+          <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
             <DialogTrigger asChild>
               <Button onClick={() => setIsDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
