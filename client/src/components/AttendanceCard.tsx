@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,10 +51,7 @@ export default function AttendanceCard() {
   // Check-in mutation
   const checkInMutation = useMutation({
     mutationFn: async (data: { latitude: number; longitude: number; locationName: string }) => {
-      return apiRequest("/api/attendance/check-in", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/attendance/check-in", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
@@ -77,10 +74,7 @@ export default function AttendanceCard() {
   // Check-out mutation
   const checkOutMutation = useMutation({
     mutationFn: async (data: { latitude: number; longitude: number; locationName: string }) => {
-      return apiRequest("/api/attendance/check-out", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return apiRequest("POST", "/api/attendance/check-out", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
@@ -143,7 +137,11 @@ export default function AttendanceCard() {
     try {
       const locationData = await getCurrentLocation();
       setLocation(locationData);
-      await checkInMutation.mutateAsync(locationData);
+      await checkInMutation.mutateAsync({
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        locationName: locationData.name
+      });
     } catch (error) {
       toast({
         title: "Location Error",
@@ -159,7 +157,11 @@ export default function AttendanceCard() {
     try {
       const locationData = await getCurrentLocation();
       setLocation(locationData);
-      await checkOutMutation.mutateAsync(locationData);
+      await checkOutMutation.mutateAsync({
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        locationName: locationData.name
+      });
     } catch (error) {
       toast({
         title: "Location Error",
