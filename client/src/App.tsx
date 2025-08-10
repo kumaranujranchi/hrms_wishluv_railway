@@ -93,26 +93,10 @@ function Router() {
 
       {/* Employee Routes */}
       <Route path="/employee" component={EmployeeDashboard} />
-      <Route path="/attendance">
-        <ProtectedRoute requiredRole="employee">
-          <Attendance />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/leave-management">
-        <ProtectedRoute requiredRole="employee">
-          <LeaveManagement />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/payroll">
-        <ProtectedRoute requiredRole="employee">
-          <Payroll />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/onboarding">
-        <ProtectedRoute requiredRole="employee">
-          <Onboarding />
-        </ProtectedRoute>
-      </Route>
+      <Route path="/attendance" component={Attendance} />
+      <Route path="/leave-management" component={LeaveManagement} />
+      <Route path="/payroll" component={Payroll} />
+      <Route path="/onboarding" component={Onboarding} />
 
       {/* Shared Routes (accessible by both admin and employee) */}
       <Route path="/expenses" component={Expenses} />

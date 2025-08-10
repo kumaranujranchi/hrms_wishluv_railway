@@ -34,7 +34,7 @@ export default function ProtectedRoute({
             <ShieldX className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-neutral-900 mb-2">Access Denied</h2>
             <p className="text-neutral-600 mb-4">Please log in to access this page.</p>
-            <Button onClick={() => window.location.href = '/api/login'}>
+            <Button onClick={() => window.location.href = '/login'}>
               Sign In
             </Button>
           </CardContent>
