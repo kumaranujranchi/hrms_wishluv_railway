@@ -47,16 +47,16 @@ export default function MobileBottomNav() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 z-50 md:hidden">
-      <div className="flex items-center justify-around px-2 py-2">
+      <div className="flex items-center justify-evenly px-1 py-2 max-w-full">
         {navItems.map(({ icon: Icon, label, href }) => (
           <Link key={href} href={href}>
-            <div className={`flex flex-col items-center px-3 py-2 rounded-lg transition-colors ${
+            <div className={`flex flex-col items-center px-2 py-2 rounded-lg transition-colors min-w-0 flex-1 ${
               isActive(href)
                 ? 'text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20'
                 : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
             }`}>
-              <Icon size={20} />
-              <span className="text-xs mt-1 font-medium">{label}</span>
+              <Icon size={18} />
+              <span className="text-xs mt-1 font-medium truncate max-w-full">{label}</span>
             </div>
           </Link>
         ))}
