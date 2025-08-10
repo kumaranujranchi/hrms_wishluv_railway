@@ -1,6 +1,5 @@
 import Layout from "@/components/Layout";
 import Dashboard from "@/components/Dashboard";
-import AIInsights from "@/components/AIInsights";
 import { useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -24,10 +23,7 @@ export default function AdminDashboardPage() {
           {/* Main dashboard content */}
           <Dashboard />
 
-          {/* AI Insights for admins */}
-          {user?.id && (
-            <AIInsights userId={user.id} userRole={user.role || 'admin'} />
-          )}
+
         </div>
       </Layout>
     </ProtectedRoute>

@@ -376,129 +376,126 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Recent Activities and Announcements */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities */}
-        <motion.div variants={itemVariants}>
-          <Card className="stat-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5 text-green-600" />
-                Recent Activities
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {activitiesLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-8 h-8 shimmer rounded-full"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 shimmer rounded w-3/4"></div>
-                        <div className="h-3 shimmer rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : recentActivities?.length ? (
-                <div className="space-y-4">
-                  {recentActivities.slice(0, 5).map((activity, index) => (
-                    <motion.div
-                      key={activity.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="mt-1">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{activity.title}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {activity.description}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          {getStatusBadge(activity.status)}
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(activity.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">
-                  No recent activities
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Announcements */}
-        <motion.div variants={itemVariants}>
-          <Card className="stat-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-orange-600" />
-                Announcements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {announcementsLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="h-4 shimmer rounded w-2/3"></div>
-                      <div className="h-3 shimmer rounded w-full"></div>
+      {/* Recent Activities */}
+      <motion.div variants={itemVariants}>
+        <Card className="stat-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-green-600" />
+              Recent Activities
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {activitiesLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-8 h-8 shimmer rounded-full"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 shimmer rounded w-3/4"></div>
                       <div className="h-3 shimmer rounded w-1/2"></div>
                     </div>
-                  ))}
-                </div>
-              ) : announcements?.length ? (
-                <div className="space-y-4">
-                  {announcements.slice(0, 3).map((announcement, index) => (
-                    <motion.div
-                      key={announcement.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-sm">{announcement.title}</h4>
-                        <Badge 
-                          variant={announcement.priority === 'high' ? 'destructive' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {announcement.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                        {announcement.content}
+                  </div>
+                ))}
+              </div>
+            ) : recentActivities?.length ? (
+              <div className="space-y-4">
+                {recentActivities.slice(0, 5).map((activity, index) => (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="mt-1">
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{activity.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {activity.description}
                       </p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          By {announcement.author.firstName} {announcement.author.lastName}
-                        </span>
-                        <span>
-                          {new Date(announcement.createdAt).toLocaleDateString()}
+                      <div className="flex items-center gap-2 mt-2">
+                        {getStatusBadge(activity.status)}
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(activity.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">
-                  No announcements
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                No recent activities
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Announcements - Full Width */}
+      <motion.div variants={itemVariants}>
+        <Card className="stat-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-orange-600" />
+              Announcements
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {announcementsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-4 shimmer rounded w-2/3"></div>
+                    <div className="h-3 shimmer rounded w-full"></div>
+                    <div className="h-3 shimmer rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : announcements?.length ? (
+              <div className="space-y-4">
+                {announcements.slice(0, 3).map((announcement, index) => (
+                  <motion.div
+                    key={announcement.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-sm">{announcement.title}</h4>
+                      <Badge 
+                        variant={announcement.priority === 'high' ? 'destructive' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {announcement.priority}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                      {announcement.content}
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        By {announcement.author.firstName} {announcement.author.lastName}
+                      </span>
+                      <span>
+                        {new Date(announcement.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                No announcements
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Performance Insights for Employees */}
       {user?.role !== 'admin' && (
