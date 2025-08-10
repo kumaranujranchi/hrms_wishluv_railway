@@ -36,6 +36,19 @@ interface Announcement {
   };
 }
 
+interface RecentActivity {
+  id: string;
+  type: 'leave' | 'expense' | 'attendance' | 'general';
+  title: string;
+  description: string;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  createdAt: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+  };
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
 
@@ -45,6 +58,10 @@ export default function Dashboard() {
 
   const { data: announcements, isLoading: announcementsLoading } = useQuery<Announcement[]>({
     queryKey: ["/api/announcements"],
+  });
+
+  const { data: recentActivities, isLoading: activitiesLoading } = useQuery<RecentActivity[]>({
+    queryKey: ["/api/recent-activities"],
   });
 
   const quickActions = user?.role === 'admin' ? [
@@ -131,9 +148,9 @@ export default function Dashboard() {
                 <p className="text-2xl font-bold text-neutral-900 mt-2">
                   {stats?.attendanceRate || 0}%
                 </p>
-                <p className="text-sm text-success-600 mt-2 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +2.3% from yesterday
+                <p className="text-sm text-neutral-600 mt-2 flex items-center">
+                  <Clock className="h-4 w-4 mr-1" />
+                  {(stats?.attendanceRate ?? 0) > 0 ? 'Today\'s rate' : 'No attendance data'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-success-50 rounded-lg flex items-center justify-center">
@@ -168,10 +185,12 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-neutral-600">Monthly Payroll</p>
-                <p className="text-2xl font-bold text-neutral-900 mt-2">$847K</p>
-                <p className="text-sm text-primary-600 mt-2 flex items-center">
+                <p className="text-2xl font-bold text-neutral-900 mt-2">
+                  ${(stats?.monthlyPayroll ?? 0) > 0 ? ((stats?.monthlyPayroll ?? 0) / 1000).toFixed(0) + 'K' : '0'}
+                </p>
+                <p className="text-sm text-neutral-600 mt-2 flex items-center">
                   <DollarSign className="h-4 w-4 mr-1" />
-                  Processing in 3 days
+                  {(stats?.monthlyPayroll ?? 0) > 0 ? 'Ready for processing' : 'No payroll data'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-primary-50 rounded-lg flex items-center justify-center">
@@ -189,9 +208,9 @@ export default function Dashboard() {
                 <p className="text-2xl font-bold text-neutral-900 mt-2">
                   {stats?.totalEmployees || 0}
                 </p>
-                <p className="text-sm text-success-600 mt-2 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  3 new this month
+                <p className="text-sm text-neutral-600 mt-2 flex items-center">
+                  <Users className="h-4 w-4 mr-1" />
+                  {stats?.totalEmployees ? 'Active staff' : 'No employees yet'}
                 </p>
               </div>
               <div className="w-12 h-12 bg-neutral-100 rounded-lg flex items-center justify-center">
@@ -238,32 +257,72 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {/* Sample activity items - in real app these would come from API */}
-                <div className="flex items-start space-x-3 p-3 hover:bg-neutral-50 rounded-lg transition-colors">
-                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                    <Users className="text-primary-600 h-4 w-4" />
+                {activitiesLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="animate-pulse flex items-center space-x-3 p-3">
+                        <div className="w-8 h-8 bg-neutral-200 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="h-4 bg-neutral-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-neutral-200 rounded w-1/2 mt-2"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-neutral-900">
-                      <span className="font-medium">Sarah Johnson</span> submitted leave request
-                    </p>
-                    <p className="text-xs text-neutral-600 mt-1">2 hours ago</p>
-                  </div>
-                  <Badge className="badge-warning">Pending</Badge>
-                </div>
+                ) : recentActivities && recentActivities.length > 0 ? (
+                  recentActivities.slice(0, 5).map((activity) => {
+                    const getActivityIcon = (type: string) => {
+                      switch (type) {
+                        case 'leave':
+                          return <Calendar className="text-primary-600 h-4 w-4" />;
+                        case 'expense':
+                          return <Receipt className="text-warning-600 h-4 w-4" />;
+                        case 'attendance':
+                          return <Clock className="text-success-600 h-4 w-4" />;
+                        default:
+                          return <Users className="text-neutral-600 h-4 w-4" />;
+                      }
+                    };
 
-                <div className="flex items-start space-x-3 p-3 hover:bg-neutral-50 rounded-lg transition-colors">
-                  <div className="w-8 h-8 bg-success-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="text-success-600 h-4 w-4" />
+                    const getStatusBadge = (status: string) => {
+                      switch (status) {
+                        case 'approved':
+                          return <Badge className="badge-success">Approved</Badge>;
+                        case 'rejected':
+                          return <Badge className="badge-error">Rejected</Badge>;
+                        case 'pending':
+                          return <Badge className="badge-warning">Pending</Badge>;
+                        default:
+                          return <Badge className="badge-info">Completed</Badge>;
+                      }
+                    };
+
+                    return (
+                      <div key={activity.id} className="flex items-start space-x-3 p-3 hover:bg-neutral-50 rounded-lg transition-colors">
+                        <div className="w-8 h-8 bg-neutral-100 rounded-full flex items-center justify-center">
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-neutral-900">
+                            {activity.user && (
+                              <span className="font-medium">{activity.user.firstName} {activity.user.lastName}</span>
+                            )} {activity.description}
+                          </p>
+                          <p className="text-xs text-neutral-600 mt-1">
+                            {new Date(activity.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {getStatusBadge(activity.status)}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-neutral-500">
+                    <Clock className="h-8 w-8 mx-auto mb-2 text-neutral-300" />
+                    <p>No recent activities</p>
+                    <p className="text-sm">Employee activities will appear here</p>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-neutral-900">
-                      <span className="font-medium">Mark Davis</span> expense claim approved
-                    </p>
-                    <p className="text-xs text-neutral-600 mt-1">4 hours ago</p>
-                  </div>
-                  <Badge className="badge-success">Approved</Badge>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -332,44 +391,21 @@ export default function Dashboard() {
           {/* Team Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Team Status</CardTitle>
+              <CardTitle>Team Overview</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {/* Sample team members - in real app these would come from API */}
-                <div className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" />
-                      <AvatarFallback>LW</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900">Lisa Wilson</p>
-                      <p className="text-xs text-neutral-600">Designer</p>
-                    </div>
-                  </div>
-                  <span className="w-3 h-3 bg-success-500 rounded-full"></span>
-                </div>
-                
-                <div className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" />
-                      <AvatarFallback>MR</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900">Mike Rodriguez</p>
-                      <p className="text-xs text-neutral-600">Developer</p>
-                    </div>
-                  </div>
-                  <span className="w-3 h-3 bg-warning-500 rounded-full"></span>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-neutral-200">
-                <div className="flex justify-between text-sm">
-                  <span className="text-neutral-600">Team Attendance</span>
-                  <span className="font-medium text-neutral-900">92%</span>
+              <div className="space-y-4">
+                <div className="text-center py-8 text-neutral-500">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-neutral-300" />
+                  <p className="font-medium">No team members yet</p>
+                  <p className="text-sm">Add employees to see their status here</p>
+                  {user?.role === 'admin' && (
+                    <Link href="/admin/create-employee">
+                      <Button className="mt-4" size="sm">
+                        Add Employee
+                      </Button>
+                    </Link>
+                  )}
                 </div>
               </div>
             </CardContent>

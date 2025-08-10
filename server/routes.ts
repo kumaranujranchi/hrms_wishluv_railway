@@ -461,30 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notification routes
   app.get('/api/notifications', isAuthenticated, async (req: any, res) => {
     try {
-      // Mock notifications for demonstration
-      const notifications = [
-        {
-          id: '1',
-          title: 'Leave Request Approval',
-          message: 'John Smith has requested 3 days of vacation leave',
-          type: 'info',
-          read: false,
-          actionType: 'leave_approval',
-          actionId: 'leave-123',
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          title: 'Expense Claim Review',
-          message: 'Travel expense of $450 requires your approval',
-          type: 'warning',
-          read: false,
-          actionType: 'expense_approval',
-          actionId: 'expense-456',
-          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        }
-      ];
-      res.json(notifications);
+      // Return empty array - real notifications would be generated based on actual data
+      res.json([]);
     } catch (error) {
       console.error("Error fetching notifications:", error);
       res.status(500).json({ message: "Failed to fetch notifications" });
@@ -504,37 +482,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Insights route
   app.get('/api/ai/insights/:userId', isAuthenticated, async (req: any, res) => {
     try {
-      // Mock AI insights for demonstration
-      const insights = [
-        {
-          id: '1',
-          type: 'attendance',
-          title: 'Attendance Pattern Analysis',
-          description: 'Team productivity peaks on Tuesdays and Wednesdays',
-          recommendation: 'Schedule important meetings on high-productivity days',
-          confidence: 89,
-          impact: 'medium',
-          data: { peak_days: ['Tuesday', 'Wednesday'], productivity_increase: '23%' }
-        }
-      ];
-      res.json(insights);
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (user?.role !== 'admin' && user?.role !== 'manager') {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Return empty array - real AI insights would be generated based on actual data
+      res.json([]);
     } catch (error) {
       console.error("Error fetching AI insights:", error);
       res.status(500).json({ message: "Failed to fetch AI insights" });
     }
   });
 
+  // Recent activities endpoint
+  app.get('/api/recent-activities', isAuthenticated, async (req: any, res) => {
+    try {
+      // For now return empty array - this would show recent leave requests, expense claims, etc.
+      // In a real implementation, this would aggregate recent activities from multiple tables
+      res.json([]);
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
+      res.status(500).json({ message: 'Failed to fetch recent activities' });
+    }
+  });
+
   // Attendance statistics route
   app.get('/api/attendance/stats', isAuthenticated, async (req: any, res) => {
     try {
-      // Calculate attendance statistics
+      const userId = req.user.id;
+      
+      // Calculate real attendance statistics based on user data
+      const attendanceRecords = await storage.getAttendanceByUser(userId);
+      
       const stats = {
-        totalDays: 30,
-        presentDays: 28,
-        lateDays: 2,
-        absentDays: 2,
-        averageHours: 8.2,
-        attendanceRate: 93.3
+        totalDays: attendanceRecords.length || 0,
+        presentDays: attendanceRecords.filter(a => a.status === 'present').length || 0,
+        lateDays: attendanceRecords.filter(a => a.status === 'late').length || 0,
+        absentDays: attendanceRecords.filter(a => a.status === 'absent').length || 0,
+        averageHours: 0, // This would need calculation based on check-in/out times
+        attendanceRate: attendanceRecords.length > 0 ? 
+          Math.round((attendanceRecords.filter(a => a.status === 'present' || a.status === 'late').length / attendanceRecords.length) * 100) : 0
       };
       
       res.json(stats);

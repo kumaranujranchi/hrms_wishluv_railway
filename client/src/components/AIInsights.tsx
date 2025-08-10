@@ -53,43 +53,8 @@ export default function AIInsights({ userId, userRole }: AIInsightsProps) {
     }
   };
 
-  const generateMockInsights = (): AIInsight[] => {
-    return [
-      {
-        id: '1',
-        type: 'attendance',
-        title: 'Irregular Attendance Pattern Detected',
-        description: 'Engineering team shows 15% increase in late arrivals over the past month',
-        recommendation: 'Consider flexible working hours or investigate potential commute issues',
-        confidence: 87,
-        impact: 'medium',
-        data: { affected_employees: 12, average_delay: '23 minutes' }
-      },
-      {
-        id: '2',
-        type: 'leave',
-        title: 'Leave Balance Optimization',
-        description: '68% of employees have unused vacation days nearing expiry',
-        recommendation: 'Send reminders and encourage vacation planning to improve work-life balance',
-        confidence: 92,
-        impact: 'high',
-        data: { employees_affected: 34, average_unused_days: 8.5 }
-      },
-      {
-        id: '3',
-        type: 'expense',
-        title: 'Expense Claim Anomaly',
-        description: 'Travel expenses have increased by 45% compared to last quarter',
-        recommendation: 'Review travel policy and consider cost optimization measures',
-        confidence: 78,
-        impact: 'medium',
-        data: { cost_increase: '$12,450', claims_affected: 18 }
-      }
-    ];
-  };
-
-  // Use mock data when insights are empty (for demonstration)
-  const displayInsights = insights.length > 0 ? insights : generateMockInsights();
+  // Only show insights if they exist from the API
+  const displayInsights = insights;
 
   if (userRole !== 'admin' && userRole !== 'manager') {
     return null;
