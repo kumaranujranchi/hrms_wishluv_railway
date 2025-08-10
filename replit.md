@@ -2,7 +2,7 @@
 
 ## Overview
 
-Wishluv Buildcon is a comprehensive Human Resource Management System built as a full-stack web application. The application provides core HR functionalities including attendance tracking with geo-fencing, comprehensive leave management with admin approval workflows and leave allocation tracking, expense claim processing, employee directory management, advanced payroll processing with detailed salary breakdowns, and comprehensive reporting capabilities. The system supports role-based access control with admin and employee roles, each having appropriate permissions and dashboard views.
+Wishluv Buildcon is a comprehensive Human Resource Management System built as a full-stack web application with mobile app-style interface. The application provides core HR functionalities including attendance tracking with geo-fencing and location names, comprehensive leave management with admin approval workflows and leave allocation tracking, expense claim processing, employee directory management, advanced payroll processing with detailed salary breakdowns, and comprehensive reporting capabilities. The system supports role-based access control with admin and employee roles, each having appropriate permissions and dashboard views. Features mobile app-style navigation with bottom navigation for main functions and hamburger menu for secondary features.
 
 ## User Preferences
 
@@ -16,6 +16,7 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query (React Query) for server state management and caching
 - **UI Components**: Radix UI primitives with shadcn/ui component library for consistent, accessible design
 - **Styling**: Tailwind CSS with CSS variables for theming and responsive design
+- **Mobile Interface**: Mobile app-style navigation with bottom nav bar and hamburger menu
 - **Build Tool**: Vite for fast development and optimized production builds
 
 ### Backend Architecture
