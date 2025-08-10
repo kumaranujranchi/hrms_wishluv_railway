@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 export default function MobileHamburgerMenu() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const getMenuItems = () => {
@@ -98,12 +98,12 @@ export default function MobileHamburgerMenu() {
               className="w-full flex items-center justify-center space-x-2"
               onClick={async () => {
                 try {
-                  await fetch('/api/auth/logout', { method: 'POST' });
-                  window.location.reload();
+                  await logout();
+                  setIsOpen(false);
                 } catch (error) {
                   console.error('Logout failed:', error);
+                  setIsOpen(false);
                 }
-                setIsOpen(false);
               }}
             >
               <LogOut size={16} />

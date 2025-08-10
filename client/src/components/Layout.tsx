@@ -116,9 +116,9 @@ export default function Layout({ children }: LayoutProps) {
               className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 transition-colors"
             >
               <Avatar className="h-8 w-8">
-                <AvatarImage src={user?.profileImageUrl} />
+                <AvatarImage src={user?.profileImageUrl || ""} />
                 <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white text-sm font-semibold">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {user?.firstName?.[0] || ""}{user?.lastName?.[0] || ""}
                 </AvatarFallback>
               </Avatar>
               <ChevronDown className={`h-4 w-4 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
@@ -164,16 +164,10 @@ export default function Layout({ children }: LayoutProps) {
         </main>
 
         {/* Mobile Bottom Navigation */}
-        <MobileBottomNav navigationItems={navigationItems} />
+        <MobileBottomNav />
 
         {/* Mobile Hamburger Menu */}
-        <MobileHamburgerMenu
-          isOpen={isMobileMenuOpen}
-          onClose={() => setIsMobileMenuOpen(false)}
-          navigationItems={navigationItems}
-          user={user}
-          onLogout={handleLogout}
-        />
+        <MobileHamburgerMenu />
       </div>
     );
   }
@@ -253,9 +247,9 @@ export default function Layout({ children }: LayoutProps) {
         >
           <div className="flex items-center gap-3">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user?.profileImageUrl} />
+              <AvatarImage src={user?.profileImageUrl || ""} />
               <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {user?.firstName?.[0] || ""}{user?.lastName?.[0] || ""}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
@@ -325,9 +319,9 @@ export default function Layout({ children }: LayoutProps) {
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.profileImageUrl} />
+                  <AvatarImage src={user?.profileImageUrl || ""} />
                   <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white text-sm font-semibold">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    {user?.firstName?.[0] || ""}{user?.lastName?.[0] || ""}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block">
@@ -365,9 +359,9 @@ export default function Layout({ children }: LayoutProps) {
             <div className="p-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={user?.profileImageUrl} />
+                  <AvatarImage src={user?.profileImageUrl || ""} />
                   <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
-                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                    {user?.firstName?.[0] || ""}{user?.lastName?.[0] || ""}
                   </AvatarFallback>
                 </Avatar>
                 <div>
