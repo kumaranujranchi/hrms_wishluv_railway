@@ -42,6 +42,7 @@ export interface IStorage {
   // User operations 
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  changeUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean>;
   createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string; }): Promise<User>;
   createEmployeeByAdmin(userData: { email: string; passwordHash: string; firstName: string; lastName: string; department?: string; position?: string; needsPasswordReset?: boolean; }): Promise<User>;
   updateUser(id: string, updates: Partial<User>): Promise<User>;
@@ -132,6 +133,40 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
+  }
+
+  async changeUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    try {
+      // Get user with current password hash
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) {
+        return false;
+      }
+
+      // Verify current password
+      const bcrypt = await import('bcryptjs');
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isCurrentPasswordValid) {
+        return false;
+      }
+
+      // Hash new password
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+      // Update password in database
+      await db
+        .update(users)
+        .set({
+          passwordHash: newPasswordHash,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+
+      return true;
+    } catch (error) {
+      console.error("Error changing password:", error);
+      return false;
+    }
   }
 
   async createUser(userData: { email: string; passwordHash: string; firstName: string; lastName: string; }): Promise<User> {

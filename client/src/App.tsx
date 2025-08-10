@@ -24,6 +24,7 @@ import AdminLeaveManagement from "@/pages/admin-leave-management";
 import Payroll from "@/pages/payroll";
 import Reports from "@/pages/reports";
 import Onboarding from "@/pages/onboarding";
+import Settings from "@/pages/settings";
 
 function Router() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -117,6 +118,7 @@ function Router() {
       <Route path="/expenses" component={Expenses} />
       <Route path="/employee-directory" component={EmployeeDirectory} />
       <Route path="/reports" component={Reports} />
+      <Route path="/settings" component={Settings} />
 
       {/* 404 */}
       <Route component={NotFound} />
