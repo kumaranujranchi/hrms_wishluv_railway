@@ -44,11 +44,11 @@ export default function Login() {
         variant: "default",
       });
       
-      // Redirect based on user role
+      // Force a full page reload to ensure proper authentication state
       if (user.role === 'admin') {
-        setLocation('/admin');
+        window.location.href = '/admin';
       } else {
-        setLocation('/employee');
+        window.location.href = '/employee';
       }
     },
     onError: (error) => {
