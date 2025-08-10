@@ -216,30 +216,7 @@ export default function Login() {
               ))}
             </motion.div>
 
-            {/* Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="grid grid-cols-3 gap-6 pt-6"
-            >
-              {[
-                { label: "Active Users", value: "500+" },
-                { label: "Companies", value: "50+" },
-                { label: "Uptime", value: "99.9%" }
-              ].map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 1 + index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="text-2xl font-bold gradient-text-primary mb-1">{stat.value}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
-                </motion.div>
-              ))}
-            </motion.div>
+
           </div>
         </motion.div>
 
