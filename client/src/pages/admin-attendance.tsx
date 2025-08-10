@@ -31,6 +31,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, isToday, startOfDay, endOfDay } from "date-fns";
+import { getLocationName } from "@/utils/geocoding";
 
 interface AttendanceRecord {
   id: string;
@@ -146,6 +147,66 @@ export default function AdminAttendancePage() {
     const h = Math.floor(hours);
     const m = Math.round((hours - h) * 60);
     return `${h}h ${m}m`;
+  };
+
+  // Location Display Component
+  const LocationDisplay = ({ record }: { record: AttendanceRecord }) => {
+    const [locationName, setLocationName] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+      const fetchLocationName = async () => {
+        // If locationName is already available, use it
+        if (record.locationName) {
+          setLocationName(record.locationName);
+          return;
+        }
+        
+        // If we have coordinates, reverse geocode them
+        if (record.latitude && record.longitude) {
+          setIsLoading(true);
+          try {
+            const lat = parseFloat(record.latitude);
+            const lng = parseFloat(record.longitude);
+            const name = await getLocationName(lat, lng);
+            setLocationName(name);
+          } catch (error) {
+            console.error('Failed to get location name:', error);
+            setLocationName(`${record.latitude}, ${record.longitude}`);
+          } finally {
+            setIsLoading(false);
+          }
+          return;
+        }
+        
+        // If we have location string, use it
+        if (record.location) {
+          setLocationName(record.location);
+          return;
+        }
+        
+        // Fallback
+        setLocationName("No location data");
+      };
+
+      fetchLocationName();
+    }, [record]);
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center text-sm text-gray-500">
+          <MapPin className="h-3 w-3 mr-1" />
+          <span>Loading location...</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center text-sm">
+        <MapPin className="h-3 w-3 mr-1 text-primary-500" />
+        <span className="font-medium">{locationName}</span>
+      </div>
+    );
   };
 
   if (!user || user.role !== 'admin') {
@@ -295,21 +356,7 @@ export default function AdminAttendancePage() {
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
-                              <div className="space-y-1">
-                                {record.locationName ? (
-                                  <div className="flex items-center text-sm">
-                                    <MapPin className="h-3 w-3 mr-1 text-primary-500" />
-                                    <span className="font-medium">{record.locationName}</span>
-                                  </div>
-                                ) : record.location ? (
-                                  <div className="flex items-center text-sm text-gray-500">
-                                    <MapPin className="h-3 w-3 mr-1" />
-                                    <span>Office Location</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-gray-400">No location data</span>
-                                )}
-                              </div>
+                              <LocationDisplay record={record} />
                             </TableCell>
                             <TableCell>
                               {record.latitude && record.longitude ? (
@@ -410,21 +457,7 @@ export default function AdminAttendancePage() {
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
-                              <div className="space-y-1">
-                                {record.locationName ? (
-                                  <div className="flex items-center text-sm">
-                                    <MapPin className="h-3 w-3 mr-1 text-primary-500" />
-                                    <span className="font-medium">{record.locationName}</span>
-                                  </div>
-                                ) : record.location ? (
-                                  <div className="flex items-center text-sm text-gray-500">
-                                    <MapPin className="h-3 w-3 mr-1" />
-                                    <span>Office Location</span>
-                                  </div>
-                                ) : (
-                                  <span className="text-xs text-gray-400">No location data</span>
-                                )}
-                              </div>
+                              <LocationDisplay record={record} />
                             </TableCell>
                             <TableCell>
                               {record.latitude && record.longitude ? (
