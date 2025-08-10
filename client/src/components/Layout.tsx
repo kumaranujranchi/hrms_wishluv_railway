@@ -1,346 +1,392 @@
-import { ReactNode, useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
-import NotificationSystem from "./NotificationSystem";
-import MobileBottomNav from "./MobileBottomNav";
-import MobileHamburgerMenu from "./MobileHamburgerMenu";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Search, 
-  Bell, 
-  User, 
-  LayoutDashboard, 
+  Menu, 
+  X, 
+  Home, 
+  Users, 
   Clock, 
   Calendar, 
   Receipt, 
   DollarSign, 
-  Users, 
-  UserPlus, 
-  BarChart3, 
-  Settings,
-  Plus,
+  Settings, 
   LogOut,
-  Building,
-  Briefcase
+  Bell,
+  Search,
+  ChevronDown,
+  User,
+  BarChart3,
+  FileText,
+  Building2
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileBottomNav from "./MobileBottomNav";
+import MobileHamburgerMenu from "./MobileHamburgerMenu";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const isMobile = useIsMobile();
   const [location] = useLocation();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
-  const navigation = [
-    { 
-      name: "Dashboard", 
-      href: user?.role === 'admin' ? "/admin" : "/employee", 
-      icon: LayoutDashboard, 
-      current: (user?.role === 'admin' && location === "/admin") || (user?.role !== 'admin' && location === "/employee")
-    },
-    ...(user?.role === 'admin' ? [
-      {
-        name: "Attendance Management", 
-        href: "/admin/attendance", 
-        icon: Clock, 
-        current: location === "/admin/attendance" 
-      },
-      {
-        name: "Leave Management", 
-        href: "/admin/leave-management", 
-        icon: Calendar, 
-        current: location === "/admin/leave-management" 
-      },
-      {
-        name: "Payroll Management", 
-        href: "/admin/payroll", 
-        icon: DollarSign,
-        current: location === "/admin/payroll" 
-      },
-      { 
-        name: "Departments", 
-        href: "/admin/departments", 
-        icon: Building,
-        current: location === "/admin/departments"
-      },
-      { 
-        name: "Designations", 
-        href: "/admin/designations", 
-        icon: Briefcase,
-        current: location === "/admin/designations"
-      },
-      {
-        name: "Create Employee",
-        href: "/admin/create-employee",
-        icon: UserPlus,
-        current: location === "/admin/create-employee"
-      }
-    ] : [
-      {
-        name: "Attendance", 
-        href: "/attendance", 
-        icon: Clock, 
-        badge: "3",
-        current: location === "/attendance" 
-      },
-      {
-        name: "Leave Management", 
-        href: "/leave-management", 
-        icon: Calendar, 
-        badge: "7",
-        current: location === "/leave-management" 
-      },
-      {
-        name: "Payroll", 
-        href: "/payroll", 
-        icon: DollarSign,
-        current: location === "/payroll" 
-      }
-    ]),
-    { 
-      name: "Expenses", 
-      href: "/expenses", 
-      icon: Receipt, 
-      badge: "2",
-      current: location === "/expenses" 
-    },
-    { 
-      name: "Employee Directory", 
-      href: "/employee-directory", 
-      icon: Users,
-      current: location === "/employee-directory" 
+  // Close mobile menu when location changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
+  const navigationItems = user?.role === 'admin' ? [
+    { name: 'Dashboard', href: '/admin', icon: Home },
+    { name: 'Employees', href: '/admin/create-employee', icon: Users },
+    { name: 'Departments', href: '/admin/departments', icon: Building2 },
+    { name: 'Designations', href: '/admin/designations', icon: User },
+    { name: 'Attendance', href: '/admin/attendance', icon: Clock },
+    { name: 'Leave Management', href: '/admin/leave-management', icon: Calendar },
+    { name: 'Payroll', href: '/admin/payroll', icon: DollarSign },
+    { name: 'Reports', href: '/reports', icon: BarChart3 },
+    { name: 'Settings', href: '/settings', icon: Settings },
+  ] : [
+    { name: 'Dashboard', href: '/employee', icon: Home },
+    { name: 'Attendance', href: '/attendance', icon: Clock },
+    { name: 'Leave Management', href: '/leave-management', icon: Calendar },
+    { name: 'Expenses', href: '/expenses', icon: Receipt },
+    { name: 'Payroll', href: '/payroll', icon: DollarSign },
+    { name: 'Employee Directory', href: '/employee-directory', icon: Users },
+    { name: 'Reports', href: '/reports', icon: BarChart3 },
+    { name: 'Settings', href: '/settings', icon: Settings },
+  ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
-  ];
+  };
 
-  const managementNavigation = [
-    { 
-      name: "Reports", 
-      href: "/reports", 
-      icon: BarChart3,
-      current: location === "/reports" 
-    },
-    { 
-      name: "Settings", 
-      href: "/settings", 
-      icon: Settings,
-      current: location === "/settings" 
-    },
-  ];
-
-  return (
-    <div className="flex min-h-screen bg-neutral-50">
-      {/* Desktop Sidebar - Hidden on mobile */}
-      <aside className="hidden md:flex w-64 bg-white shadow-lg border-r border-neutral-200 flex-col">
-        {/* Logo and Company */}
-        <div className="p-6 border-b border-neutral-200">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-              <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6" />
-            </div>
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+        {/* Mobile Header */}
+        <motion.header 
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          className="mobile-header"
+        >
+          <div className="flex items-center gap-3">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-lg hover:bg-black/5 transition-colors"
+            >
+              <Menu className="h-5 w-5" />
+            </motion.button>
             <div>
-              <h1 className="text-lg font-semibold text-neutral-900">Wishluv Buildcon Pvt ltd</h1>
-              <p className="text-sm text-neutral-600">HR Management</p>
-            </div>
-          </div>
-        </div>
-
-        {/* User Profile */}
-        <div className="p-4 border-b border-neutral-200">
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.profileImageUrl || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} alt="Profile" />
-              <AvatarFallback>
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900 truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-neutral-600 truncate capitalize">
-                {user?.role || "Employee"}
-              </p>
-            </div>
-            <span className="w-3 h-3 bg-success-500 rounded-full"></span>
-          </div>
-        </div>
-
-        {/* Navigation Menu */}
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {navigation.map((item) => {
-            const Icon = item.icon;
-            // All navigation items are now role-specific
-            return (
-              <Link 
-                key={item.name} 
-                href={item.href}
-                className={`sidebar-item ${item.current ? 'active' : ''}`}
-              >
-                <Icon className="text-xl mr-3" />
-                <span className="font-medium">{item.name}</span>
-                {item.badge && (
-                  <Badge className="ml-auto bg-warning-500 text-white">
-                    {item.badge}
-                  </Badge>
-                )}
-              </Link>
-            );
-          })}
-          
-          <div className="space-y-1 pt-4">
-            <p className="text-xs font-medium text-neutral-400 uppercase tracking-wide px-3 py-2">
-              Management
-            </p>
-            {managementNavigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link 
-                  key={item.name} 
-                  href={item.href}
-                  className={`sidebar-item ${item.current ? 'active' : ''}`}
-                >
-                  <Icon className="text-xl mr-3" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-        </nav>
-
-        {/* User Info & Logout */}
-        <div className="p-4 border-t border-neutral-200 space-y-3">
-          <div className="flex items-center space-x-3 text-sm">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary-100 text-primary-600 text-xs font-semibold">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-neutral-900 truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-neutral-500 capitalize">{user?.role}</p>
-            </div>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="w-full text-red-600 border-red-200 hover:bg-red-50"
-            onClick={async () => {
-              try {
-                await fetch('/api/auth/logout', { method: 'POST' });
-                window.location.reload();
-              } catch (error) {
-                console.error('Logout failed:', error);
-              }
-            }}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </aside>
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto pb-16 md:pb-0">
-        {/* Mobile Header with Hamburger Menu */}
-        <header className="bg-white shadow-sm border-b border-neutral-200 px-4 md:px-6 py-3 md:py-4">
-          <div className="flex items-center justify-between">
-            {/* Mobile: Hamburger + Logo */}
-            <div className="flex items-center space-x-3 md:hidden">
-              <MobileHamburgerMenu />
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                  <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Logo" className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-neutral-900">Wishluv</h1>
-                </div>
-              </div>
-            </div>
-            
-            {/* Desktop: Page title */}
-            <div className="hidden md:block">
-              <h1 className="text-2xl font-semibold text-neutral-900">
-                {navigation.find(item => item.current)?.name || 
-                 managementNavigation.find(item => item.current)?.name || 
-                 "Dashboard"}
+              <h1 className="font-semibold text-lg gradient-text-primary">
+                HRMS
               </h1>
-              <p className="text-sm text-neutral-600 mt-1">
-                Welcome back, {user?.firstName}! Here's what's happening today.
+              <p className="text-xs text-muted-foreground">
+                {user?.role === 'admin' ? 'Admin Panel' : 'Employee Portal'}
               </p>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="relative p-2 rounded-lg hover:bg-black/5 transition-colors"
+            >
+              <Bell className="h-5 w-5" />
+              <span className="mobile-notification-badge">3</span>
+            </motion.button>
             
-            {/* Mobile: User avatar and notifications */}
-            <div className="flex items-center space-x-2 md:hidden">
-              <Bell className="h-5 w-5 text-gray-600" />
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={user?.profileImageUrl || undefined} alt="Profile" />
-                <AvatarFallback className="text-xs">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              className="flex items-center gap-2 p-2 rounded-lg hover:bg-black/5 transition-colors"
+            >
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.profileImageUrl} />
+                <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white text-sm font-semibold">
                   {user?.firstName?.[0]}{user?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
+              <ChevronDown className={`h-4 w-4 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+            </motion.button>
+          </div>
+        </motion.header>
+
+        {/* Mobile Profile Dropdown */}
+        <AnimatePresence>
+          {isProfileDropdownOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-16 right-4 z-50 w-48 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
+            >
+              <div className="p-4 border-b border-gray-100">
+                <p className="font-semibold text-sm">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              </div>
+              <div className="p-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Content */}
+        <main className="mobile-content-padding p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            {children}
+          </motion.div>
+        </main>
+
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav navigationItems={navigationItems} />
+
+        {/* Mobile Hamburger Menu */}
+        <MobileHamburgerMenu
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          navigationItems={navigationItems}
+          user={user}
+          onLogout={handleLogout}
+        />
+      </div>
+    );
+  }
+
+  // Desktop Layout
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex">
+      {/* Sidebar */}
+      <motion.aside
+        initial={{ x: -300 }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-64 bg-white/80 backdrop-blur-xl border-r border-gray-200/50 shadow-xl"
+      >
+        <div className="p-6">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-3 mb-8"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
-            
-            {/* Desktop: Search and user menu */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div>
+              <h1 className="font-bold text-xl gradient-text-primary">HRMS</h1>
+              <p className="text-xs text-muted-foreground">
+                {user?.role === 'admin' ? 'Admin Panel' : 'Employee Portal'}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Navigation */}
+          <nav className="space-y-2">
+            {navigationItems.map((item, index) => {
+              const Icon = item.icon;
+              const isActive = location === item.href;
+              
+              return (
+                <motion.div
+                  key={item.name}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  <a
+                    href={item.href}
+                    className={`sidebar-item group relative overflow-hidden ${
+                      isActive ? 'active' : ''
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 mr-3" />
+                    <span className="font-medium">{item.name}</span>
+                    
+                    {/* Active indicator */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="activeIndicator"
+                        className="absolute right-2 w-2 h-2 bg-green-500 rounded-full"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                      />
+                    )}
+                  </a>
+                </motion.div>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* User Profile Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200/50 bg-white/50 backdrop-blur-sm"
+        >
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user?.profileImageUrl} />
+              <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
+                {user?.firstName?.[0]}{user?.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">
+                {user?.email}
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+            </motion.button>
+          </div>
+        </motion.div>
+      </motion.aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Header */}
+        <motion.header
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 px-6 py-4"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-semibold gradient-text-primary">
+                {navigationItems.find(item => item.href === location)?.name || 'Dashboard'}
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-4">
               {/* Search */}
-              <div className="relative">
-                <Input
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="relative"
+              >
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
                   type="text"
                   placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64"
+                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                 />
-                <Search className="absolute left-3 top-2.5 text-neutral-400 h-4 w-4" />
-              </div>
-              
-              {/* Notifications - Temporarily disabled to fix department/designation creation */}
-              {/* {user?.id && <NotificationSystem userId={user.id} />} */}
-              
-              {/* Profile Menu with Logout */}
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-2 text-sm text-neutral-600">
-                  <User className="h-4 w-4" />
-                  <span>{user?.firstName} {user?.lastName}</span>
-                  <span className="text-xs bg-primary-100 text-primary-800 px-2 py-1 rounded-full">
-                    {user?.role === 'admin' ? 'Admin' : 'Employee'}
-                  </span>
+              </motion.div>
+
+              {/* Notifications */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="notification-badge">3</span>
+              </motion.button>
+
+              {/* User Menu */}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user?.profileImageUrl} />
+                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white text-sm font-semibold">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      await fetch('/api/auth/logout', { method: 'POST' });
-                      window.location.reload();
-                    } catch (error) {
-                      console.error('Logout failed:', error);
-                    }
-                  }}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Logout
-                </Button>
-              </div>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+              </motion.div>
             </div>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Page Content */}
-        <div className="p-4 md:p-6">
-          {children}
-        </div>
-      </main>
-      
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+        {/* Main Content Area */}
+        <main className="flex-1 p-6 overflow-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="max-w-7xl mx-auto"
+          >
+            {children}
+          </motion.div>
+        </main>
+      </div>
+
+      {/* Desktop Profile Dropdown */}
+      <AnimatePresence>
+        {isProfileDropdownOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="absolute top-20 right-6 z-50 w-64 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
+          >
+            <div className="p-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={user?.profileImageUrl} />
+                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-blue-600 text-white font-semibold">
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-2">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
