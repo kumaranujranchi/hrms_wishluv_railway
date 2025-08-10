@@ -363,8 +363,8 @@ export default function Dashboard() {
               className="group"
             >
               <Link href={action.href}>
-                <Card className={`${action.color} text-white cursor-pointer transition-all duration-300 hover:shadow-xl`}>
-                  <CardContent className="p-6 text-center">
+                <Card className={`${action.color} text-white cursor-pointer transition-all duration-300 hover:shadow-xl h-full`}>
+                  <CardContent className="p-6 text-center flex flex-col h-full">
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       className="mb-4 flex justify-center"
@@ -373,12 +373,12 @@ export default function Dashboard() {
                         <action.icon className="h-8 w-8" />
                       </div>
                     </motion.div>
-                    <h3 className="font-semibold mb-2">{action.title}</h3>
-                    <p className="text-sm opacity-90">{action.description}</p>
+                    <h3 className="font-semibold mb-2 flex-shrink-0">{action.title}</h3>
+                    <p className="text-sm opacity-90 flex-grow">{action.description}</p>
                     <motion.div
                       initial={{ x: 0 }}
                       whileHover={{ x: 5 }}
-                      className="mt-3 flex justify-center"
+                      className="mt-3 flex justify-center flex-shrink-0"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </motion.div>

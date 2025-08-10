@@ -145,19 +145,19 @@ export default function Login() {
               transition={{ delay: 0.2 }}
               className="text-center lg:text-left"
             >
-              <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center"
-                >
-                  <Building2 className="h-6 w-6 text-white" />
-                </motion.div>
-                <div>
-                  <h1 className="text-3xl font-bold gradient-text-primary">HRMS</h1>
-                  <p className="text-sm text-muted-foreground">Human Resource Management System</p>
+                              <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center"
+                  >
+                    <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6" />
+                  </motion.div>
+                  <div>
+                    <h1 className="text-3xl font-bold gradient-text-primary">Wishluv Buildcon</h1>
+                    <p className="text-sm text-muted-foreground">Human Resource Management System</p>
+                  </div>
                 </div>
-              </div>
               
               <h2 className="text-4xl font-bold text-gray-900 mb-4">
                 Welcome to the Future of
@@ -255,14 +255,14 @@ export default function Login() {
         >
           <Card className="w-full max-w-md bg-white/80 backdrop-blur-xl border-white/20 shadow-2xl">
             <CardHeader className="text-center pb-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"
-              >
-                <Building2 className="h-8 w-8 text-white" />
-              </motion.div>
+                              <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+                  className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-8 w-8" />
+                </motion.div>
               <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                 Welcome Back
               </CardTitle>
