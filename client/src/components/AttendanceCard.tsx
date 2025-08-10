@@ -48,12 +48,19 @@ export default function AttendanceCard() {
     retry: false,
   });
 
+  // Debug logging
+  console.log('Attendance Status:', attendanceStatus);
+  console.log('Is Checked In:', attendanceStatus?.isCheckedIn);
+  console.log('Check In Time:', attendanceStatus?.checkInTime);
+  console.log('Check Out Time:', attendanceStatus?.checkOutTime);
+
   // Check-in mutation
   const checkInMutation = useMutation({
     mutationFn: async (data: { latitude: number; longitude: number; locationName: string }) => {
       return apiRequest("POST", "/api/attendance/check-in", data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Check-in successful:', data);
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/my"] });
       toast({
