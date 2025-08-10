@@ -56,6 +56,7 @@ export interface IStorage {
   
   // Attendance operations
   markAttendance(attendance: InsertAttendance): Promise<Attendance>;
+  updateAttendance(id: string, updates: Partial<Attendance>): Promise<Attendance>;
   getAttendanceByUser(userId: string, startDate?: Date, endDate?: Date): Promise<Attendance[]>;
   getTodayAttendance(userId: string): Promise<Attendance | undefined>;
   getAttendanceStats(startDate?: Date, endDate?: Date): Promise<any>;
@@ -276,6 +277,15 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db
       .insert(attendance)
       .values(attendanceData)
+      .returning();
+    return result;
+  }
+
+  async updateAttendance(id: string, updates: Partial<Attendance>): Promise<Attendance> {
+    const [result] = await db
+      .update(attendance)
+      .set(updates)
+      .where(eq(attendance.id, id))
       .returning();
     return result;
   }
@@ -851,6 +861,9 @@ export class DatabaseStorage implements IStorage {
         checkOut: attendance.checkOut,
         status: attendance.status,
         location: attendance.location,
+        locationName: attendance.locationName,
+        latitude: attendance.latitude,
+        longitude: attendance.longitude,
         workingHours: sql<number>`
           case 
             when ${attendance.checkOut} is not null 
@@ -886,6 +899,9 @@ export class DatabaseStorage implements IStorage {
         checkOut: attendance.checkOut,
         status: attendance.status,
         location: attendance.location,
+        locationName: attendance.locationName,
+        latitude: attendance.latitude,
+        longitude: attendance.longitude,
         workingHours: sql<number>`
           case 
             when ${attendance.checkOut} is not null 

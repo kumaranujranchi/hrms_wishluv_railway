@@ -100,9 +100,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/logout', (req, res) => {
     req.session.destroy((err) => {
       if (err) {
+        console.error('Session destruction error:', err);
         return res.status(500).json({ message: "Could not log out" });
       }
       res.clearCookie('connect.sid');
+      res.clearCookie('sessionId');
       res.json({ message: "Logged out successfully" });
     });
   });
@@ -252,6 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/attendance/check-out', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
+      const { location, latitude, longitude, locationName } = req.body;
 
       const todayAttendance = await storage.getTodayAttendance(userId);
       if (!todayAttendance) {
@@ -262,9 +265,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Already checked out today" });
       }
 
-      // Update attendance record with check-out time
-      // Note: This is a simplified implementation - in a real app you'd update the existing record
-      res.json({ message: "Checked out successfully", checkOut: new Date() });
+      // Update attendance record with check-out time and location
+      const attendance = await storage.updateAttendance(todayAttendance.id, {
+        checkOut: new Date(),
+        status: 'present',
+        location: location || `${latitude}, ${longitude}`,
+        locationName: locationName,
+        latitude: latitude ? latitude.toString() : null,
+        longitude: longitude ? longitude.toString() : null,
+      });
+
+      res.json(attendance);
     } catch (error) {
       console.error("Error checking out:", error);
       res.status(500).json({ message: "Failed to check out" });
@@ -297,6 +308,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching today's attendance:", error);
       res.status(500).json({ message: "Failed to fetch today's attendance" });
+    }
+  });
+
+  // Geocoding endpoint to get location name from coordinates
+  app.get('/api/geocode/reverse', async (req, res) => {
+    try {
+      const { lat, lon } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: "Latitude and longitude are required" });
+      }
+
+      const latitude = parseFloat(lat as string);
+      const longitude = parseFloat(lon as string);
+
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({ message: "Invalid coordinates" });
+      }
+
+      console.log('Geocoding request for coordinates:', { latitude, longitude });
+
+      // Use OpenStreetMap Nominatim API for reverse geocoding
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&extratags=1&namedetails=1`,
+        {
+          headers: {
+            'User-Agent': 'HRMS-App/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        console.error('Nominatim API error:', response.status, response.statusText);
+        throw new Error(`Geocoding request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Extract meaningful location information
+      const address = data.address || {};
+      const displayName = data.display_name || '';
+      
+      // Build a friendly location name
+      const locationParts = [];
+      
+      // Add building/amenity name if available
+      if (data.name && data.name !== data.display_name) {
+        locationParts.push(data.name);
+      }
+      
+      // Add road/street if available
+      if (address.road) {
+        locationParts.push(address.road);
+      } else if (address.pedestrian) {
+        locationParts.push(address.pedestrian);
+      }
+      
+      // Add area information
+      if (address.suburb) {
+        locationParts.push(address.suburb);
+      } else if (address.neighbourhood) {
+        locationParts.push(address.neighbourhood);
+      } else if (address.hamlet) {
+        locationParts.push(address.hamlet);
+      }
+      
+      // Add city information
+      if (address.city) {
+        locationParts.push(address.city);
+      } else if (address.town) {
+        locationParts.push(address.town);
+      } else if (address.village) {
+        locationParts.push(address.village);
+      }
+      
+      // Construct the friendly name
+      const name = locationParts.length > 0 
+        ? locationParts.slice(0, 3).join(', ') // Limit to first 3 parts to avoid being too long
+        : displayName.split(',').slice(0, 2).join(', '); // Fallback to first parts of display name
+
+      res.json({
+        name: name || 'Unknown Location',
+        address: displayName,
+        city: address.city || address.town || address.village || 'Unknown City',
+        country: address.country || 'Unknown Country'
+      });
+
+    } catch (error) {
+      console.error('Reverse geocoding failed:', error);
+      
+      // Fallback: Return a simple location name based on coordinates
+      const lat = parseFloat(req.query.lat as string);
+      const lon = parseFloat(req.query.lon as string);
+      
+      // Simple fallback location name
+      const fallbackName = `Location (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+      
+      res.status(200).json({ 
+        message: "Using fallback location name",
+        name: fallbackName,
+        address: fallbackName,
+        city: "Unknown City",
+        country: "Unknown Country"
+      });
+    }
+  });
+
+  // Test geocoding endpoint
+  app.get('/api/geocode/test', async (req, res) => {
+    try {
+      // Test with a known location (New York City)
+      const testLat = 40.7128;
+      const testLon = -74.0060;
+      
+      console.log('Testing geocoding with coordinates:', { testLat, testLon });
+      
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${testLat}&lon=${testLon}&addressdetails=1&extratags=1&namedetails=1`,
+        {
+          headers: {
+            'User-Agent': 'HRMS-App/1.0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Test geocoding failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json({
+        success: true,
+        testLocation: data.display_name,
+        message: "Geocoding service is working"
+      });
+    } catch (error) {
+      console.error('Test geocoding failed:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Geocoding service is not working"
+      });
     }
   });
 

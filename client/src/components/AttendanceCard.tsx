@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ export default function AttendanceCard() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [location, setLocation] = useState<{ latitude: number; longitude: number; name: string } | null>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; locationName: string } | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // Update current time every second
@@ -94,7 +94,7 @@ export default function AttendanceCard() {
     },
   });
 
-  const getCurrentLocation = async (): Promise<{ latitude: number; longitude: number; name: string }> => {
+  const getCurrentLocation = async (): Promise<{ latitude: number; longitude: number; locationName: string }> => {
     setIsLoadingLocation(true);
     
     return new Promise((resolve, reject) => {
@@ -106,27 +106,52 @@ export default function AttendanceCard() {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
+          console.log('GPS coordinates obtained:', { latitude, longitude });
           
           try {
-            // Get location name using reverse geocoding
-            const response = await fetch(
-              `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=YOUR_API_KEY`
-            );
-            const data = await response.json();
-            const locationName = data.results[0]?.formatted || "Unknown Location";
+            // Get location name using our server endpoint
+            const response = await fetch(`/api/geocode/reverse?lat=${latitude}&lon=${longitude}`);
             
-            resolve({ latitude, longitude, name: locationName });
+            if (!response.ok) {
+              console.warn('Geocoding service failed, using coordinates as fallback');
+              resolve({ latitude, longitude, locationName: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+              return;
+            }
+            
+            const data = await response.json();
+            const locationName = data.name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+            console.log('Location name obtained:', locationName);
+            
+            resolve({ latitude, longitude, locationName });
           } catch (error) {
+            console.warn('Geocoding error, using coordinates as fallback:', error);
             // Fallback to coordinates if geocoding fails
-            resolve({ latitude, longitude, name: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
+            resolve({ latitude, longitude, locationName: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` });
           }
         },
         (error) => {
-          reject(new Error("Unable to retrieve your location."));
+          console.error('Geolocation error:', error);
+          let errorMessage = "Unable to retrieve your location.";
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Location permission denied. Please enable location services in your browser.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information is unavailable. Please try again.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out. Please try again.";
+              break;
+            default:
+              errorMessage = "Unable to retrieve your location. Please try again.";
+          }
+          
+          reject(new Error(errorMessage));
         },
         {
           enableHighAccuracy: true,
-          timeout: 10000,
+          timeout: 15000, // Increased timeout to 15 seconds
           maximumAge: 300000, // 5 minutes
         }
       );
@@ -143,9 +168,44 @@ export default function AttendanceCard() {
         locationName: locationData.name
       });
     } catch (error) {
+      console.error('Check-in error:', error);
+      
+      // If it's a geocoding error, try to check-in with just coordinates
+      if (error instanceof Error && error.message.includes('geocoding')) {
+        try {
+          // Try to get just GPS coordinates without geocoding
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 300000,
+            });
+          });
+          
+          const { latitude, longitude } = position.coords;
+          const fallbackLocationData = {
+            latitude,
+            longitude,
+            locationName: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          };
+          
+          setLocation(fallbackLocationData);
+          await checkInMutation.mutateAsync(fallbackLocationData);
+          
+          toast({
+            title: "Check-in Successful",
+            description: "Checked in with location coordinates (geocoding service unavailable).",
+            variant: "default",
+          });
+          return;
+        } catch (fallbackError) {
+          console.error('Fallback check-in also failed:', fallbackError);
+        }
+      }
+      
       toast({
         title: "Location Error",
-        description: "Unable to get your location. Please enable location services.",
+        description: error instanceof Error ? error.message : "Unable to get your location. Please enable location services.",
         variant: "destructive",
       });
     } finally {
@@ -163,9 +223,44 @@ export default function AttendanceCard() {
         locationName: locationData.name
       });
     } catch (error) {
+      console.error('Check-out error:', error);
+      
+      // If it's a geocoding error, try to check-out with just coordinates
+      if (error instanceof Error && error.message.includes('geocoding')) {
+        try {
+          // Try to get just GPS coordinates without geocoding
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 300000,
+            });
+          });
+          
+          const { latitude, longitude } = position.coords;
+          const fallbackLocationData = {
+            latitude,
+            longitude,
+            locationName: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
+          };
+          
+          setLocation(fallbackLocationData);
+          await checkOutMutation.mutateAsync(fallbackLocationData);
+          
+          toast({
+            title: "Check-out Successful",
+            description: "Checked out with location coordinates (geocoding service unavailable).",
+            variant: "default",
+          });
+          return;
+        } catch (fallbackError) {
+          console.error('Fallback check-out also failed:', fallbackError);
+        }
+      }
+      
       toast({
         title: "Location Error",
-        description: "Unable to get your location. Please enable location services.",
+        description: error instanceof Error ? error.message : "Unable to get your location. Please enable location services.",
         variant: "destructive",
       });
     } finally {
@@ -199,6 +294,70 @@ export default function AttendanceCard() {
   const isWorkingHours = () => {
     const hour = currentTime.getHours();
     return hour >= 9 && hour <= 18; // 9 AM to 6 PM
+  };
+
+  const testLocation = async () => {
+    try {
+      console.log('Testing location access...');
+      
+      if (!navigator.geolocation) {
+        toast({
+          title: "Location Test",
+          description: "Geolocation is not supported by this browser.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000,
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      toast({
+        title: "Location Test Successful",
+        description: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+        variant: "default",
+      });
+
+      // Test geocoding service
+      try {
+        const response = await fetch(`/api/geocode/test`);
+        const data = await response.json();
+        
+        if (data.success) {
+          toast({
+            title: "Geocoding Test",
+            description: "Geocoding service is working properly.",
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Geocoding Test",
+            description: "Geocoding service is not working.",
+            variant: "destructive",
+          });
+        }
+      } catch (geocodingError) {
+        toast({
+          title: "Geocoding Test",
+          description: "Geocoding service test failed.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Location test failed:', error);
+      toast({
+        title: "Location Test Failed",
+        description: error instanceof Error ? error.message : "Unable to get location",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -330,7 +489,7 @@ export default function AttendanceCard() {
               className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
             >
               <MapPin className="h-4 w-4 text-gray-600" />
-              <span className="text-sm text-gray-700 truncate">{location.name}</span>
+              <span className="text-sm text-gray-700 truncate">{location.locationName}</span>
             </motion.div>
           )}
 
@@ -378,6 +537,23 @@ export default function AttendanceCard() {
                 </Button>
               </motion.div>
             )}
+            
+            {/* Debug Button */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              <Button
+                onClick={testLocation}
+                variant="outline"
+                size="sm"
+                className="px-3 py-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-50"
+                title="Test location and geocoding services"
+              >
+                🔧 Debug
+              </Button>
+            </motion.div>
           </div>
 
           {/* Working Hours Indicator */}

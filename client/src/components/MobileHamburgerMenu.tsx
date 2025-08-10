@@ -99,11 +99,10 @@ export default function MobileHamburgerMenu() {
               onClick={async () => {
                 try {
                   await logout();
-                  setIsOpen(false);
                 } catch (error) {
                   console.error('Logout failed:', error);
-                  setIsOpen(false);
                 }
+                setIsOpen(false);
               }}
             >
               <LogOut size={16} />

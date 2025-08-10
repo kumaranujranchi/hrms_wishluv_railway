@@ -1,49 +1,40 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
 
 export function useAuth() {
   const queryClient = useQueryClient();
   
-  const { data: user, isLoading, error } = useQuery<User | null>({
+  const { data: user, isLoading } = useQuery<User>({
     queryKey: ["/api/auth/user"],
     retry: false,
-    refetchOnWindowFocus: false,
   });
 
   const logout = async () => {
     try {
-      await apiRequest("POST", "/api/auth/logout");
-      // Clear all cached queries
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Logout failed');
+      }
+
+      // Clear all queries from cache
       queryClient.clear();
-      // Force a page reload to reset all state
-      window.location.href = "/login";
+      
+      // Redirect to login page
+      window.location.href = '/login';
     } catch (error) {
-      console.error("Logout error:", error);
-      // Even if logout fails, clear cache and redirect
-      queryClient.clear();
-      window.location.href = "/login";
+      console.error('Logout error:', error);
+      throw error;
     }
   };
-
-  const login = async (credentials: { email: string; password: string }) => {
-    const response = await apiRequest("POST", "/api/auth/login", credentials);
-    const userData = await response.json();
-    
-    // Invalidate the auth query to refetch user data
-    await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    
-    return userData;
-  };
-
-  // If there's an error (like 401), the user is not authenticated
-  const isAuthenticated = !!user && !error;
 
   return {
     user,
     isLoading,
-    isAuthenticated,
+    isAuthenticated: !!user,
     logout,
-    login,
   };
 }
