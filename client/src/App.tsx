@@ -53,9 +53,9 @@ function Router() {
   // Authenticated - role-based routing
   return (
     <Switch>
-      {/* Root redirect based on user role */}
+      {/* Root redirect based on user role - serve dashboard directly */}
       <Route path="/">
-        {user?.role === 'admin' ? <Redirect to="/admin" /> : <Redirect to="/employee" />}
+        {user?.role === 'admin' ? <AdminDashboard /> : <EmployeeDashboard />}
       </Route>
 
       {/* Admin Routes */}
@@ -119,6 +119,16 @@ function Router() {
       <Route path="/employee-directory" component={EmployeeDirectory} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
+      
+      {/* Admin Announcements */}
+      <Route path="/admin/announcements">
+        <ProtectedRoute requiredRole="admin">
+          <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">Announcements Management</h1>
+            <p className="text-gray-600">Announcement management feature coming soon.</p>
+          </div>
+        </ProtectedRoute>
+      </Route>
 
       {/* 404 */}
       <Route component={NotFound} />

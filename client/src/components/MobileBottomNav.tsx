@@ -19,15 +19,15 @@ export default function MobileBottomNav() {
   const getNavItems = () => {
     if (user?.role === 'admin') {
       return [
-        { icon: Home, label: "Dashboard", href: "/admin" },
-        { icon: Users, label: "Employees", href: "/employee-directory" },
+        { icon: Home, label: "Dashboard", href: "/" },
+        { icon: Users, label: "Directory", href: "/employee-directory" },
         { icon: Clock, label: "Attendance", href: "/admin/attendance" },
         { icon: BarChart3, label: "Reports", href: "/reports" },
         { icon: User, label: "Profile", href: "/settings" }
       ];
     } else {
       return [
-        { icon: Home, label: "Dashboard", href: "/employee" },
+        { icon: Home, label: "Dashboard", href: "/" },
         { icon: Clock, label: "Attendance", href: "/attendance" },
         { icon: Calendar, label: "Leave", href: "/leave-management" },
         { icon: FileText, label: "Expenses", href: "/expenses" },
@@ -39,11 +39,8 @@ export default function MobileBottomNav() {
   const navItems = getNavItems();
 
   const isActive = (href: string) => {
-    if (href === "/admin") {
-      return location === "/" || location === "/admin" || location === "/dashboard";
-    }
-    if (href === "/employee") {
-      return location === "/" || location === "/employee" || location === "/dashboard";
+    if (href === "/") {
+      return location === "/" || location === "/admin" || location === "/employee" || location === "/dashboard";
     }
     return location === href || location.startsWith(href + "/");
   };

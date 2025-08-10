@@ -30,9 +30,9 @@ export default function MobileHamburgerMenu() {
         { icon: CreditCard, label: "Expense Claims", href: "/admin/expense-claims" },
         { icon: DollarSign, label: "Payroll", href: "/admin/payroll" },
         { icon: Users2, label: "Leave Assignments", href: "/admin/leave-assignments" },
-        { icon: Building2, label: "Departments", href: "/departments" },
-        { icon: Briefcase, label: "Designations", href: "/designations" },
-        { icon: Bell, label: "Announcements", href: "/announcements" },
+        { icon: Building2, label: "Departments", href: "/admin/departments" },
+        { icon: Briefcase, label: "Designations", href: "/admin/designations" },
+        { icon: Bell, label: "Announcements", href: "/admin/announcements" },
         { icon: Settings, label: "Company Settings", href: "/admin/settings" }
       ];
     } else {
