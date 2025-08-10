@@ -20,7 +20,8 @@ import {
   User,
   BarChart3,
   FileText,
-  Building2
+  Building2,
+  UserPlus
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileBottomNav from "./MobileBottomNav";
@@ -45,7 +46,8 @@ export default function Layout({ children }: LayoutProps) {
 
   const navigationItems = user?.role === 'admin' ? [
     { name: 'Dashboard', href: '/admin', icon: Home },
-    { name: 'Employees', href: '/admin/create-employee', icon: Users },
+    { name: 'Add Employee', href: '/admin/create-employee', icon: UserPlus },
+    { name: 'Employee Directory', href: '/employee-directory', icon: Users },
     { name: 'Departments', href: '/admin/departments', icon: Building2 },
     { name: 'Designations', href: '/admin/designations', icon: User },
     { name: 'Attendance', href: '/admin/attendance', icon: Clock },
