@@ -430,7 +430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/employees', isAuthenticated, async (req: any, res) => {
     try {
       const employees = await storage.getAllEmployees();
-      // Remove sensitive information
+      // Remove sensitive information and include onboarding status
       const sanitizedEmployees = employees.map(emp => ({
         id: emp.id,
         firstName: emp.firstName,
@@ -440,11 +440,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         position: emp.position,
         profileImageUrl: emp.profileImageUrl,
         role: emp.role,
+        isOnboardingComplete: emp.isOnboardingComplete,
+        joinDate: emp.joinDate,
+        isActive: emp.isActive,
       }));
       res.json(sanitizedEmployees);
     } catch (error) {
       console.error("Error fetching employees:", error);
       res.status(500).json({ message: "Failed to fetch employees" });
+    }
+  });
+
+  app.delete('/api/admin/employees/:id', isAuthenticated, requireAdmin, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      
+      // Check if employee exists
+      const employee = await storage.getUser(id);
+      if (!employee) {
+        return res.status(404).json({ message: "Employee not found" });
+      }
+      
+      // Prevent admin from deleting themselves
+      if (id === userId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      // Delete employee and all related data
+      await storage.deleteEmployee(id);
+      
+      res.json({ message: "Employee deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting employee:", error);
+      res.status(500).json({ message: "Failed to delete employee" });
     }
   });
 

@@ -35,7 +35,9 @@ import {
   Building,
   CreditCard,
   FileText,
-  Heart
+  Heart,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 interface Employee {
@@ -110,6 +112,8 @@ export default function EmployeeDirectoryPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
 
   const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
@@ -166,6 +170,28 @@ export default function EmployeeDirectoryPage() {
       toast({
         title: "Error",
         description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: async (employeeId: string) => {
+      await apiRequest("DELETE", `/api/admin/employees/${employeeId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Employee deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/employees"] });
+      setDeleteDialogOpen(false);
+      setEmployeeToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete employee",
         variant: "destructive",
       });
     },
@@ -418,14 +444,28 @@ export default function EmployeeDirectoryPage() {
                         </div>
                         <div className="flex items-center space-x-2">
                           {user?.role === 'admin' && (
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditEmployee(employee)}
-                            >
-                              <Edit className="h-3 w-3 mr-1" />
-                              Edit
-                            </Button>
+                            <>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleEditEmployee(employee)}
+                              >
+                                <Edit className="h-3 w-3 mr-1" />
+                                Edit
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => {
+                                  setEmployeeToDelete(employee);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                className="text-red-600 border-red-200 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-3 w-3 mr-1" />
+                                Delete
+                              </Button>
+                            </>
                           )}
                           {getRoleBadge(employee.role)}
                         </div>
@@ -1221,7 +1261,74 @@ export default function EmployeeDirectoryPage() {
             </form>
           </Form>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+
+        {/* Delete Employee Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+                <span>Delete Employee</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                Are you sure you want to delete <strong>{employeeToDelete?.firstName} {employeeToDelete?.lastName}</strong>? 
+                This action cannot be undone and will permanently remove all employee data.
+              </p>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 mr-2" />
+                  <div className="text-sm text-red-700">
+                    <p className="font-medium">This will permanently delete:</p>
+                    <ul className="mt-1 list-disc list-inside space-y-1">
+                      <li>Employee profile and personal information</li>
+                      <li>Attendance records and history</li>
+                      <li>Leave requests and balances</li>
+                      <li>Expense claims and approvals</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setDeleteDialogOpen(false);
+                    setEmployeeToDelete(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="destructive"
+                  disabled={deleteEmployeeMutation.isPending}
+                  onClick={() => {
+                    if (employeeToDelete) {
+                      deleteEmployeeMutation.mutate(employeeToDelete.id);
+                    }
+                  }}
+                >
+                  {deleteEmployeeMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Employee
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
     </Layout>
   );
 }

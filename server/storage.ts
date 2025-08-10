@@ -52,6 +52,7 @@ export interface IStorage {
   getAllEmployees(): Promise<User[]>;
   getEmployeesByManager(managerId: string): Promise<User[]>;
   updateEmployee(id: string, updates: Partial<User>): Promise<User>;
+  deleteEmployee(id: string): Promise<void>;
   
   // Attendance operations
   markAttendance(attendance: InsertAttendance): Promise<Attendance>;
@@ -216,6 +217,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user;
+  }
+
+  async deleteEmployee(id: string): Promise<void> {
+    // Delete in order to respect foreign key constraints
+    // First delete dependent records, then the employee
+    await db.delete(attendance).where(eq(attendance.userId, id));
+    await db.delete(leaveRequests).where(eq(leaveRequests.userId, id));
+    await db.delete(expenseClaims).where(eq(expenseClaims.userId, id));
+    await db.delete(payroll).where(eq(payroll.userId, id));
+    await db.delete(employeeProfiles).where(eq(employeeProfiles.userId, id));
+    await db.delete(leaveAssignments).where(eq(leaveAssignments.userId, id));
+    await db.delete(employeeSalaryStructure).where(eq(employeeSalaryStructure.userId, id));
+    
+    // Finally delete the user record
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async upsertUser(id: string, userData: { email: string; firstName: string; lastName: string; profileImageUrl?: string; role?: string; }): Promise<User> {
