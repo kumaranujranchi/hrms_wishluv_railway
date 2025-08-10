@@ -288,6 +288,20 @@ export default function AttendanceCard() {
     if (!attendanceStatus?.checkInTime) return "00:00:00";
     
     const checkIn = new Date(attendanceStatus.checkInTime);
+    
+    // If user has checked out, calculate time between check-in and check-out
+    if (attendanceStatus?.checkOutTime) {
+      const checkOut = new Date(attendanceStatus.checkOutTime);
+      const diff = checkOut.getTime() - checkIn.getTime();
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    // If user is still checked in, calculate time from check-in to now
     const now = new Date();
     const diff = now.getTime() - checkIn.getTime();
     
@@ -303,69 +317,7 @@ export default function AttendanceCard() {
     return hour >= 9 && hour <= 18; // 9 AM to 6 PM
   };
 
-  const testLocation = async () => {
-    try {
-      console.log('Testing location access...');
-      
-      if (!navigator.geolocation) {
-        toast({
-          title: "Location Test",
-          description: "Geolocation is not supported by this browser.",
-          variant: "destructive",
-        });
-        return;
-      }
 
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000,
-        });
-      });
-
-      const { latitude, longitude } = position.coords;
-      
-      toast({
-        title: "Location Test Successful",
-        description: `GPS: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-        variant: "default",
-      });
-
-      // Test geocoding service
-      try {
-        const response = await fetch(`/api/geocode/test`);
-        const data = await response.json();
-        
-        if (data.success) {
-          toast({
-            title: "Geocoding Test",
-            description: "Geocoding service is working properly.",
-            variant: "default",
-          });
-        } else {
-          toast({
-            title: "Geocoding Test",
-            description: "Geocoding service is not working.",
-            variant: "destructive",
-          });
-        }
-      } catch (geocodingError) {
-        toast({
-          title: "Geocoding Test",
-          description: "Geocoding service test failed.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Location test failed:', error);
-      toast({
-        title: "Location Test Failed",
-        description: error instanceof Error ? error.message : "Unable to get location",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <motion.div
@@ -544,23 +496,6 @@ export default function AttendanceCard() {
                 </Button>
               </motion.div>
             )}
-            
-            {/* Debug Button */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              <Button
-                onClick={testLocation}
-                variant="outline"
-                size="sm"
-                className="px-3 py-2 text-xs border-gray-300 text-gray-600 hover:bg-gray-50"
-                title="Test location and geocoding services"
-              >
-                🔧 Debug
-              </Button>
-            </motion.div>
           </div>
 
           {/* Working Hours Indicator */}
