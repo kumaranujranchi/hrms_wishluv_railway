@@ -431,7 +431,7 @@ export default function EmployeeDirectoryPage() {
                     <CardContent className="p-6">
                       <div className="flex items-center space-x-4 mb-4">
                         <Avatar className="w-12 h-12">
-                          <AvatarImage src={employee.profileImageUrl || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} alt="Profile" />
+                          <AvatarImage src={employee.profileImageUrl || "https://imagizer.imageshack.com/img923/9749/vElpPB.png"} alt="Profile" />
                           <AvatarFallback className="bg-primary-100 text-primary-600">
                             {getInitials(employee.firstName, employee.lastName)}
                           </AvatarFallback>

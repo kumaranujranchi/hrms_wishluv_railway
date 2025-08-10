@@ -151,7 +151,7 @@ export default function Login() {
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                     className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center"
                   >
-                    <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-6 w-6" />
+                    <img src="https://imagizer.imageshack.com/img923/9749/vElpPB.png" alt="Company Logo" className="h-6 w-6" />
                   </motion.div>
                   <div>
                     <h1 className="text-3xl font-bold gradient-text-primary">Wishluv Buildcon</h1>
@@ -261,7 +261,7 @@ export default function Login() {
                   transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
                   className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"
                 >
-                  <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Company Logo" className="h-8 w-8" />
+                  <img src="https://imagizer.imageshack.com/img923/9749/vElpPB.png" alt="Company Logo" className="h-8 w-8" />
                 </motion.div>
               <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
                 Welcome Back

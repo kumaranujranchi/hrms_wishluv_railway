@@ -408,7 +408,7 @@ export default function AdminLeaveManagement() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-10 h-10">
-                              <AvatarImage src={request.user?.profileImage || "https://imagizer.imageshack.com/img924/9256/E2qQnT.png"} />
+                              <AvatarImage src={request.user?.profileImage || "https://imagizer.imageshack.com/img923/9749/vElpPB.png"} />
                               <AvatarFallback>
                                 {request.user?.firstName?.[0]}{request.user?.lastName?.[0]}
                               </AvatarFallback>
