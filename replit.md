@@ -28,9 +28,10 @@ Preferred communication style: Simple, everyday language.
 ### Database Design
 - **Primary Database**: PostgreSQL via Neon Database for reliability and performance
 - **Schema Management**: Drizzle Kit for migrations and schema evolution
+- **Data Protection**: Comprehensive backup system with automatic data recovery procedures
 - **Key Tables**: 
   - Users table with role-based access (admin, employee)
-  - Attendance tracking with geo-location support
+  - Attendance tracking with geo-location support and reverse geocoding for location names
   - Leave requests with comprehensive approval workflows
   - Leave assignments for admin-controlled leave allocations
   - Expense claims with receipt file attachments
@@ -60,6 +61,7 @@ Preferred communication style: Simple, everyday language.
 ### Database Services
 - **Neon Database**: PostgreSQL hosting with connection pooling
 - **Database Configuration**: Environment-based connection string management
+- **Data Protection**: Backup system with restoration procedures to prevent data loss
 
 ### Cloud Services
 - **Google Cloud Storage**: File storage with IAM-based access control
