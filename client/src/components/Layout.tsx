@@ -195,7 +195,7 @@ export default function Layout({ children }: LayoutProps) {
             transition={{ delay: 0.2 }}
             className="flex items-center gap-3 mb-8"
           >
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
               <img src="https://imagizer.imageshack.com/img923/9749/vElpPB.png" alt="Company Logo" className="h-6 w-6" />
             </div>
             <div>

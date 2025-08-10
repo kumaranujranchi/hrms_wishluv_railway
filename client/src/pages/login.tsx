@@ -149,7 +149,7 @@ export default function Login() {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                    className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-xl flex items-center justify-center"
+                    className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm"
                   >
                     <img src="https://imagizer.imageshack.com/img923/9749/vElpPB.png" alt="Company Logo" className="h-6 w-6" />
                   </motion.div>
@@ -259,7 +259,7 @@ export default function Login() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-                  className="w-16 h-16 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"
+                  className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"
                 >
                   <img src="https://imagizer.imageshack.com/img923/9749/vElpPB.png" alt="Company Logo" className="h-8 w-8" />
                 </motion.div>
