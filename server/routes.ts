@@ -388,12 +388,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const address = data.address || {};
       const displayName = data.display_name || '';
       
-      // Build a friendly location name
+      // Build a friendly location name prioritizing specific locations over city
       const locationParts = [];
       
-      // Add building/amenity name if available
+      // Add building/amenity name if available (highest priority)
       if (data.name && data.name !== data.display_name) {
         locationParts.push(data.name);
+      }
+      
+      // Add amenity type if available (parks, schools, etc.)
+      if (data.amenity) {
+        locationParts.push(data.amenity);
       }
       
       // Add road/street if available
@@ -403,28 +408,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         locationParts.push(address.pedestrian);
       }
       
-      // Add area information
+      // Add specific area information (neighborhood, suburb, etc.)
       if (address.suburb) {
         locationParts.push(address.suburb);
       } else if (address.neighbourhood) {
         locationParts.push(address.neighbourhood);
       } else if (address.hamlet) {
         locationParts.push(address.hamlet);
+      } else if (address.quarter) {
+        locationParts.push(address.quarter);
+      } else if (address.district) {
+        locationParts.push(address.district);
       }
       
-      // Add city information
-      if (address.city) {
-        locationParts.push(address.city);
-      } else if (address.town) {
-        locationParts.push(address.town);
-      } else if (address.village) {
-        locationParts.push(address.village);
+      // Only add city if we don't have enough specific information
+      if (locationParts.length < 2) {
+        if (address.city) {
+          locationParts.push(address.city);
+        } else if (address.town) {
+          locationParts.push(address.town);
+        } else if (address.village) {
+          locationParts.push(address.village);
+        }
       }
       
-      // Construct the friendly name
-      const name = locationParts.length > 0 
-        ? locationParts.slice(0, 3).join(', ') // Limit to first 3 parts to avoid being too long
-        : displayName.split(',').slice(0, 2).join(', '); // Fallback to first parts of display name
+      // Construct the friendly name - prioritize specific locations
+      let name;
+      if (locationParts.length > 0) {
+        // If we have specific location info, use it (max 2 parts to keep it concise)
+        name = locationParts.slice(0, 2).join(', ');
+      } else {
+        // Fallback: try to extract meaningful parts from display name
+        const displayParts = displayName.split(',');
+        // Look for parts that are not just the city name
+        const meaningfulParts = displayParts.filter(part => {
+          const trimmed = part.trim();
+          // Skip generic terms and very long parts
+          return trimmed.length > 0 && 
+                 trimmed.length < 50 && 
+                 !['city', 'district', 'state', 'country'].some(term => 
+                   trimmed.toLowerCase().includes(term)
+                 );
+        });
+        name = meaningfulParts.slice(0, 2).join(', ');
+      }
 
       res.json({
         name: name || 'Unknown Location',
