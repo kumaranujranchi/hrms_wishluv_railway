@@ -573,59 +573,59 @@ export class DatabaseStorage implements IStorage {
 
   // Employee profile management
   async updateEmployeeProfile(employeeId: string, profileData: any): Promise<EmployeeProfile> {
-    // First update the user table with basic info
-    const [updatedUser] = await db
+    // First update the user table with basic info (only if provided)
+    const userUpdate: any = { updatedAt: new Date() };
+    if (profileData.firstName) userUpdate.firstName = profileData.firstName;
+    if (profileData.lastName) userUpdate.lastName = profileData.lastName;
+    if (profileData.email) userUpdate.email = profileData.email;
+    if (profileData.department) userUpdate.department = profileData.department;
+    if (profileData.position) userUpdate.position = profileData.position;
+
+    await db
       .update(users)
-      .set({
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        email: profileData.email,
-        department: profileData.department,
-        position: profileData.position,
-        updatedAt: new Date(),
-      })
-      .where(eq(users.id, employeeId))
-      .returning();
+      .set(userUpdate)
+      .where(eq(users.id, employeeId));
 
     // Then update or insert the employee profile details
-    const profileUpdate = {
+    const profileUpdate: any = {
       userId: employeeId,
-      fatherName: profileData.fatherName,
-      dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : null,
-      marriageAnniversary: profileData.marriageAnniversary ? new Date(profileData.marriageAnniversary) : null,
-      personalMobile: profileData.personalMobile,
-      emergencyContactName: profileData.emergencyContactName,
-      emergencyContactNumber: profileData.emergencyContactNumber,
-      emergencyContactRelation: profileData.emergencyContactRelation,
-      panNumber: profileData.panNumber,
-      aadharNumber: profileData.aadharNumber,
-      currentAddress: profileData.currentAddress,
-      permanentAddress: profileData.permanentAddress,
-      bankAccountNumber: profileData.bankAccountNumber,
-      ifscCode: profileData.ifscCode,
-      bankName: profileData.bankName,
-      // Salary structure fields
-      basicSalary: profileData.basicSalary ? profileData.basicSalary : null,
-      hra: profileData.hra ? profileData.hra : null,
-      pfEmployeeContribution: profileData.pfEmployeeContribution ? profileData.pfEmployeeContribution : null,
-      pfEmployerContribution: profileData.pfEmployerContribution ? profileData.pfEmployerContribution : null,
-      esicEmployeeContribution: profileData.esicEmployeeContribution ? profileData.esicEmployeeContribution : null,
-      esicEmployerContribution: profileData.esicEmployerContribution ? profileData.esicEmployerContribution : null,
-      specialAllowance: profileData.specialAllowance ? profileData.specialAllowance : null,
-      performanceBonus: profileData.performanceBonus ? profileData.performanceBonus : null,
-      gratuity: profileData.gratuity ? profileData.gratuity : null,
-      professionalTax: profileData.professionalTax ? profileData.professionalTax : null,
-      medicalAllowance: profileData.medicalAllowance ? profileData.medicalAllowance : null,
-      conveyanceAllowance: profileData.conveyanceAllowance ? profileData.conveyanceAllowance : null,
-      foodCoupons: profileData.foodCoupons ? profileData.foodCoupons : null,
-      lta: profileData.lta ? profileData.lta : null,
-      shiftAllowance: profileData.shiftAllowance ? profileData.shiftAllowance : null,
-      overtimePay: profileData.overtimePay ? profileData.overtimePay : null,
-      attendanceBonus: profileData.attendanceBonus ? profileData.attendanceBonus : null,
-      joiningBonus: profileData.joiningBonus ? profileData.joiningBonus : null,
-      retentionBonus: profileData.retentionBonus ? profileData.retentionBonus : null,
       updatedAt: new Date(),
     };
+
+    // Only add fields that are provided
+    if (profileData.fatherName !== undefined) profileUpdate.fatherName = profileData.fatherName;
+    if (profileData.dateOfBirth) profileUpdate.dateOfBirth = new Date(profileData.dateOfBirth);
+    if (profileData.marriageAnniversary) profileUpdate.marriageAnniversary = new Date(profileData.marriageAnniversary);
+    if (profileData.personalMobile !== undefined) profileUpdate.personalMobile = profileData.personalMobile;
+    if (profileData.emergencyContactName !== undefined) profileUpdate.emergencyContactName = profileData.emergencyContactName;
+    if (profileData.emergencyContactNumber !== undefined) profileUpdate.emergencyContactNumber = profileData.emergencyContactNumber;
+    if (profileData.emergencyContactRelation !== undefined) profileUpdate.emergencyContactRelation = profileData.emergencyContactRelation;
+    if (profileData.panNumber !== undefined) profileUpdate.panNumber = profileData.panNumber;
+    if (profileData.aadharNumber !== undefined) profileUpdate.aadharNumber = profileData.aadharNumber;
+    if (profileData.bankAccountNumber !== undefined) profileUpdate.bankAccountNumber = profileData.bankAccountNumber;
+    if (profileData.ifscCode !== undefined) profileUpdate.ifscCode = profileData.ifscCode;
+    if (profileData.bankName !== undefined) profileUpdate.bankName = profileData.bankName;
+
+    // Salary structure fields
+    if (profileData.basicSalary) profileUpdate.basicSalary = profileData.basicSalary;
+    if (profileData.hra) profileUpdate.hra = profileData.hra;
+    if (profileData.pfEmployeeContribution) profileUpdate.pfEmployeeContribution = profileData.pfEmployeeContribution;
+    if (profileData.pfEmployerContribution) profileUpdate.pfEmployerContribution = profileData.pfEmployerContribution;
+    if (profileData.esicEmployeeContribution) profileUpdate.esicEmployeeContribution = profileData.esicEmployeeContribution;
+    if (profileData.esicEmployerContribution) profileUpdate.esicEmployerContribution = profileData.esicEmployerContribution;
+    if (profileData.specialAllowance) profileUpdate.specialAllowance = profileData.specialAllowance;
+    if (profileData.performanceBonus) profileUpdate.performanceBonus = profileData.performanceBonus;
+    if (profileData.gratuity) profileUpdate.gratuity = profileData.gratuity;
+    if (profileData.professionalTax) profileUpdate.professionalTax = profileData.professionalTax;
+    if (profileData.medicalAllowance) profileUpdate.medicalAllowance = profileData.medicalAllowance;
+    if (profileData.conveyanceAllowance) profileUpdate.conveyanceAllowance = profileData.conveyanceAllowance;
+    if (profileData.foodCoupons) profileUpdate.foodCoupons = profileData.foodCoupons;
+    if (profileData.lta) profileUpdate.lta = profileData.lta;
+    if (profileData.shiftAllowance) profileUpdate.shiftAllowance = profileData.shiftAllowance;
+    if (profileData.overtimePay) profileUpdate.overtimePay = profileData.overtimePay;
+    if (profileData.attendanceBonus) profileUpdate.attendanceBonus = profileData.attendanceBonus;
+    if (profileData.joiningBonus) profileUpdate.joiningBonus = profileData.joiningBonus;
+    if (profileData.retentionBonus) profileUpdate.retentionBonus = profileData.retentionBonus;
 
     // Check if profile already exists
     const existingProfile = await this.getEmployeeProfile(employeeId);
@@ -645,7 +645,7 @@ export class DatabaseStorage implements IStorage {
         });
     }
 
-    return existingProfile || await this.createEmployeeProfile(profileUpdate);
+    return await this.getEmployeeProfile(employeeId) || existingProfile;
   }
 
   async getEmployeeProfile(employeeId: string): Promise<EmployeeProfile | undefined> {

@@ -312,33 +312,30 @@ export const createEmployeeSchema = z.object({
   tempPassword: z.string().min(8, "Temporary password must be at least 8 characters"),
 });
 
-// Update employee schema (for admin editing)
+// Update employee schema (for admin editing) - all fields optional except core user fields
 export const updateEmployeeSchema = z.object({
-  firstName: z.string().min(2, "First name is required"),
-  lastName: z.string().min(2, "Last name is required"),
-  email: z.string().email("Please enter a valid email address"),
-  department: z.string().min(1, "Department is required"),
-  position: z.string().min(1, "Position is required"),
-  // Personal details
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
+  email: z.string().email("Please enter a valid email address").optional(),
+  department: z.string().optional(),
+  position: z.string().optional(),
+  // Personal details - all optional
   fatherName: z.string().optional(),
   dateOfBirth: z.string().optional(),
   marriageAnniversary: z.string().optional(),
   personalMobile: z.string().optional(),
-  // Emergency contact
+  // Emergency contact - all optional
   emergencyContactName: z.string().optional(),
   emergencyContactNumber: z.string().optional(),
   emergencyContactRelation: z.string().optional(),
-  // Government IDs
+  // Government IDs - all optional
   panNumber: z.string().optional(),
   aadharNumber: z.string().optional(),
-  // Address
-  currentAddress: z.string().optional(),
-  permanentAddress: z.string().optional(),
-  // Banking details
+  // Banking details - all optional
   bankAccountNumber: z.string().optional(),
   ifscCode: z.string().optional(),
   bankName: z.string().optional(),
-  // Salary structure
+  // Salary structure - all optional
   basicSalary: z.string().optional(),
   hra: z.string().optional(),
   pfEmployeeContribution: z.string().optional(),
