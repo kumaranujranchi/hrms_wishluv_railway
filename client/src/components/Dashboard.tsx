@@ -324,10 +324,10 @@ export default function Dashboard() {
               whileHover="hover"
               className="group"
             >
-              <Card className="stat-card overflow-hidden">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
+              <Card className="stat-card overflow-hidden h-full">
+                <CardContent className="p-6 h-full flex flex-col">
+                  <div className="flex items-center justify-between flex-grow">
+                    <div className="flex-1">
                       <p className="text-sm font-medium text-muted-foreground mb-1">
                         {stat.title}
                       </p>
@@ -337,7 +337,7 @@ export default function Dashboard() {
                     </div>
                     <motion.div
                       whileHover={{ scale: 1.1, rotate: 5 }}
-                      className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} ${stat.bgColor}`}
+                      className={`p-3 rounded-xl bg-gradient-to-br ${stat.color} ${stat.bgColor} flex-shrink-0`}
                     >
                       <stat.icon className="h-6 w-6 text-white" />
                     </motion.div>
