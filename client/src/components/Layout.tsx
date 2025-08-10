@@ -2,6 +2,8 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationSystem from "./NotificationSystem";
+import MobileBottomNav from "./MobileBottomNav";
+import MobileHamburgerMenu from "./MobileHamburgerMenu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -132,8 +134,8 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-neutral-50">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 flex flex-col">
+      {/* Desktop Sidebar - Hidden on mobile */}
+      <aside className="hidden md:flex w-64 bg-white shadow-lg border-r border-neutral-200 flex-col">
         {/* Logo and Company */}
         <div className="p-6 border-b border-neutral-200">
           <div className="flex items-center space-x-3">
@@ -244,11 +246,25 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </aside>
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-neutral-200 px-6 py-4">
+      <main className="flex-1 overflow-auto pb-16 md:pb-0">
+        {/* Mobile Header with Hamburger Menu */}
+        <header className="bg-white shadow-sm border-b border-neutral-200 px-4 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <div>
+            {/* Mobile: Hamburger + Logo */}
+            <div className="flex items-center space-x-3 md:hidden">
+              <MobileHamburgerMenu />
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                  <img src="https://imagizer.imageshack.com/img924/9256/E2qQnT.png" alt="Logo" className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-neutral-900">Wishluv</h1>
+                </div>
+              </div>
+            </div>
+            
+            {/* Desktop: Page title */}
+            <div className="hidden md:block">
               <h1 className="text-2xl font-semibold text-neutral-900">
                 {navigation.find(item => item.current)?.name || 
                  managementNavigation.find(item => item.current)?.name || 
@@ -259,7 +275,19 @@ export default function Layout({ children }: LayoutProps) {
               </p>
             </div>
             
-            <div className="flex items-center space-x-4">
+            {/* Mobile: User avatar and notifications */}
+            <div className="flex items-center space-x-2 md:hidden">
+              <Bell className="h-5 w-5 text-gray-600" />
+              <Avatar className="w-8 h-8">
+                <AvatarImage src={user?.profileImageUrl || undefined} alt="Profile" />
+                <AvatarFallback className="text-xs">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            
+            {/* Desktop: Search and user menu */}
+            <div className="hidden md:flex items-center space-x-4">
               {/* Search */}
               <div className="relative">
                 <Input
@@ -306,10 +334,13 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page Content */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {children}
         </div>
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
     </div>
   );
 }

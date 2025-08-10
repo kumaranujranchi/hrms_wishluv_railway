@@ -1,0 +1,132 @@
+/* Mobile App Styling */
+
+/* Mobile-specific layout adjustments */
+@media (max-width: 768px) {
+  /* Ensure content doesn't get hidden behind bottom nav */
+  .mobile-content-padding {
+    padding-bottom: 80px;
+  }
+  
+  /* Mobile header styling */
+  .mobile-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  
+  /* Bottom navigation styling */
+  .mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 50;
+    padding: 8px;
+  }
+  
+  .mobile-bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    min-width: 60px;
+  }
+  
+  .mobile-bottom-nav-item.active {
+    background-color: #f0f9ff;
+    color: #0369a1;
+  }
+  
+  .mobile-bottom-nav-item:not(.active) {
+    color: #6b7280;
+  }
+  
+  .mobile-bottom-nav-item:not(.active):hover {
+    background-color: #f9fafb;
+    color: #374151;
+  }
+  
+  /* Hamburger menu styling */
+  .mobile-hamburger-menu {
+    width: 320px;
+    background: white;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .mobile-hamburger-header {
+    background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    color: white;
+    padding: 24px;
+  }
+  
+  .mobile-hamburger-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin: 4px 16px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .mobile-hamburger-menu-item:hover {
+    background-color: #f3f4f6;
+  }
+  
+  /* Safe area for modern mobile devices */
+  .mobile-safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .mobile-safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Dark mode support for mobile components */
+@media (max-width: 768px) {
+  .dark .mobile-header {
+    background: #1f2937;
+    border-bottom-color: #374151;
+  }
+  
+  .dark .mobile-bottom-nav {
+    background: #1f2937;
+    border-top-color: #374151;
+  }
+  
+  .dark .mobile-bottom-nav-item.active {
+    background-color: #1e3a8a;
+    color: #60a5fa;
+  }
+  
+  .dark .mobile-bottom-nav-item:not(.active) {
+    color: #9ca3af;
+  }
+  
+  .dark .mobile-hamburger-menu {
+    background: #1f2937;
+  }
+  
+  .dark .mobile-hamburger-menu-item:hover {
+    background-color: #374151;
+  }
+}
