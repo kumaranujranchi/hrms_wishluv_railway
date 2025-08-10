@@ -13,6 +13,9 @@ interface TodayAttendance {
   checkOut: string | null;
   status: string;
   location: string | null;
+  locationName: string | null;
+  latitude: string | null;
+  longitude: string | null;
 }
 
 export default function AttendanceCard() {
@@ -25,8 +28,8 @@ export default function AttendanceCard() {
   });
 
   const checkInMutation = useMutation({
-    mutationFn: async (location: string) => {
-      await apiRequest("POST", "/api/attendance/check-in", { location });
+    mutationFn: async (locationData: { location: string; latitude: string; longitude: string; locationName: string; }) => {
+      await apiRequest("POST", "/api/attendance/check-in", locationData);
     },
     onSuccess: () => {
       toast({
@@ -65,22 +68,49 @@ export default function AttendanceCard() {
     },
   });
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const { latitude, longitude } = position.coords;
+          
+          // Get location name using reverse geocoding
+          let locationName = 'Unknown Location';
+          try {
+            const { getLocationName } = await import('@/utils/geocoding');
+            locationName = await getLocationName(latitude, longitude);
+          } catch (error) {
+            console.warn('Failed to get location name:', error);
+          }
+          
           const locationStr = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
           setLocation(locationStr);
-          checkInMutation.mutate(locationStr);
+          
+          // Send all location data to the server
+          checkInMutation.mutate({
+            location: locationStr,
+            latitude: latitude.toString(),
+            longitude: longitude.toString(),
+            locationName: locationName
+          });
         },
         (error) => {
           console.error("Error getting location:", error);
-          checkInMutation.mutate("Location not available");
+          checkInMutation.mutate({
+            location: "Location not available",
+            latitude: "",
+            longitude: "",
+            locationName: "Location not available"
+          });
         }
       );
     } else {
-      checkInMutation.mutate("Geolocation not supported");
+      checkInMutation.mutate({
+        location: "Geolocation not supported",
+        latitude: "",
+        longitude: "",
+        locationName: "Geolocation not supported"
+      });
     }
   };
 
@@ -146,7 +176,12 @@ export default function AttendanceCard() {
                 <span>Check-out: {new Date(todayAttendance.checkOut).toLocaleTimeString()}</span>
               </div>
             )}
-            {todayAttendance.location && (
+            {todayAttendance.locationName ? (
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 text-primary-500" />
+                <span>Location: {todayAttendance.locationName}</span>
+              </div>
+            ) : todayAttendance.location && (
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4" />
                 <span>Location: Office</span>

@@ -63,6 +63,9 @@ export const attendance = pgTable("attendance", {
   checkOut: timestamp("check_out"),
   status: attendanceStatusEnum("status").default('present'),
   location: varchar("location"),
+  locationName: varchar("location_name"),
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 });

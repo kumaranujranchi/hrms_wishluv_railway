@@ -42,6 +42,9 @@ interface AttendanceRecord {
   checkOut: string | null;
   status: string;
   location: string | null;
+  locationName: string | null;
+  latitude: string | null;
+  longitude: string | null;
   workingHours?: number;
 }
 
@@ -266,12 +269,13 @@ export default function AdminAttendancePage() {
                         <TableHead>Check Out</TableHead>
                         <TableHead>Working Hours</TableHead>
                         <TableHead>Location</TableHead>
+                        <TableHead>Coordinates</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loadingToday ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
+                          <TableCell colSpan={7} className="text-center py-8">
                             Loading attendance data...
                           </TableCell>
                         </TableRow>
@@ -291,18 +295,41 @@ export default function AdminAttendancePage() {
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
-                              {record.location && (
-                                <div className="flex items-center text-sm text-gray-500">
-                                  <MapPin className="h-3 w-3 mr-1" />
+                              <div className="space-y-1">
+                                {record.locationName ? (
+                                  <div className="flex items-center text-sm">
+                                    <MapPin className="h-3 w-3 mr-1 text-primary-500" />
+                                    <span className="font-medium">{record.locationName}</span>
+                                  </div>
+                                ) : record.location ? (
+                                  <div className="flex items-center text-sm text-gray-500">
+                                    <MapPin className="h-3 w-3 mr-1" />
+                                    <span>Office Location</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-gray-400">No location data</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {record.latitude && record.longitude ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  <div>Lat: {parseFloat(record.latitude).toFixed(6)}</div>
+                                  <div>Lng: {parseFloat(record.longitude).toFixed(6)}</div>
+                                </div>
+                              ) : record.location ? (
+                                <div className="text-xs text-gray-500 font-mono">
                                   {record.location}
                                 </div>
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
                               )}
                             </TableCell>
                           </TableRow>
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                             No attendance records found for today
                           </TableCell>
                         </TableRow>
@@ -355,12 +382,14 @@ export default function AdminAttendancePage() {
                         <TableHead>Check In</TableHead>
                         <TableHead>Check Out</TableHead>
                         <TableHead>Working Hours</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Coordinates</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loadingRange ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
+                          <TableCell colSpan={8} className="text-center py-8">
                             Loading attendance data...
                           </TableCell>
                         </TableRow>
@@ -380,11 +409,42 @@ export default function AdminAttendancePage() {
                             <TableCell>{formatTime(record.checkIn)}</TableCell>
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                {record.locationName ? (
+                                  <div className="flex items-center text-sm">
+                                    <MapPin className="h-3 w-3 mr-1 text-primary-500" />
+                                    <span className="font-medium">{record.locationName}</span>
+                                  </div>
+                                ) : record.location ? (
+                                  <div className="flex items-center text-sm text-gray-500">
+                                    <MapPin className="h-3 w-3 mr-1" />
+                                    <span>Office Location</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-gray-400">No location data</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {record.latitude && record.longitude ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  <div>Lat: {parseFloat(record.latitude).toFixed(6)}</div>
+                                  <div>Lng: {parseFloat(record.longitude).toFixed(6)}</div>
+                                </div>
+                              ) : record.location ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  {record.location}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                             No attendance records found for the selected date range
                           </TableCell>
                         </TableRow>

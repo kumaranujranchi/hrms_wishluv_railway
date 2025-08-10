@@ -223,7 +223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/attendance/check-in', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { location } = req.body;
+      const { location, latitude, longitude, locationName } = req.body;
 
       // Check if already checked in today
       const todayAttendance = await storage.getTodayAttendance(userId);
@@ -236,7 +236,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         date: new Date(),
         checkIn: new Date(),
         status: 'present',
-        location,
+        location: location || `${latitude}, ${longitude}`, // Fallback for backward compatibility
+        locationName: locationName,
+        latitude: latitude ? latitude.toString() : null,
+        longitude: longitude ? longitude.toString() : null,
       });
 
       res.json(attendance);
