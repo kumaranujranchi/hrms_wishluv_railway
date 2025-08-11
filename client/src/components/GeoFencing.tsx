@@ -1,9 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { 
+  MapPin, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle,
+  Loader2,
+  Navigation
+} from 'lucide-react';
 
 interface Location {
   latitude: number;
@@ -11,59 +18,70 @@ interface Location {
   accuracy: number;
 }
 
-interface GeoFenceConfig {
+interface GeofencingConfig {
   centerLat: number;
   centerLng: number;
   radiusMeters: number;
   name: string;
+  isEnabled: boolean;
+  isRequired: boolean;
 }
 
 interface GeoFencingProps {
   onLocationVerified: (location: Location, isWithinBounds: boolean) => void;
-  isRequired?: boolean;
-  config?: GeoFenceConfig;
+  config?: GeofencingConfig;
 }
 
-export default function GeoFencing({ 
-  onLocationVerified, 
-  isRequired = false,
-  config = {
-    centerLat: 40.7128,
-    centerLng: -74.0060,
-    radiusMeters: 200,
-    name: "Office"
-  }
-}: GeoFencingProps) {
+const DEFAULT_OFFICE_CONFIG: GeofencingConfig = {
+  centerLat: 25.6146835780726,
+  centerLng: 85.1126174983296,
+  radiusMeters: 50,
+  name: "Office Location",
+  isEnabled: true,
+  isRequired: true
+};
+
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+}
+
+export default function GeoFencing({ onLocationVerified, config = DEFAULT_OFFICE_CONFIG }: GeoFencingProps) {
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
-  const [locationError, setLocationError] = useState<string>('');
+  const [locationStatus, setLocationStatus] = useState<'idle' | 'checking' | 'success' | 'error'>('idle');
   const [isWithinBounds, setIsWithinBounds] = useState<boolean>(false);
-  const [locationStatus, setLocationStatus] = useState<'checking' | 'success' | 'error'>('checking');
-  const { toast } = useToast();
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [distance, setDistance] = useState<number>(0);
 
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lng2-lng1) * Math.PI/180;
-
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-    return R * c;
-  };
-
-  const checkGeolocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by this browser');
-      setLocationStatus('error');
+  const checkGeolocation = async () => {
+    if (!config.isEnabled) {
+      onLocationVerified({ latitude: 0, longitude: 0, accuracy: 0 }, true);
       return;
     }
 
     setLocationStatus('checking');
-    setLocationError('');
+    setErrorMessage('');
+
+    if (!navigator.geolocation) {
+      setErrorMessage('Geolocation is not supported by this browser.');
+      setLocationStatus('error');
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -76,170 +94,176 @@ export default function GeoFencing({
         setCurrentLocation(location);
 
         // Calculate distance from office
-        const distance = calculateDistance(
+        const distanceFromOffice = calculateDistance(
           location.latitude,
           location.longitude,
           config.centerLat,
           config.centerLng
         );
 
-        const withinBounds = distance <= config.radiusMeters;
+        setDistance(distanceFromOffice);
+
+        const withinBounds = distanceFromOffice <= config.radiusMeters;
         setIsWithinBounds(withinBounds);
         setLocationStatus('success');
 
         // Notify parent component
         onLocationVerified(location, withinBounds);
-
-        // Show toast notification
-        if (withinBounds) {
-          toast({
-            title: "Location Verified",
-            description: `You are within ${config.name} boundaries`,
-          });
-        } else if (isRequired) {
-          toast({
-            title: "Location Outside Boundaries",
-            description: `You are ${Math.round(distance - config.radiusMeters)}m away from ${config.name}`,
-            variant: "destructive",
-          });
-        }
       },
       (error) => {
-        let errorMessage = 'Unable to retrieve location';
+        let errorMsg = 'Unable to retrieve your location.';
         
-        switch(error.code) {
+        switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = 'Location access denied by user';
+            errorMsg = 'Location permission denied. Please enable location services.';
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable';
+            errorMsg = 'Location information is unavailable.';
             break;
           case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
+            errorMsg = 'Location request timed out.';
             break;
         }
-
-        setLocationError(errorMessage);
+        
+        setErrorMessage(errorMsg);
         setLocationStatus('error');
-        onLocationVerified(null as any, false);
+        
+        // For non-required geofencing, allow attendance with warning
+        if (!config.isRequired) {
+          onLocationVerified({ latitude: 0, longitude: 0, accuracy: 0 }, false);
+        }
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
+        timeout: 15000,
+        maximumAge: 300000
       }
     );
   };
 
   useEffect(() => {
-    if (isRequired) {
-      checkGeolocation();
-    }
-  }, [isRequired]);
+    checkGeolocation();
+  }, []);
 
   const getStatusIcon = () => {
     switch (locationStatus) {
       case 'checking':
-        return <MapPin className="h-5 w-5 text-blue-500 animate-pulse" />;
+        return <Loader2 className="h-5 w-5 animate-spin text-blue-500" />;
       case 'success':
-        return isWithinBounds 
-          ? <CheckCircle className="h-5 w-5 text-green-500" />
-          : <AlertTriangle className="h-5 w-5 text-orange-500" />;
+        return isWithinBounds ? 
+          <CheckCircle className="h-5 w-5 text-green-500" /> : 
+          <XCircle className="h-5 w-5 text-red-500" />;
+      case 'error':
+        return <AlertTriangle className="h-5 w-5 text-orange-500" />;
       default:
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
+        return <Navigation className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  const getStatusText = () => {
+    switch (locationStatus) {
+      case 'checking':
+        return 'Checking location...';
+      case 'success':
+        return isWithinBounds ? 
+          `Within office bounds (${distance.toFixed(0)}m away)` : 
+          `Outside office bounds (${distance.toFixed(0)}m away)`;
+      case 'error':
+        return errorMessage;
+      default:
+        return 'Location not checked';
     }
   };
 
   const getStatusBadge = () => {
-    if (locationStatus === 'checking') {
-      return <Badge className="bg-blue-100 text-blue-800">Checking Location</Badge>;
+    if (locationStatus === 'success') {
+      return isWithinBounds ? 
+        <Badge className="bg-green-100 text-green-800">Within Bounds</Badge> :
+        <Badge className="bg-red-100 text-red-800">Outside Bounds</Badge>;
+    } else if (locationStatus === 'error') {
+      return <Badge className="bg-orange-100 text-orange-800">Location Error</Badge>;
+    } else if (locationStatus === 'checking') {
+      return <Badge className="bg-blue-100 text-blue-800">Checking...</Badge>;
     }
-    
-    if (locationStatus === 'error') {
-      return <Badge className="bg-red-100 text-red-800">Location Error</Badge>;
-    }
-
-    return isWithinBounds 
-      ? <Badge className="bg-green-100 text-green-800">Within Boundaries</Badge>
-      : <Badge className="bg-orange-100 text-orange-800">Outside Boundaries</Badge>;
+    return <Badge variant="secondary">Unknown</Badge>;
   };
 
+  if (!config.isEnabled) {
+    return null;
+  }
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            {getStatusIcon()}
-            <span>Location Verification</span>
-          </div>
-          {getStatusBadge()}
+    <Card className="mb-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <MapPin className="h-5 w-5 text-blue-600" />
+          Location Verification
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {locationStatus === 'checking' && (
-            <div className="text-center py-4">
-              <p className="text-neutral-600">Checking your current location...</p>
+      
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {getStatusIcon()}
+            <span className="text-sm font-medium">{getStatusText()}</span>
+          </div>
+          {getStatusBadge()}
+        </div>
+
+        {currentLocation && (
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="text-xs text-gray-600 space-y-1">
+              <div>Current: {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}</div>
+              <div>Office: {config.centerLat.toFixed(6)}, {config.centerLng.toFixed(6)}</div>
+              <div>Accuracy: ±{currentLocation.accuracy.toFixed(0)}m</div>
             </div>
-          )}
+          </div>
+        )}
 
-          {locationError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                <p className="text-sm text-red-700">{locationError}</p>
-              </div>
+        {locationStatus === 'success' && !isWithinBounds && config.isRequired && (
+          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <span className="text-sm font-medium text-orange-800">Outside Office Area</span>
             </div>
-          )}
+            <p className="text-sm text-orange-700">
+              You are {distance.toFixed(0)} meters away from the office. 
+              You need to be within {config.radiusMeters} meters to mark attendance.
+            </p>
+          </div>
+        )}
 
-          {currentLocation && locationStatus === 'success' && (
-            <div className="bg-neutral-50 rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium">Latitude:</span>
-                  <span className="ml-2">{currentLocation.latitude.toFixed(6)}</span>
-                </div>
-                <div>
-                  <span className="font-medium">Longitude:</span>
-                  <span className="ml-2">{currentLocation.longitude.toFixed(6)}</span>
-                </div>
-                <div>
-                  <span className="font-medium">Accuracy:</span>
-                  <span className="ml-2">{Math.round(currentLocation.accuracy)}m</span>
-                </div>
-                <div>
-                  <span className="font-medium">Status:</span>
-                  <span className={`ml-2 font-medium ${
-                    isWithinBounds ? 'text-green-600' : 'text-orange-600'
-                  }`}>
-                    {isWithinBounds ? 'Inside Office' : 'Outside Office'}
-                  </span>
-                </div>
-              </div>
+        {locationStatus === 'success' && !isWithinBounds && !config.isRequired && (
+          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              You are currently outside the office boundaries. 
+              Attendance will be marked with a location exception.
+            </p>
+          </div>
+        )}
 
-              {!isWithinBounds && (
-                <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded">
-                  <p className="text-sm text-orange-800">
-                    You are currently outside the office boundaries. 
-                    {isRequired && ' Attendance may be marked with a location exception.'}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="flex justify-between items-center">
+          <Button 
+            variant="outline" 
+            onClick={checkGeolocation}
+            disabled={locationStatus === 'checking'}
+            size="sm"
+          >
+            {locationStatus === 'checking' ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Checking...
+              </>
+            ) : (
+              <>
+                <Navigation className="h-4 w-4 mr-2" />
+                Refresh Location
+              </>
+            )}
+          </Button>
 
-          <div className="flex justify-between items-center">
-            <Button 
-              variant="outline" 
-              onClick={checkGeolocation}
-              disabled={locationStatus === 'checking'}
-            >
-              {locationStatus === 'checking' ? 'Checking...' : 'Refresh Location'}
-            </Button>
-
-            <div className="text-xs text-neutral-500">
-              Office: {config.name} (±{config.radiusMeters}m radius)
-            </div>
+          <div className="text-xs text-gray-500">
+            Office: {config.name} (±{config.radiusMeters}m radius)
           </div>
         </div>
       </CardContent>

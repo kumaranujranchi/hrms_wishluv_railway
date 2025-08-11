@@ -222,11 +222,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Geofencing validation function
+  const validateGeofencing = (latitude: number, longitude: number): { isValid: boolean; distance: number } => {
+    const OFFICE_LAT = 25.6146835780726;
+    const OFFICE_LNG = 85.1126174983296;
+    const RADIUS_METERS = 50;
+
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (latitude * Math.PI) / 180;
+    const φ2 = (OFFICE_LAT * Math.PI) / 180;
+    const Δφ = ((OFFICE_LAT - latitude) * Math.PI) / 180;
+    const Δλ = ((OFFICE_LNG - longitude) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return {
+      isValid: distance <= RADIUS_METERS,
+      distance: distance
+    };
+  };
+
   // Attendance routes
   app.post('/api/attendance/check-in', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
       const { location, latitude, longitude, locationName } = req.body;
+
+      // Validate geofencing if coordinates are provided
+      if (latitude && longitude) {
+        const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
+        if (!geofencingResult.isValid) {
+          return res.status(400).json({ 
+            message: `You are ${Math.round(geofencingResult.distance)} meters away from office. You must be within 50 meters to check in.`,
+            distance: geofencingResult.distance
+          });
+        }
+      }
 
       // Check if already checked in today
       const todayAttendance = await storage.getTodayAttendance(userId);
@@ -256,6 +290,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.id;
       const { location, latitude, longitude, locationName } = req.body;
+
+      // Validate geofencing if coordinates are provided
+      if (latitude && longitude) {
+        const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
+        if (!geofencingResult.isValid) {
+          return res.status(400).json({ 
+            message: `You are ${Math.round(geofencingResult.distance)} meters away from office. You must be within 50 meters to check out.`,
+            distance: geofencingResult.distance
+          });
+        }
+      }
 
       const todayAttendance = await storage.getTodayAttendance(userId);
       if (!todayAttendance) {

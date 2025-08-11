@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import GeoFencing from "./GeoFencing";
 import { 
   Clock, 
   MapPin, 
@@ -14,7 +15,8 @@ import {
   Loader2,
   Zap,
   Sunrise,
-  Sunset
+  Sunset,
+  AlertTriangle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,6 +27,15 @@ interface AttendanceStatus {
   todayStatus?: string;
 }
 
+const OFFICE_GEOFENCING_CONFIG = {
+  centerLat: 25.6146835780726,
+  centerLng: 85.1126174983296,
+  radiusMeters: 50,
+  name: "Office Location",
+  isEnabled: true,
+  isRequired: true
+};
+
 export default function AttendanceCard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -32,6 +43,8 @@ export default function AttendanceCard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [location, setLocation] = useState<{ latitude: number; longitude: number; locationName: string } | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isWithinOfficeArea, setIsWithinOfficeArea] = useState<boolean>(false);
+  const [locationVerified, setLocationVerified] = useState<boolean>(false);
 
   // Update current time every second
   useEffect(() => {
@@ -101,6 +114,18 @@ export default function AttendanceCard() {
     },
   });
 
+  const handleLocationVerified = (location: any, isWithinBounds: boolean) => {
+    setIsWithinOfficeArea(isWithinBounds);
+    setLocationVerified(true);
+    if (location.latitude && location.longitude) {
+      setLocation({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        locationName: `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
+      });
+    }
+  };
+
   const getCurrentLocation = async (): Promise<{ latitude: number; longitude: number; locationName: string }> => {
     setIsLoadingLocation(true);
     
@@ -166,13 +191,32 @@ export default function AttendanceCard() {
   };
 
   const handleCheckIn = async () => {
+    // Check if location is verified and within bounds
+    if (!locationVerified) {
+      toast({
+        title: "Location Required",
+        description: "Please verify your location first before checking in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea) {
+      toast({
+        title: "Outside Office Area",
+        description: "You must be within 50 meters of the office to check in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const locationData = await getCurrentLocation();
       setLocation(locationData);
       await checkInMutation.mutateAsync({
         latitude: locationData.latitude,
         longitude: locationData.longitude,
-        locationName: locationData.name
+        locationName: locationData.locationName
       });
     } catch (error) {
       console.error('Check-in error:', error);
@@ -221,13 +265,32 @@ export default function AttendanceCard() {
   };
 
   const handleCheckOut = async () => {
+    // Check if location is verified and within bounds
+    if (!locationVerified) {
+      toast({
+        title: "Location Required",
+        description: "Please verify your location first before checking out.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea) {
+      toast({
+        title: "Outside Office Area",
+        description: "You must be within 50 meters of the office to check out.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const locationData = await getCurrentLocation();
       setLocation(locationData);
       await checkOutMutation.mutateAsync({
         latitude: locationData.latitude,
         longitude: locationData.longitude,
-        locationName: locationData.name
+        locationName: locationData.locationName
       });
     } catch (error) {
       console.error('Check-out error:', error);
@@ -362,6 +425,12 @@ export default function AttendanceCard() {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Geofencing Component */}
+          <GeoFencing 
+            onLocationVerified={handleLocationVerified}
+            config={OFFICE_GEOFENCING_CONFIG}
+          />
+
           {/* Current Time Display */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -463,15 +532,21 @@ export default function AttendanceCard() {
               >
                 <Button
                   onClick={handleCheckIn}
-                  disabled={checkInMutation.isPending || isLoadingLocation}
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                  disabled={checkInMutation.isPending || isLoadingLocation || (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea)}
+                  className={`w-full font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
+                    OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea 
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
+                  }`}
                 >
                   {checkInMutation.isPending || isLoadingLocation ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? (
+                    <AlertTriangle className="h-4 w-4 mr-2" />
                   ) : (
                     <CheckCircle className="h-4 w-4 mr-2" />
                   )}
-                  Check In
+                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? 'Outside Office Area' : 'Check In'}
                 </Button>
               </motion.div>
             ) : (
@@ -483,16 +558,22 @@ export default function AttendanceCard() {
               >
                 <Button
                   onClick={handleCheckOut}
-                  disabled={checkOutMutation.isPending || isLoadingLocation}
+                  disabled={checkOutMutation.isPending || isLoadingLocation || (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea)}
                   variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 font-semibold py-3 rounded-xl transition-all duration-200"
+                  className={`w-full font-semibold py-3 rounded-xl transition-all duration-200 ${
+                    OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea
+                      ? 'border-gray-300 text-gray-400 cursor-not-allowed'
+                      : 'border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'
+                  }`}
                 >
                   {checkOutMutation.isPending || isLoadingLocation ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? (
+                    <AlertTriangle className="h-4 w-4 mr-2" />
                   ) : (
                     <XCircle className="h-4 w-4 mr-2" />
                   )}
-                  Check Out
+                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? 'Outside Office Area' : 'Check Out'}
                 </Button>
               </motion.div>
             )}
