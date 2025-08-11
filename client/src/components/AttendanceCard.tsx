@@ -194,8 +194,8 @@ export default function AttendanceCard() {
     // Check if location is verified and within bounds
     if (!locationVerified) {
       toast({
-        title: "Location Required",
-        description: "Please verify your location first before checking in.",
+        title: "स्थान सत्यापन आवश्यक",
+        description: "कृपया चेक-इन करने से पहले अपना स्थान सत्यापित करें।",
         variant: "destructive",
       });
       return;
@@ -203,8 +203,8 @@ export default function AttendanceCard() {
 
     if (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea) {
       toast({
-        title: "Outside Office Area",
-        description: "You must be within 50 meters of the office to check in.",
+        title: "ऑफिस क्षेत्र के बाहर",
+        description: "आप केवल ऑफिस लोकेशन के 50 मीटर के अंदर ही चेक-इन कर सकते हैं। कृपया ऑफिस आकर चेक-इन करें।",
         variant: "destructive",
       });
       return;
@@ -212,6 +212,18 @@ export default function AttendanceCard() {
 
     try {
       const locationData = await getCurrentLocation();
+      
+      // Double check geofencing before API call
+      const distance = calculateDistanceFromOffice(locationData.latitude, locationData.longitude);
+      if (distance > OFFICE_GEOFENCING_CONFIG.radiusMeters) {
+        toast({
+          title: "ऑफिस क्षेत्र के बाहर",
+          description: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। चेक-इन करने के लिए ऑफिस के 50 मीटर के अंदर आना आवश्यक है।`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setLocation(locationData);
       await checkInMutation.mutateAsync({
         latitude: locationData.latitude,
@@ -234,6 +246,18 @@ export default function AttendanceCard() {
           });
           
           const { latitude, longitude } = position.coords;
+          
+          // Check distance again with raw coordinates
+          const distance = calculateDistanceFromOffice(latitude, longitude);
+          if (distance > OFFICE_GEOFENCING_CONFIG.radiusMeters) {
+            toast({
+              title: "ऑफिस क्षेत्र के बाहर",
+              description: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। चेक-इन करने के लिए ऑफिस के 50 मीटर के अंदर आना आवश्यक है।`,
+              variant: "destructive",
+            });
+            return;
+          }
+          
           const fallbackLocationData = {
             latitude,
             longitude,
@@ -244,8 +268,8 @@ export default function AttendanceCard() {
           await checkInMutation.mutateAsync(fallbackLocationData);
           
           toast({
-            title: "Check-in Successful",
-            description: "Checked in with location coordinates (geocoding service unavailable).",
+            title: "चेक-इन सफल",
+            description: "स्थान निर्देशांकों के साथ चेक-इन पूर्ण (जियोकोडिंग सेवा अनुपलब्ध)।",
             variant: "default",
           });
           return;
@@ -255,8 +279,8 @@ export default function AttendanceCard() {
       }
       
       toast({
-        title: "Location Error",
-        description: error instanceof Error ? error.message : "Unable to get your location. Please enable location services.",
+        title: "स्थान त्रुटि",
+        description: error instanceof Error ? error.message : "आपका स्थान प्राप्त करने में असमर्थ। कृपया स्थान सेवाएं सक्षम करें।",
         variant: "destructive",
       });
     } finally {
@@ -268,8 +292,8 @@ export default function AttendanceCard() {
     // Check if location is verified and within bounds
     if (!locationVerified) {
       toast({
-        title: "Location Required",
-        description: "Please verify your location first before checking out.",
+        title: "स्थान सत्यापन आवश्यक",
+        description: "कृपया चेक-आउट करने से पहले अपना स्थान सत्यापित करें।",
         variant: "destructive",
       });
       return;
@@ -277,8 +301,8 @@ export default function AttendanceCard() {
 
     if (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea) {
       toast({
-        title: "Outside Office Area",
-        description: "You must be within 50 meters of the office to check out.",
+        title: "ऑफिस क्षेत्र के बाहर",
+        description: "आप केवल ऑफिस लोकेशन के 50 मीटर के अंदर ही चेक-आउट कर सकते हैं। कृपया ऑफिस आकर चेक-आउट करें।",
         variant: "destructive",
       });
       return;
@@ -286,6 +310,18 @@ export default function AttendanceCard() {
 
     try {
       const locationData = await getCurrentLocation();
+      
+      // Double check geofencing before API call
+      const distance = calculateDistanceFromOffice(locationData.latitude, locationData.longitude);
+      if (distance > OFFICE_GEOFENCING_CONFIG.radiusMeters) {
+        toast({
+          title: "ऑफिस क्षेत्र के बाहर",
+          description: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। चेक-आउट करने के लिए ऑफिस के 50 मीटर के अंदर आना आवश्यक है।`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setLocation(locationData);
       await checkOutMutation.mutateAsync({
         latitude: locationData.latitude,
@@ -308,6 +344,18 @@ export default function AttendanceCard() {
           });
           
           const { latitude, longitude } = position.coords;
+          
+          // Check distance again with raw coordinates
+          const distance = calculateDistanceFromOffice(latitude, longitude);
+          if (distance > OFFICE_GEOFENCING_CONFIG.radiusMeters) {
+            toast({
+              title: "ऑफिस क्षेत्र के बाहर",
+              description: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। चेक-आउट करने के लिए ऑफिस के 50 मीटर के अंदर आना आवश्यक है।`,
+              variant: "destructive",
+            });
+            return;
+          }
+          
           const fallbackLocationData = {
             latitude,
             longitude,
@@ -318,8 +366,8 @@ export default function AttendanceCard() {
           await checkOutMutation.mutateAsync(fallbackLocationData);
           
           toast({
-            title: "Check-out Successful",
-            description: "Checked out with location coordinates (geocoding service unavailable).",
+            title: "चेक-आउट सफल",
+            description: "स्थान निर्देशांकों के साथ चेक-आउट पूर्ण (जियोकोडिंग सेवा अनुपलब्ध)।",
             variant: "default",
           });
           return;
@@ -329,8 +377,8 @@ export default function AttendanceCard() {
       }
       
       toast({
-        title: "Location Error",
-        description: error instanceof Error ? error.message : "Unable to get your location. Please enable location services.",
+        title: "स्थान त्रुटि",
+        description: error instanceof Error ? error.message : "आपका स्थान प्राप्त करने में असमर्थ। कृपया स्थान सेवाएं सक्षम करें।",
         variant: "destructive",
       });
     } finally {
@@ -345,6 +393,21 @@ export default function AttendanceCard() {
       second: '2-digit',
       hour12: true
     });
+  };
+
+  // Helper function to calculate distance from office
+  const calculateDistanceFromOffice = (lat: number, lng: number): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat * Math.PI) / 180;
+    const φ2 = (OFFICE_GEOFENCING_CONFIG.centerLat * Math.PI) / 180;
+    const Δφ = ((OFFICE_GEOFENCING_CONFIG.centerLat - lat) * Math.PI) / 180;
+    const Δλ = ((OFFICE_GEOFENCING_CONFIG.centerLng - lng) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
   };
 
   const getWorkingHours = () => {
@@ -546,7 +609,7 @@ export default function AttendanceCard() {
                   ) : (
                     <CheckCircle className="h-4 w-4 mr-2" />
                   )}
-                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? 'Outside Office Area' : 'Check In'}
+                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? 'ऑफिस क्षेत्र के बाहर' : 'चेक इन'}
                 </Button>
               </motion.div>
             ) : (
@@ -573,7 +636,7 @@ export default function AttendanceCard() {
                   ) : (
                     <XCircle className="h-4 w-4 mr-2" />
                   )}
-                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? 'Outside Office Area' : 'Check Out'}
+                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea ? 'ऑफिस क्षेत्र के बाहर' : 'चेक आउट'}
                 </Button>
               </motion.div>
             )}

@@ -256,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
         if (!geofencingResult.isValid) {
           return res.status(400).json({ 
-            message: `You are ${Math.round(geofencingResult.distance)} meters away from office. You must be within 50 meters to check in.`,
+            message: `आप ऑफिस से ${Math.round(geofencingResult.distance)} मीटर दूर हैं। चेक-इन करने के लिए आपको ऑफिस के 50 मीटर के अंदर होना आवश्यक है।`,
             distance: geofencingResult.distance
           });
         }
@@ -296,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
         if (!geofencingResult.isValid) {
           return res.status(400).json({ 
-            message: `You are ${Math.round(geofencingResult.distance)} meters away from office. You must be within 50 meters to check out.`,
+            message: `आप ऑफिस से ${Math.round(geofencingResult.distance)} मीटर दूर हैं। चेक-आउट करने के लिए आपको ऑफिस के 50 मीटर के अंदर होना आवश्यक है।`,
             distance: geofencingResult.distance
           });
         }
