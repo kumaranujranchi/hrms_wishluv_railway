@@ -138,4 +138,50 @@ router.post('/api/debug/create-sample-attendance', async (req, res) => {
   }
 });
 
+// Production data validation endpoint
+router.get('/api/debug/validate-production-sync', async (req, res) => {
+  try {
+    // Check database connection and data
+    const [userCount] = await db.execute(sql`SELECT COUNT(*) as count FROM users`);
+    const [attendanceCount] = await db.execute(sql`SELECT COUNT(*) as count FROM attendance`);
+    const [todayAttendanceCount] = await db.execute(sql`
+      SELECT COUNT(*) as count FROM attendance WHERE DATE(date) = CURRENT_DATE
+    `);
+    
+    // Get latest user additions
+    const latestUsers = await db.execute(sql`
+      SELECT email, first_name, created_at 
+      FROM users 
+      WHERE role = 'employee' 
+      ORDER BY created_at DESC 
+      LIMIT 5
+    `);
+    
+    // Check database URL (masked for security)
+    const dbUrl = process.env.DATABASE_URL;
+    const dbInfo = dbUrl ? 
+      `Connected to: ${dbUrl.split('@')[1]?.split('/')[0] || 'Database'}` : 
+      'No DATABASE_URL found';
+    
+    res.json({
+      status: 'success',
+      environment: process.env.NODE_ENV || 'unknown',
+      databaseInfo: dbInfo,
+      dataSync: {
+        totalUsers: userCount.count,
+        totalAttendance: attendanceCount.count,
+        todayAttendance: todayAttendanceCount.count,
+        latestEmployees: latestUsers
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'error',
+      error: 'Production sync validation failed', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
