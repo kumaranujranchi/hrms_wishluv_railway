@@ -31,7 +31,7 @@ export const userRoleEnum = pgEnum('user_role', ['admin', 'manager', 'employee']
 export const leaveStatusEnum = pgEnum('leave_status', ['pending', 'approved', 'rejected']);
 export const leaveTypeEnum = pgEnum('leave_type', ['sick', 'vacation', 'personal', 'maternity', 'paternity']);
 export const expenseStatusEnum = pgEnum('expense_status', ['submitted', 'approved', 'rejected', 'reimbursed']);
-export const attendanceStatusEnum = pgEnum('attendance_status', ['present', 'absent', 'late', 'half_day']);
+export const attendanceStatusEnum = pgEnum('attendance_status', ['present', 'absent', 'late', 'half_day', 'out_of_office', 'holiday']);
 
 // Users table 
 export const users = pgTable("users", {

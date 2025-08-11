@@ -308,14 +308,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         date: new Date(),
         checkIn: new Date(),
-        status: isOutOfOffice ? 'out_of_office' : 'present',
+        status: (isOutOfOffice ? 'out_of_office' : 'present') as 'present' | 'absent' | 'late' | 'out_of_office' | 'holiday',
         location: location || `${latitude}, ${longitude}`,
         locationName: locationName || 'Unknown Location',
         latitude: latitude ? latitude.toString() : null,
         longitude: longitude ? longitude.toString() : null,
         reason: reason || null,
         isOutOfOffice: isOutOfOffice,
-        distanceFromOffice: distance ? Math.round(distance) : null,
+        distanceFromOffice: distance ? Math.round(distance) : undefined,
       };
 
       console.log('Creating attendance record with data:', attendanceData);
@@ -379,14 +379,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update attendance record with check-out time and location
       const attendance = await storage.updateAttendance(todayAttendance.id, {
         checkOut: new Date(),
-        status: isOutOfOffice ? 'out_of_office' : 'present',
+        status: (isOutOfOffice ? 'out_of_office' : 'present') as 'present' | 'absent' | 'late' | 'out_of_office' | 'holiday',
         location: location || `${latitude}, ${longitude}`,
         locationName: locationName,
         latitude: latitude ? latitude.toString() : null,
         longitude: longitude ? longitude.toString() : null,
         checkOutReason: reason || null,
         isOutOfOfficeCheckOut: isOutOfOffice,
-        checkOutDistanceFromOffice: distance ? Math.round(distance) : null,
+        checkOutDistanceFromOffice: distance ? Math.round(distance) : undefined,
       });
 
       console.log('Check-out successful for user:', userId, 'at:', new Date().toISOString());
@@ -572,7 +572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fallback: try to extract meaningful parts from display name
         const displayParts = displayName.split(',');
         // Look for parts that are not just the city name
-        const meaningfulParts = displayParts.filter(part => {
+        const meaningfulParts = displayParts.filter((part: string) => {
           const trimmed = part.trim();
           // Skip generic terms and very long parts
           return trimmed.length > 0 && 

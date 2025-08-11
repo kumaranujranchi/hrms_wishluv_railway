@@ -46,6 +46,12 @@ interface AttendanceRecord {
   locationName: string | null;
   latitude: string | null;
   longitude: string | null;
+  reason: string | null;
+  checkOutReason: string | null;
+  isOutOfOffice: boolean;
+  isOutOfOfficeCheckOut: boolean;
+  distanceFromOffice: number | null;
+  checkOutDistanceFromOffice: number | null;
   workingHours?: number;
 }
 
@@ -122,11 +128,17 @@ export default function AdminAttendancePage() {
     checkError();
   }, [toast]);
 
-  const getStatusBadge = (status: string, checkIn: string | null, checkOut: string | null) => {
-    if (status === 'present') {
+  const getStatusBadge = (status: string, checkIn: string | null, checkOut: string | null, isOutOfOffice?: boolean, isOutOfOfficeCheckOut?: boolean) => {
+    if (status === 'present' || status === 'out_of_office') {
       if (checkOut) {
+        if (isOutOfOfficeCheckOut) {
+          return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200"><MapPin className="h-3 w-3 mr-1" />Out of Office Checkout</Badge>;
+        }
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-200"><CheckCircle className="h-3 w-3 mr-1" />Complete</Badge>;
       } else if (checkIn) {
+        if (isOutOfOffice) {
+          return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200"><MapPin className="h-3 w-3 mr-1" />Out of Office</Badge>;
+        }
         return <Badge className="bg-primary-100 text-primary-800 hover:bg-primary-200"><Clock className="h-3 w-3 mr-1" />Checked In</Badge>;
       }
     } else if (status === 'late') {
@@ -330,13 +342,15 @@ export default function AdminAttendancePage() {
                         <TableHead>Check Out</TableHead>
                         <TableHead>Working Hours</TableHead>
                         <TableHead>Location</TableHead>
+                        <TableHead>Out of Office</TableHead>
+                        <TableHead>Reasons</TableHead>
                         <TableHead>Coordinates</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loadingToday ? (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8">
+                          <TableCell colSpan={9} className="text-center py-8">
                             Loading attendance data...
                           </TableCell>
                         </TableRow>
@@ -350,13 +364,49 @@ export default function AdminAttendancePage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {getStatusBadge(record.status, record.checkIn, record.checkOut)}
+                              {getStatusBadge(record.status, record.checkIn, record.checkOut, record.isOutOfOffice, record.isOutOfOfficeCheckOut)}
                             </TableCell>
                             <TableCell>{formatTime(record.checkIn)}</TableCell>
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
                               <LocationDisplay record={record} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                {record.isOutOfOffice && (
+                                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600 border-orange-200">
+                                    Check-In Outside ({record.distanceFromOffice ? `${Math.round(record.distanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {record.isOutOfOfficeCheckOut && (
+                                  <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                                    Check-Out Outside ({record.checkOutDistanceFromOffice ? `${Math.round(record.checkOutDistanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {!record.isOutOfOffice && !record.isOutOfOfficeCheckOut && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1 max-w-xs">
+                                {record.reason && (
+                                  <div className="text-xs p-2 bg-amber-50 rounded border border-amber-200">
+                                    <div className="font-medium text-amber-800 mb-1">Check-In Reason:</div>
+                                    <div className="text-amber-700">{record.reason}</div>
+                                  </div>
+                                )}
+                                {record.checkOutReason && (
+                                  <div className="text-xs p-2 bg-red-50 rounded border border-red-200">
+                                    <div className="font-medium text-red-800 mb-1">Check-Out Reason:</div>
+                                    <div className="text-red-700">{record.checkOutReason}</div>
+                                  </div>
+                                )}
+                                {!record.reason && !record.checkOutReason && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               {record.latitude && record.longitude ? (
@@ -376,7 +426,7 @@ export default function AdminAttendancePage() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                             No attendance records found for today
                           </TableCell>
                         </TableRow>
@@ -430,13 +480,15 @@ export default function AdminAttendancePage() {
                         <TableHead>Check Out</TableHead>
                         <TableHead>Working Hours</TableHead>
                         <TableHead>Location</TableHead>
+                        <TableHead>Out of Office</TableHead>
+                        <TableHead>Reasons</TableHead>
                         <TableHead>Coordinates</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {loadingRange ? (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8">
+                          <TableCell colSpan={10} className="text-center py-8">
                             Loading attendance data...
                           </TableCell>
                         </TableRow>
@@ -451,13 +503,49 @@ export default function AdminAttendancePage() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {getStatusBadge(record.status, record.checkIn, record.checkOut)}
+                              {getStatusBadge(record.status, record.checkIn, record.checkOut, record.isOutOfOffice, record.isOutOfOfficeCheckOut)}
                             </TableCell>
                             <TableCell>{formatTime(record.checkIn)}</TableCell>
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
                               <LocationDisplay record={record} />
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1">
+                                {record.isOutOfOffice && (
+                                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600 border-orange-200">
+                                    Check-In Outside ({record.distanceFromOffice ? `${Math.round(record.distanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {record.isOutOfOfficeCheckOut && (
+                                  <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                                    Check-Out Outside ({record.checkOutDistanceFromOffice ? `${Math.round(record.checkOutDistanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {!record.isOutOfOffice && !record.isOutOfOfficeCheckOut && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-1 max-w-xs">
+                                {record.reason && (
+                                  <div className="text-xs p-2 bg-amber-50 rounded border border-amber-200">
+                                    <div className="font-medium text-amber-800 mb-1">Check-In Reason:</div>
+                                    <div className="text-amber-700">{record.reason}</div>
+                                  </div>
+                                )}
+                                {record.checkOutReason && (
+                                  <div className="text-xs p-2 bg-red-50 rounded border border-red-200">
+                                    <div className="font-medium text-red-800 mb-1">Check-Out Reason:</div>
+                                    <div className="text-red-700">{record.checkOutReason}</div>
+                                  </div>
+                                )}
+                                {!record.reason && !record.checkOutReason && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               {record.latitude && record.longitude ? (
@@ -477,7 +565,7 @@ export default function AdminAttendancePage() {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                             No attendance records found for the selected date range
                           </TableCell>
                         </TableRow>
