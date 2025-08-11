@@ -17,6 +17,7 @@ import {
   createEmployeeSchema,
   updateEmployeeSchema,
 } from "@shared/schema";
+import debugRouter from "./routes/debug";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -1206,6 +1207,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete designation" });
     }
   });
+
+  // Debug routes for production database sync
+  app.use(debugRouter);
 
   const httpServer = createServer(app);
   return httpServer;
