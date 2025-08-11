@@ -249,15 +249,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/attendance/check-in', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { location, latitude, longitude, locationName } = req.body;
+      const { location, latitude, longitude, locationName, reason } = req.body;
 
       // Validate geofencing if coordinates are provided
+      let isOutOfOffice = false;
+      let distance = 0;
       if (latitude && longitude) {
         const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
-        if (!geofencingResult.isValid) {
+        isOutOfOffice = !geofencingResult.isValid;
+        distance = geofencingResult.distance;
+        
+        // If outside office and no reason provided, require reason
+        if (isOutOfOffice && !reason) {
           return res.status(400).json({ 
-            message: `आप ऑफिस से ${Math.round(geofencingResult.distance)} मीटर दूर हैं। चेक-इन करने के लिए आपको ऑफिस के 50 मीटर के अंदर होना आवश्यक है।`,
-            distance: geofencingResult.distance
+            message: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। ऑफिस के बाहर से चेक-इन करने के लिए कारण आवश्यक है।`,
+            distance: distance,
+            requiresReason: true
           });
         }
       }
@@ -272,11 +279,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         date: new Date(),
         checkIn: new Date(),
-        status: 'present',
+        status: isOutOfOffice ? 'out_of_office' : 'present',
         location: location || `${latitude}, ${longitude}`, // Fallback for backward compatibility
         locationName: locationName,
         latitude: latitude ? latitude.toString() : null,
         longitude: longitude ? longitude.toString() : null,
+        reason: reason || null,
+        isOutOfOffice: isOutOfOffice,
+        distanceFromOffice: distance ? Math.round(distance) : null,
       });
 
       res.json(attendance);
@@ -289,15 +299,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/attendance/check-out', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      const { location, latitude, longitude, locationName } = req.body;
+      const { location, latitude, longitude, locationName, reason } = req.body;
 
       // Validate geofencing if coordinates are provided
+      let isOutOfOffice = false;
+      let distance = 0;
       if (latitude && longitude) {
         const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
-        if (!geofencingResult.isValid) {
+        isOutOfOffice = !geofencingResult.isValid;
+        distance = geofencingResult.distance;
+        
+        // If outside office and no reason provided, require reason
+        if (isOutOfOffice && !reason) {
           return res.status(400).json({ 
-            message: `आप ऑफिस से ${Math.round(geofencingResult.distance)} मीटर दूर हैं। चेक-आउट करने के लिए आपको ऑफिस के 50 मीटर के अंदर होना आवश्यक है।`,
-            distance: geofencingResult.distance
+            message: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। ऑफिस के बाहर से चेक-आउट करने के लिए कारण आवश्यक है।`,
+            distance: distance,
+            requiresReason: true
           });
         }
       }
@@ -314,11 +331,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update attendance record with check-out time and location
       const attendance = await storage.updateAttendance(todayAttendance.id, {
         checkOut: new Date(),
-        status: 'present',
+        status: isOutOfOffice ? 'out_of_office' : 'present',
         location: location || `${latitude}, ${longitude}`,
         locationName: locationName,
         latitude: latitude ? latitude.toString() : null,
         longitude: longitude ? longitude.toString() : null,
+        checkOutReason: reason || null,
+        isOutOfOfficeCheckOut: isOutOfOffice,
+        checkOutDistanceFromOffice: distance ? Math.round(distance) : null,
       });
 
       res.json(attendance);

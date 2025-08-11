@@ -67,6 +67,12 @@ export const attendance = pgTable("attendance", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   notes: text("notes"),
+  reason: text("reason"),
+  isOutOfOffice: boolean("is_out_of_office").default(false),
+  distanceFromOffice: decimal("distance_from_office", { precision: 10, scale: 2 }),
+  checkOutReason: text("check_out_reason"),
+  isOutOfOfficeCheckOut: boolean("is_out_of_office_check_out").default(false),
+  checkOutDistanceFromOffice: decimal("check_out_distance_from_office", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -169,36 +175,36 @@ export const companySettings = pgTable("company_settings", {
 export const employeeProfiles = pgTable("employee_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id).notNull().unique(),
-  
+
   // Personal Information
   fatherName: varchar("father_name"),
   dateOfBirth: timestamp("date_of_birth"),
   marriageAnniversary: timestamp("marriage_anniversary"),
   personalMobile: varchar("personal_mobile"),
-  
+
   // Emergency Contact
   emergencyContactName: varchar("emergency_contact_name"),
   emergencyContactNumber: varchar("emergency_contact_number"),
   emergencyContactRelation: varchar("emergency_contact_relation"),
-  
+
   // Employment Details
   dateOfJoining: timestamp("date_of_joining"),
   designation: varchar("designation"),
-  
+
   // Government IDs
   panNumber: varchar("pan_number"),
   aadharNumber: varchar("aadhar_number"),
-  
+
   // Banking Details
   bankAccountNumber: varchar("bank_account_number"),
   ifscCode: varchar("ifsc_code"),
   bankName: varchar("bank_name"),
   bankProofDocumentPath: varchar("bank_proof_document_path"),
-  
+
   // PF Details
   uanNumber: varchar("uan_number"),
   pfNumber: varchar("pf_number"),
-  
+
   // Salary Structure
   basicSalary: decimal("basic_salary", { precision: 15, scale: 2 }),
   hra: decimal("hra", { precision: 15, scale: 2 }),
@@ -219,12 +225,12 @@ export const employeeProfiles = pgTable("employee_profiles", {
   attendanceBonus: decimal("attendance_bonus", { precision: 15, scale: 2 }),
   joiningBonus: decimal("joining_bonus", { precision: 15, scale: 2 }),
   retentionBonus: decimal("retention_bonus", { precision: 15, scale: 2 }),
-  
+
   // Status
   onboardingCompleted: boolean("onboarding_completed").default(false),
   approvedBy: varchar("approved_by").references(() => users.id),
   approvedAt: timestamp("approved_at"),
-  
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -372,9 +378,22 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-export const insertAttendanceSchema = createInsertSchema(attendance).omit({
-  id: true,
-  createdAt: true,
+export const insertAttendanceSchema = z.object({
+  userId: z.string(),
+  date: z.date(),
+  checkIn: z.date().optional(),
+  checkOut: z.date().optional(),
+  status: z.enum(['present', 'absent', 'late', 'holiday', 'out_of_office']),
+  location: z.string().optional(),
+  locationName: z.string().optional(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
+  reason: z.string().optional(),
+  isOutOfOffice: z.boolean().optional(),
+  distanceFromOffice: z.number().optional(),
+  checkOutReason: z.string().optional(),
+  isOutOfOfficeCheckOut: z.boolean().optional(),
+  checkOutDistanceFromOffice: z.number().optional(),
 });
 
 export const insertLeaveRequestSchema = createInsertSchema(leaveRequests).omit({

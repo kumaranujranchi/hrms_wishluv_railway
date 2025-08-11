@@ -29,6 +29,8 @@ interface AttendanceRecord {
   checkOut: string | null;
   status: string;
   location: string | null;
+  reason?: string; // Added reason field
+  checkOutReason?: string; // Added checkOutReason field
 }
 
 export default function AttendancePage() {
@@ -90,13 +92,13 @@ export default function AttendancePage() {
 
   const calculateWorkingHours = (checkIn: string | null, checkOut: string | null) => {
     if (!checkIn || !checkOut) return "N/A";
-    
+
     const inTime = new Date(checkIn);
     const outTime = new Date(checkOut);
     const diffMs = outTime.getTime() - inTime.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     return `${diffHours}h ${diffMinutes}m`;
   };
 
@@ -258,6 +260,13 @@ export default function AttendancePage() {
                         {calculateWorkingHours(record.checkIn, record.checkOut)}
                       </p>
                       <p className="text-xs text-neutral-600">Working Hours</p>
+                    </div>
+                    {/* Display Reason */}
+                    <div className="flex items-center space-x-4 text-sm text-neutral-600">
+                      <p className="text-sm font-medium text-neutral-900">Reason:</p>
+                      <p className="text-sm text-neutral-700">
+                        {(record as any).reason || (record as any).checkOutReason || '-'}
+                      </p>
                     </div>
                   </div>
                 ))
