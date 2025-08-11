@@ -234,9 +234,8 @@ export default function AttendanceCard() {
       return;
     }
 
-    const isOutsideOffice = OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea;
-
-    if (isOutsideOffice) {
+    // Office के बाहर है तो reason मांगें, otherwise direct check-in करें
+    if (!isWithinOfficeArea) {
       setPendingAction('checkin');
       setShowReasonDialog(true);
     } else {
@@ -254,9 +253,8 @@ export default function AttendanceCard() {
       return;
     }
 
-    const isOutsideOffice = OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea;
-
-    if (isOutsideOffice) {
+    // Office के बाहर है तो reason मांगें, otherwise direct check-out करें
+    if (!isWithinOfficeArea) {
       setPendingAction('checkout');
       setShowReasonDialog(true);
     } else {
@@ -316,15 +314,11 @@ export default function AttendanceCard() {
     try {
       const locationData = await getCurrentLocation();
 
-      // Double check geofencing before API call, especially if outside
-      const distance = calculateDistanceFromOffice(locationData.latitude, locationData.longitude);
-      const isOutsideOffice = OFFICE_GEOFENCING_CONFIG.isRequired && distance > OFFICE_GEOFENCING_CONFIG.radiusMeters;
-
-      if (isOutsideOffice && !reason) {
-        // This case should ideally be handled by the dialog, but as a safeguard:
+      // Office के बाहर है और reason नहीं है तो error दिखाएं
+      if (!isWithinOfficeArea && !reason) {
         toast({
           title: "कारण आवश्यक",
-          description: "आप ऑफिस के बाहर हैं और चेक-इन/चेक-आउट करने के लिए कारण बताना होगा।",
+          description: "आप ऑफिस के बाहर हैं। कृपया कारण बताएं।",
           variant: "destructive",
         });
         return;
@@ -588,21 +582,17 @@ export default function AttendanceCard() {
               >
                 <Button
                   onClick={handleCheckIn}
-                  disabled={checkInMutation.isPending || isLoadingLocation || (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location)}
-                  className={`w-full font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl ${
-                    OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white'
-                  }`}
+                  disabled={checkInMutation.isPending || isLoadingLocation || !locationVerified}
+                  className="w-full font-semibold py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white disabled:bg-gray-400 disabled:text-gray-600 disabled:cursor-not-allowed"
                 >
                   {checkInMutation.isPending || isLoadingLocation ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location ? (
+                  ) : !locationVerified ? (
                     <AlertTriangle className="h-4 w-4 mr-2" />
                   ) : (
                     <CheckCircle className="h-4 w-4 mr-2" />
                   )}
-                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location ? 'ऑफिस क्षेत्र के बाहर' : 'चेक इन'}
+                  {!locationVerified ? 'स्थान सत्यापित करें' : 'चेक इन'}
                 </Button>
               </motion.div>
             ) : (
@@ -614,22 +604,18 @@ export default function AttendanceCard() {
               >
                 <Button
                   onClick={handleCheckOut}
-                  disabled={checkOutMutation.isPending || isLoadingLocation || (OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location)}
+                  disabled={checkOutMutation.isPending || isLoadingLocation || !locationVerified}
                   variant="outline"
-                  className={`w-full font-semibold py-3 rounded-xl transition-all duration-200 ${
-                    OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location
-                      ? 'border-gray-300 text-gray-400 cursor-not-allowed'
-                      : 'border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300'
-                  }`}
+                  className="w-full font-semibold py-3 rounded-xl transition-all duration-200 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
                   {checkOutMutation.isPending || isLoadingLocation ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location ? (
+                  ) : !locationVerified ? (
                     <AlertTriangle className="h-4 w-4 mr-2" />
                   ) : (
                     <XCircle className="h-4 w-4 mr-2" />
                   )}
-                  {OFFICE_GEOFENCING_CONFIG.isRequired && !isWithinOfficeArea && !location ? 'ऑफिस क्षेत्र के बाहर' : 'चेक आउट'}
+                  {!locationVerified ? 'स्थान सत्यापित करें' : 'चेक आउट'}
                 </Button>
               </motion.div>
             )}

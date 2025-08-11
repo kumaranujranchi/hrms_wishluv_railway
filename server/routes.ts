@@ -264,7 +264,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ 
             message: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। ऑफिस के बाहर से चेक-इन करने के लिए कारण आवश्यक है।`,
             distance: distance,
-            requiresReason: true
+            requiresReason: true,
+            isOutOfOffice: true
           });
         }
       }
@@ -314,7 +315,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ 
             message: `आप ऑफिस से ${Math.round(distance)} मीटर दूर हैं। ऑफिस के बाहर से चेक-आउट करने के लिए कारण आवश्यक है।`,
             distance: distance,
-            requiresReason: true
+            requiresReason: true,
+            isOutOfOffice: true
           });
         }
       }
