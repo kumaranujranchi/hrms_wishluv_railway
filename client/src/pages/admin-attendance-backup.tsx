@@ -1,32 +1,43 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, startOfMonth, endOfMonth } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { 
-  Users, 
-  CheckCircle, 
-  AlertCircle, 
-  XCircle, 
-  TrendingUp, 
-  Download,
-  MapPin,
-  Clock,
-  CalendarDays
-} from "lucide-react";
-
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Clock, 
+  Calendar as CalendarIcon, 
+  MapPin, 
+  CheckCircle, 
+  XCircle,
+  AlertCircle,
+  Users,
+  Filter,
+  Download,
+  TrendingUp
+} from "lucide-react";
+import { format, startOfMonth, endOfMonth, isToday, startOfDay, endOfDay } from "date-fns";
+import { getLocationName } from "@/utils/geocoding";
 
 interface AttendanceRecord {
   id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
   date: string;
   checkIn: string | null;
   checkOut: string | null;
@@ -37,13 +48,10 @@ interface AttendanceRecord {
   longitude: string | null;
   reason: string | null;
   checkOutReason: string | null;
-  userName: string;
-  userEmail: string;
-  userId: string;
-  isOutOfOffice?: boolean;
-  isOutOfOfficeCheckOut?: boolean;
-  distanceFromOffice?: string | number;
-  checkOutDistanceFromOffice?: string | number;
+  isOutOfOffice: boolean;
+  isOutOfOfficeCheckOut: boolean;
+  distanceFromOffice: number | null;
+  checkOutDistanceFromOffice: number | null;
   workingHours?: number;
 }
 
@@ -99,6 +107,27 @@ export default function AdminAttendancePage() {
     enabled: !!user && user.role === 'admin'
   });
 
+  useEffect(() => {
+    const checkError = async () => {
+      try {
+        // This will trigger error handling if unauthorized
+      } catch (error) {
+        if (isUnauthorizedError(error as Error)) {
+          toast({
+            title: "Unauthorized",
+            description: "You are logged out. Logging in again...",
+            variant: "destructive",
+          });
+          setTimeout(() => {
+            window.location.href = "/api/login";
+          }, 500);
+          return;
+        }
+      }
+    };
+    checkError();
+  }, [toast]);
+
   const getStatusBadge = (status: string, checkIn: string | null, checkOut: string | null, isOutOfOffice?: boolean, isOutOfOfficeCheckOut?: boolean) => {
     if (status === 'present' || status === 'out_of_office') {
       if (checkOut) {
@@ -139,48 +168,55 @@ export default function AdminAttendancePage() {
 
     useEffect(() => {
       const fetchLocationName = async () => {
+        // If locationName is already available, use it
         if (record.locationName) {
           setLocationName(record.locationName);
           return;
         }
-
+        
+        // If we have coordinates, reverse geocode them
         if (record.latitude && record.longitude) {
           setIsLoading(true);
           try {
-            const response = await fetch(`/api/reverse-geocode?lat=${record.latitude}&lon=${record.longitude}`);
-            const data = await response.json();
-            setLocationName(data.name || data.address || 'Unknown Location');
+            const lat = parseFloat(record.latitude);
+            const lng = parseFloat(record.longitude);
+            const name = await getLocationName(lat, lng);
+            setLocationName(name);
           } catch (error) {
-            console.error('Failed to fetch location:', error);
-            setLocationName('Unknown Location');
+            console.error('Failed to get location name:', error);
+            setLocationName(`${record.latitude}, ${record.longitude}`);
           } finally {
             setIsLoading(false);
           }
-        } else {
-          setLocationName(record.location || 'Unknown Location');
+          return;
         }
+        
+        // If we have location string, use it
+        if (record.location) {
+          setLocationName(record.location);
+          return;
+        }
+        
+        // Fallback
+        setLocationName("No location data");
       };
 
       fetchLocationName();
-    }, [record.latitude, record.longitude, record.location, record.locationName]);
+    }, [record]);
 
     if (isLoading) {
-      return <span className="text-xs text-gray-500">Loading...</span>;
+      return (
+        <div className="flex items-center text-sm text-gray-500">
+          <MapPin className="h-3 w-3 mr-1" />
+          <span>Loading location...</span>
+        </div>
+      );
     }
 
     return (
-      <div className="text-sm max-w-xs">
-        {record.isOutOfOffice ? (
-          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-300">
-            <MapPin className="h-3 w-3 mr-1" />
-            {locationName}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-            <MapPin className="h-3 w-3 mr-1" />
-            {locationName}
-          </Badge>
-        )}
+      <div className="flex items-center text-sm">
+        <MapPin className="h-3 w-3 mr-1 text-primary-500" />
+        <span className="font-medium">{locationName}</span>
       </div>
     );
   };
@@ -305,10 +341,10 @@ export default function AdminAttendancePage() {
                         <TableHead>Check In</TableHead>
                         <TableHead>Check Out</TableHead>
                         <TableHead>Working Hours</TableHead>
-                        <TableHead>Check-in Location</TableHead>
-                        <TableHead>Check-out Location</TableHead>
-                        <TableHead>Check-in Reason</TableHead>
-                        <TableHead>Check-out Reason</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Out of Office</TableHead>
+                        <TableHead>Reasons</TableHead>
+                        <TableHead>Coordinates</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -334,52 +370,53 @@ export default function AdminAttendancePage() {
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
+                              <LocationDisplay record={record} />
+                            </TableCell>
+                            <TableCell>
                               <div className="space-y-1">
-                                <LocationDisplay record={record} />
-                                {record.isOutOfOffice && record.distanceFromOffice && (
-                                  <div className="text-xs text-amber-600">
-                                    {Math.round(Number(record.distanceFromOffice))}m from office
-                                  </div>
+                                {record.isOutOfOffice && (
+                                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600 border-orange-200">
+                                    Check-In Outside ({record.distanceFromOffice ? `${Math.round(record.distanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {record.isOutOfOfficeCheckOut && (
+                                  <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                                    Check-Out Outside ({record.checkOutDistanceFromOffice ? `${Math.round(record.checkOutDistanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {!record.isOutOfOffice && !record.isOutOfOfficeCheckOut && (
+                                  <span className="text-xs text-gray-400">—</span>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
-                              {record.checkOut ? (
-                                <div className="space-y-1">
-                                  {record.isOutOfOfficeCheckOut ? (
-                                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
-                                      <MapPin className="h-3 w-3 mr-1" />
-                                      Out of Office
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                                      <MapPin className="h-3 w-3 mr-1" />
-                                      In Office
-                                    </Badge>
-                                  )}
-                                  {record.isOutOfOfficeCheckOut && record.checkOutDistanceFromOffice && (
-                                    <div className="text-xs text-orange-600">
-                                      {Math.round(Number(record.checkOutDistanceFromOffice))}m from office
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-xs text-gray-400">—</span>
-                              )}
+                              <div className="space-y-1 max-w-xs">
+                                {record.reason && (
+                                  <div className="text-xs p-2 bg-amber-50 rounded border border-amber-200">
+                                    <div className="font-medium text-amber-800 mb-1">Check-In Reason:</div>
+                                    <div className="text-amber-700">{record.reason}</div>
+                                  </div>
+                                )}
+                                {record.checkOutReason && (
+                                  <div className="text-xs p-2 bg-red-50 rounded border border-red-200">
+                                    <div className="font-medium text-red-800 mb-1">Check-Out Reason:</div>
+                                    <div className="text-red-700">{record.checkOutReason}</div>
+                                  </div>
+                                )}
+                                {!record.reason && !record.checkOutReason && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
-                              {record.reason ? (
-                                <div className="text-xs p-2 bg-amber-50 rounded border border-amber-200 max-w-xs">
-                                  <div className="text-amber-700">{record.reason}</div>
+                              {record.latitude && record.longitude ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  <div>Lat: {parseFloat(record.latitude).toFixed(6)}</div>
+                                  <div>Lng: {parseFloat(record.longitude).toFixed(6)}</div>
                                 </div>
-                              ) : (
-                                <span className="text-xs text-gray-400">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {record.checkOutReason ? (
-                                <div className="text-xs p-2 bg-orange-50 rounded border border-orange-200 max-w-xs">
-                                  <div className="text-orange-700">{record.checkOutReason}</div>
+                              ) : record.location ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  {record.location}
                                 </div>
                               ) : (
                                 <span className="text-xs text-gray-400">—</span>
@@ -406,7 +443,7 @@ export default function AdminAttendancePage() {
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button variant="outline" size="sm">
-                          <CalendarDays className="h-4 w-4 mr-2" />
+                          <CalendarIcon className="h-4 w-4 mr-2" />
                           {format(dateRange.startDate, "MMM dd")} - {format(dateRange.endDate, "MMM dd, yyyy")}
                         </Button>
                       </PopoverTrigger>
@@ -415,13 +452,13 @@ export default function AdminAttendancePage() {
                           mode="range"
                           selected={{
                             from: dateRange.startDate,
-                            to: dateRange.endDate,
+                            to: dateRange.endDate
                           }}
                           onSelect={(range) => {
                             if (range?.from && range?.to) {
                               setDateRange({
-                                startDate: range.from,
-                                endDate: range.to
+                                startDate: startOfDay(range.from),
+                                endDate: endOfDay(range.to)
                               });
                             }
                           }}
@@ -442,10 +479,10 @@ export default function AdminAttendancePage() {
                         <TableHead>Check In</TableHead>
                         <TableHead>Check Out</TableHead>
                         <TableHead>Working Hours</TableHead>
-                        <TableHead>Check-in Location</TableHead>
-                        <TableHead>Check-out Location</TableHead>
-                        <TableHead>Check-in Reason</TableHead>
-                        <TableHead>Check-out Reason</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Out of Office</TableHead>
+                        <TableHead>Reasons</TableHead>
+                        <TableHead>Coordinates</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -472,52 +509,53 @@ export default function AdminAttendancePage() {
                             <TableCell>{formatTime(record.checkOut)}</TableCell>
                             <TableCell>{formatWorkingHours(record.workingHours)}</TableCell>
                             <TableCell>
+                              <LocationDisplay record={record} />
+                            </TableCell>
+                            <TableCell>
                               <div className="space-y-1">
-                                <LocationDisplay record={record} />
-                                {record.isOutOfOffice && record.distanceFromOffice && (
-                                  <div className="text-xs text-amber-600">
-                                    {Math.round(Number(record.distanceFromOffice))}m from office
-                                  </div>
+                                {record.isOutOfOffice && (
+                                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-600 border-orange-200">
+                                    Check-In Outside ({record.distanceFromOffice ? `${Math.round(record.distanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {record.isOutOfOfficeCheckOut && (
+                                  <Badge variant="outline" className="text-xs bg-red-50 text-red-600 border-red-200">
+                                    Check-Out Outside ({record.checkOutDistanceFromOffice ? `${Math.round(record.checkOutDistanceFromOffice)}m` : 'N/A'})
+                                  </Badge>
+                                )}
+                                {!record.isOutOfOffice && !record.isOutOfOfficeCheckOut && (
+                                  <span className="text-xs text-gray-400">—</span>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell>
-                              {record.checkOut ? (
-                                <div className="space-y-1">
-                                  {record.isOutOfOfficeCheckOut ? (
-                                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">
-                                      <MapPin className="h-3 w-3 mr-1" />
-                                      Out of Office
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-                                      <MapPin className="h-3 w-3 mr-1" />
-                                      In Office
-                                    </Badge>
-                                  )}
-                                  {record.isOutOfOfficeCheckOut && record.checkOutDistanceFromOffice && (
-                                    <div className="text-xs text-orange-600">
-                                      {Math.round(Number(record.checkOutDistanceFromOffice))}m from office
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-xs text-gray-400">—</span>
-                              )}
+                              <div className="space-y-1 max-w-xs">
+                                {record.reason && (
+                                  <div className="text-xs p-2 bg-amber-50 rounded border border-amber-200">
+                                    <div className="font-medium text-amber-800 mb-1">Check-In Reason:</div>
+                                    <div className="text-amber-700">{record.reason}</div>
+                                  </div>
+                                )}
+                                {record.checkOutReason && (
+                                  <div className="text-xs p-2 bg-red-50 rounded border border-red-200">
+                                    <div className="font-medium text-red-800 mb-1">Check-Out Reason:</div>
+                                    <div className="text-red-700">{record.checkOutReason}</div>
+                                  </div>
+                                )}
+                                {!record.reason && !record.checkOutReason && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
-                              {record.reason ? (
-                                <div className="text-xs p-2 bg-amber-50 rounded border border-amber-200 max-w-xs">
-                                  <div className="text-amber-700">{record.reason}</div>
+                              {record.latitude && record.longitude ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  <div>Lat: {parseFloat(record.latitude).toFixed(6)}</div>
+                                  <div>Lng: {parseFloat(record.longitude).toFixed(6)}</div>
                                 </div>
-                              ) : (
-                                <span className="text-xs text-gray-400">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {record.checkOutReason ? (
-                                <div className="text-xs p-2 bg-orange-50 rounded border border-orange-200 max-w-xs">
-                                  <div className="text-orange-700">{record.checkOutReason}</div>
+                              ) : record.location ? (
+                                <div className="text-xs text-gray-500 font-mono">
+                                  {record.location}
                                 </div>
                               ) : (
                                 <span className="text-xs text-gray-400">—</span>
