@@ -38,32 +38,101 @@ router.get('/api/debug/db-info', async (req, res) => {
   }
 });
 
-// Debug endpoint to create test employee if not exists
-router.post('/api/debug/create-test-employee', async (req, res) => {
+// Debug endpoint to sync production data to development
+router.post('/api/debug/sync-production-data', async (req, res) => {
   try {
+    // Create missing employees that exist in production
+    const productionEmployees = [
+      { email: 'bikashkumar.gupta@wishluvbuildcon.com', firstName: 'Bikashkumar', lastName: 'Gupta' },
+      { email: 'manish.verma@wishluvbuildcon.com', firstName: 'Manish', lastName: 'Verma' },
+      { email: 'shalu.singh@wishluvbuildcon.com', firstName: 'Shalu', lastName: 'Singh' },
+      { email: 'arinash.mishra@wishluvbuildcon.com', firstName: 'Arinash', lastName: 'Mishra' },
+      { email: 'om.renuka@wishluvbuildcon.com', firstName: 'Om', lastName: 'Renuka' },
+      { email: 'sahil.kumar@wishluvbuildcon.com', firstName: 'Sahil', lastName: 'Kumar' },
+      { email: 'rahul.ranjan@wishluvbuildcon.com', firstName: 'Rahul', lastName: 'Ranjan' },
+      { email: 'kanishka.singh@wishluvbuildcon.com', firstName: 'Kanishka', lastName: 'Singh' },
+      { email: 'vikash.kumar@wishluvbuildcon.com', firstName: 'Vikash', lastName: 'Kumar' },
+      { email: 'girdhari.thakur@wishluvbuildcon.com', firstName: 'Girdhari', lastName: 'Thakur' }
+    ];
     
-    // Check if test employee exists
-    const existingUser = await db.execute(sql`
-      SELECT * FROM users WHERE email = 'test.employee@wishluvbuildcon.com'
-    `);
+    const passwordHash = await bcrypt.hash('password123', 10);
+    const createdUsers = [];
     
-    if (existingUser.length > 0) {
-      return res.json({ message: 'Test employee already exists', user: existingUser[0] });
+    for (const emp of productionEmployees) {
+      // Check if user already exists
+      const existing = await db.execute(sql`
+        SELECT id FROM users WHERE email = ${emp.email}
+      `);
+      
+      if (existing.length === 0) {
+        const newUser = await db.execute(sql`
+          INSERT INTO users (id, email, password_hash, first_name, last_name, role, is_active, created_at)
+          VALUES (gen_random_uuid(), ${emp.email}, ${passwordHash}, ${emp.firstName}, ${emp.lastName}, 'employee', true, NOW())
+          RETURNING id, email, first_name, last_name
+        `);
+        createdUsers.push(newUser[0]);
+      }
     }
     
-    // Create test employee
-    const passwordHash = await bcrypt.hash('password123', 10);
-    
-    const newUser = await db.execute(sql`
-      INSERT INTO users (id, email, password_hash, first_name, last_name, role, is_active)
-      VALUES (gen_random_uuid(), 'test.employee@wishluvbuildcon.com', ${passwordHash}, 'Test', 'Employee', 'employee', true)
-      RETURNING *
-    `);
-    
-    res.json({ message: 'Test employee created successfully', user: newUser[0] });
+    res.json({ 
+      message: 'Production data sync completed', 
+      createdUsers: createdUsers,
+      totalCreated: createdUsers.length 
+    });
   } catch (error) {
     res.status(500).json({ 
-      error: 'Failed to create test employee', 
+      error: 'Failed to sync production data', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Debug endpoint to create sample attendance data
+router.post('/api/debug/create-sample-attendance', async (req, res) => {
+  try {
+    // Get all employees
+    const employeesResult = await db.execute(sql`
+      SELECT id, email FROM users WHERE role = 'employee'
+    `);
+    const employees = employeesResult;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const createdAttendance = [];
+    
+    for (const emp of employees) {
+      // Check if attendance already exists for today
+      const existing = await db.execute(sql`
+        SELECT id FROM attendance WHERE user_id = ${emp.id} AND DATE(check_in_time) = ${today}
+      `);
+      
+      if (existing.length === 0) {
+        const checkInTime = new Date();
+        checkInTime.setHours(9, Math.floor(Math.random() * 60), 0, 0); // Random time between 9:00-9:59
+        
+        const newAttendance = await db.execute(sql`
+          INSERT INTO attendance (id, user_id, check_in_time, check_in_location, status, created_at)
+          VALUES (
+            gen_random_uuid(), 
+            ${emp.id}, 
+            ${checkInTime.toISOString()}, 
+            'Patna', 
+            'checked_in', 
+            NOW()
+          )
+          RETURNING id, user_id, check_in_time, check_in_location
+        `);
+        createdAttendance.push(newAttendance[0]);
+      }
+    }
+    
+    res.json({ 
+      message: 'Sample attendance data created', 
+      createdAttendance: createdAttendance,
+      totalCreated: createdAttendance.length 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to create sample attendance', 
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
