@@ -383,7 +383,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const todayAttendance = await storage.getTodayAttendance(userId);
       
+      console.log('Attendance status check for user:', userId);
+      console.log('Today attendance record:', todayAttendance);
+      
       if (!todayAttendance) {
+        console.log('No attendance record found for today');
         res.json({
           isCheckedIn: false,
           checkInTime: null,
@@ -393,15 +397,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return;
       }
 
-      const isCheckedIn = !!todayAttendance.checkIn;
+      const isCheckedIn = !!todayAttendance.checkIn && !todayAttendance.checkOut;
       const isCheckedOut = !!todayAttendance.checkOut;
       
       let todayStatus = 'not_checked_in';
-      if (isCheckedIn && !isCheckedOut) {
+      if (todayAttendance.checkIn && !todayAttendance.checkOut) {
         todayStatus = 'checked_in';
-      } else if (isCheckedIn && isCheckedOut) {
+      } else if (todayAttendance.checkIn && todayAttendance.checkOut) {
         todayStatus = 'checked_out';
       }
+
+      console.log('Attendance status result:', {
+        isCheckedIn,
+        checkInTime: todayAttendance.checkIn,
+        checkOutTime: todayAttendance.checkOut,
+        todayStatus
+      });
 
       res.json({
         isCheckedIn: isCheckedIn,

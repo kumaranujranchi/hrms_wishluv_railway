@@ -68,16 +68,19 @@ export default function AttendanceCard() {
   }, []);
 
   // Get current attendance status
-  const { data: attendanceStatus, isLoading: statusLoading } = useQuery<AttendanceStatus>({
+  const { data: attendanceStatus, isLoading: statusLoading, error: statusError } = useQuery<AttendanceStatus>({
     queryKey: ["/api/attendance/status"],
-    retry: false,
+    retry: 2,
+    refetchInterval: 10000, // Refetch every 10 seconds
+    staleTime: 5000, // Consider data stale after 5 seconds
   });
 
   // Debug logging
-  console.log('Attendance Status:', attendanceStatus);
+  console.log('Attendance Status Query:', { attendanceStatus, statusLoading, statusError });
   console.log('Is Checked In:', attendanceStatus?.isCheckedIn);
   console.log('Check In Time:', attendanceStatus?.checkInTime);
   console.log('Check Out Time:', attendanceStatus?.checkOutTime);
+  console.log('Today Status:', attendanceStatus?.todayStatus);
 
   // Check-in mutation
   const checkInMutation = useMutation({
@@ -86,8 +89,16 @@ export default function AttendanceCard() {
     },
     onSuccess: (data) => {
       console.log('Check-in successful:', data);
+      // Invalidate and refetch attendance status immediately
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/my"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      
+      // Force a refetch after a short delay to ensure backend is updated
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/attendance/status"] });
+      }, 1000);
+      
       toast({
         title: "Check-in successful!",
         description: "Welcome to work! Have a productive day.",
@@ -95,6 +106,7 @@ export default function AttendanceCard() {
       });
     },
     onError: (error) => {
+      console.error('Check-in error:', error);
       toast({
         title: "Check-in failed",
         description: error instanceof Error ? error.message : "Please try again.",
@@ -108,9 +120,18 @@ export default function AttendanceCard() {
     mutationFn: async (data: { latitude: number; longitude: number; locationName: string; reason?: string }) => {
       return apiRequest("POST", "/api/attendance/check-out", data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Check-out successful:', data);
+      // Invalidate and refetch attendance status immediately
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/my"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      
+      // Force a refetch after a short delay to ensure backend is updated
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/attendance/status"] });
+      }, 1000);
+      
       toast({
         title: "Check-out successful!",
         description: "Thank you for your hard work today!",
@@ -118,6 +139,7 @@ export default function AttendanceCard() {
       });
     },
     onError: (error) => {
+      console.error('Check-out error:', error);
       toast({
         title: "Check-out failed",
         description: error instanceof Error ? error.message : "Please try again.",
