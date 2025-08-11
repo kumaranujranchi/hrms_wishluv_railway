@@ -278,20 +278,24 @@ export class DatabaseStorage implements IStorage {
 
   // Attendance operations
   async markAttendance(attendanceData: InsertAttendance): Promise<Attendance> {
-    const [result] = await this.db
+    console.log('Marking attendance in database:', attendanceData);
+    const [record] = await this.db
       .insert(attendance)
       .values(attendanceData)
       .returning();
-    return result;
+    console.log('Attendance record created:', record);
+    return record;
   }
 
   async updateAttendance(id: string, updates: Partial<Attendance>): Promise<Attendance> {
-    const [result] = await this.db
+    console.log('Updating attendance in database:', { id, updates });
+    const [record] = await this.db
       .update(attendance)
-      .set(updates)
+      .set({ ...updates })
       .where(eq(attendance.id, id))
       .returning();
-    return result;
+    console.log('Attendance record updated:', record);
+    return record;
   }
 
   async getAttendanceByUser(userId: string, startDate?: Date, endDate?: Date): Promise<Attendance[]> {
@@ -410,7 +414,7 @@ export class DatabaseStorage implements IStorage {
     return leaveRequest;
   }
 
-  async getLeaveRequestsByUser(userId: string): Promise<LeaveRequest[]> {
+  async getLeaveRequestsByUser(userId: string): Promise<LeaveRequest[] > {
     return await this.db
       .select()
       .from(leaveRequests)

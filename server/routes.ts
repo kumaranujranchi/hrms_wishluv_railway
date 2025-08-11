@@ -290,7 +290,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         distanceFromOffice: distance ? Math.round(distance) : null,
       });
 
-      res.json(attendance);
+      console.log('Check-in successful for user:', userId, 'at:', new Date().toISOString());
+      
+      res.json({
+        ...attendance,
+        success: true,
+        message: 'Check-in successful'
+      });
     } catch (error) {
       console.error("Error checking in:", error);
       res.status(500).json({ message: "Failed to check in" });
@@ -343,7 +349,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         checkOutDistanceFromOffice: distance ? Math.round(distance) : null,
       });
 
-      res.json(attendance);
+      console.log('Check-out successful for user:', userId, 'at:', new Date().toISOString());
+      
+      res.json({
+        ...attendance,
+        success: true,
+        message: 'Check-out successful'
+      });
     } catch (error) {
       console.error("Error checking out:", error);
       res.status(500).json({ message: "Failed to check out" });

@@ -70,9 +70,11 @@ export default function AttendanceCard() {
   // Get current attendance status
   const { data: attendanceStatus, isLoading: statusLoading, error: statusError } = useQuery<AttendanceStatus>({
     queryKey: ["/api/attendance/status"],
-    retry: 2,
-    refetchInterval: 10000, // Refetch every 10 seconds
-    staleTime: 5000, // Consider data stale after 5 seconds
+    retry: 3,
+    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 1000, // Consider data stale after 1 second
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   // Debug logging
@@ -89,27 +91,33 @@ export default function AttendanceCard() {
     },
     onSuccess: (data) => {
       console.log('Check-in successful:', data);
-      // Invalidate and refetch attendance status immediately
+      
+      // Immediately invalidate all attendance-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/my"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
       
-      // Force a refetch after a short delay to ensure backend is updated
+      // Force multiple refetches to ensure consistency
       setTimeout(() => {
         queryClient.refetchQueries({ queryKey: ["/api/attendance/status"] });
-      }, 1000);
+        queryClient.refetchQueries({ queryKey: ["/api/attendance/today"] });
+      }, 500);
+      
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/attendance/status"] });
+      }, 1500);
       
       toast({
-        title: "Check-in successful!",
-        description: "Welcome to work! Have a productive day.",
+        title: "चेक-इन सफल!",
+        description: "आपका चेक-इन हो गया है। शुभ दिन हो!",
         variant: "default",
       });
     },
     onError: (error) => {
       console.error('Check-in error:', error);
       toast({
-        title: "Check-in failed",
-        description: error instanceof Error ? error.message : "Please try again.",
+        title: "चेक-इन असफल",
+        description: error instanceof Error ? error.message : "कृपया दोबारा कोशिश करें।",
         variant: "destructive",
       });
     },
@@ -122,27 +130,33 @@ export default function AttendanceCard() {
     },
     onSuccess: (data) => {
       console.log('Check-out successful:', data);
-      // Invalidate and refetch attendance status immediately
+      
+      // Immediately invalidate all attendance-related queries
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/my"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
       
-      // Force a refetch after a short delay to ensure backend is updated
+      // Force multiple refetches to ensure consistency
       setTimeout(() => {
         queryClient.refetchQueries({ queryKey: ["/api/attendance/status"] });
-      }, 1000);
+        queryClient.refetchQueries({ queryKey: ["/api/attendance/today"] });
+      }, 500);
+      
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/attendance/status"] });
+      }, 1500);
       
       toast({
-        title: "Check-out successful!",
-        description: "Thank you for your hard work today!",
+        title: "चेक-आउट सफल!",
+        description: "आज के लिए धन्यवाद। अच्छा दिन हो!",
         variant: "default",
       });
     },
     onError: (error) => {
       console.error('Check-out error:', error);
       toast({
-        title: "Check-out failed",
-        description: error instanceof Error ? error.message : "Please try again.",
+        title: "चेक-आउट असफल",
+        description: error instanceof Error ? error.message : "कृपया दोबारा कोशिश करें।",
         variant: "destructive",
       });
     },
