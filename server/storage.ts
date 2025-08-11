@@ -56,7 +56,7 @@ export interface IStorage {
   deleteEmployee(id: string): Promise<void>;
 
   // Attendance operations
-  markAttendance(attendance: InsertAttendance): Promise<Attendance>;
+  markAttendance(attendanceData: InsertAttendance): Promise<Attendance>;
   updateAttendance(id: string, updates: Partial<Attendance>): Promise<Attendance>;
   getAttendanceByUser(userId: string, startDate?: Date, endDate?: Date): Promise<Attendance[]>;
   getTodayAttendance(userId: string): Promise<Attendance | undefined>;
