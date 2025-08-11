@@ -251,13 +251,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.id;
       const { location, latitude, longitude, locationName, reason } = req.body;
 
+      console.log('Check-in request received:', {
+        userId,
+        latitude,
+        longitude,
+        locationName,
+        hasReason: !!reason
+      });
+
+      // Validate input data
+      if (!latitude || !longitude) {
+        console.error('Missing required location data:', { latitude, longitude });
+        return res.status(400).json({ 
+          message: "स्थान की जानकारी आवश्यक है। कृपया location permission allow करें।" 
+        });
+      }
+
       // Validate geofencing if coordinates are provided
       let isOutOfOffice = false;
       let distance = 0;
-      if (latitude && longitude) {
+      try {
         const geofencingResult = validateGeofencing(parseFloat(latitude), parseFloat(longitude));
         isOutOfOffice = !geofencingResult.isValid;
         distance = geofencingResult.distance;
+        
+        console.log('Geofencing validation result:', {
+          isOutOfOffice,
+          distance,
+          isValid: geofencingResult.isValid
+        });
         
         // If outside office and no reason provided, require reason
         if (isOutOfOffice && !reason) {
@@ -268,29 +290,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
             isOutOfOffice: true
           });
         }
+      } catch (geoError) {
+        console.error('Geofencing validation error:', geoError);
+        // Continue with check-in even if geofencing fails
+        isOutOfOffice = false;
+        distance = 0;
       }
 
       // Check if already checked in today
       const todayAttendance = await storage.getTodayAttendance(userId);
       if (todayAttendance) {
+        console.log('User already checked in today:', todayAttendance);
         return res.status(400).json({ message: "Already checked in today" });
       }
 
-      const attendance = await storage.markAttendance({
+      const attendanceData = {
         userId,
         date: new Date(),
         checkIn: new Date(),
         status: isOutOfOffice ? 'out_of_office' : 'present',
-        location: location || `${latitude}, ${longitude}`, // Fallback for backward compatibility
-        locationName: locationName,
+        location: location || `${latitude}, ${longitude}`,
+        locationName: locationName || 'Unknown Location',
         latitude: latitude ? latitude.toString() : null,
         longitude: longitude ? longitude.toString() : null,
         reason: reason || null,
         isOutOfOffice: isOutOfOffice,
         distanceFromOffice: distance ? Math.round(distance) : null,
-      });
+      };
 
-      console.log('Check-in successful for user:', userId, 'at:', new Date().toISOString());
+      console.log('Creating attendance record with data:', attendanceData);
+
+      const attendance = await storage.markAttendance(attendanceData);
+
+      console.log('Check-in successful for user:', userId, 'attendance record:', attendance);
       
       res.json({
         ...attendance,
@@ -298,8 +330,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Check-in successful'
       });
     } catch (error) {
-      console.error("Error checking in:", error);
-      res.status(500).json({ message: "Failed to check in" });
+      console.error("Critical error during check-in:", {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        userId: req.user?.id
+      });
+      
+      res.status(500).json({ 
+        message: "चेक-इन में समस्या हुई है। कृपया दोबारा कोशिश करें।",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

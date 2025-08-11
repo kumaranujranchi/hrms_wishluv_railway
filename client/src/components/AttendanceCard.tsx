@@ -87,7 +87,15 @@ export default function AttendanceCard() {
   // Check-in mutation
   const checkInMutation = useMutation({
     mutationFn: async (data: { latitude: number; longitude: number; locationName: string; reason?: string }) => {
-      return apiRequest("POST", "/api/attendance/check-in", data);
+      console.log('Sending check-in request with data:', data);
+      try {
+        const result = await apiRequest("POST", "/api/attendance/check-in", data);
+        console.log('Check-in API response:', result);
+        return result;
+      } catch (error) {
+        console.error('Check-in API error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       console.log('Check-in successful:', data);
@@ -113,11 +121,22 @@ export default function AttendanceCard() {
         variant: "default",
       });
     },
-    onError: (error) => {
-      console.error('Check-in error:', error);
+    onError: (error: any) => {
+      console.error('Check-in mutation error:', error);
+      
+      let errorMessage = "कृपया दोबारा कोशिश करें।";
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "चेक-इन असफल",
-        description: error instanceof Error ? error.message : "कृपया दोबारा कोशिश करें।",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -324,12 +343,17 @@ export default function AttendanceCard() {
   };
 
   const performAttendanceAction = async (action: 'checkin' | 'checkout', reason?: string) => {
-    setIsLoadingLocation(true); // Start loading before getting location
+    setIsLoadingLocation(true);
+    console.log(`Starting ${action} process...`);
+    
     try {
+      console.log('Getting current location...');
       const locationData = await getCurrentLocation();
+      console.log('Location obtained:', locationData);
 
       // Office के बाहर है और reason नहीं है तो error दिखाएं
       if (!isWithinOfficeArea && !reason) {
+        console.log('User is outside office and no reason provided');
         toast({
           title: "कारण आवश्यक",
           description: "आप ऑफिस के बाहर हैं। कृपया कारण बताएं।",
@@ -338,40 +362,47 @@ export default function AttendanceCard() {
         return;
       }
 
+      const requestData = {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        locationName: locationData.locationName,
+        reason: reason
+      };
+
+      console.log(`Executing ${action} with data:`, requestData);
+
       if (action === 'checkin') {
-        await checkInMutation.mutateAsync({
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-          locationName: locationData.locationName,
-          reason: reason
-        });
+        await checkInMutation.mutateAsync(requestData);
       } else {
-        await checkOutMutation.mutateAsync({
-          latitude: locationData.latitude,
-          longitude: locationData.longitude,
-          locationName: locationData.locationName,
-          reason: reason
-        });
+        await checkOutMutation.mutateAsync(requestData);
       }
     } catch (error) {
       console.error(`${action} error:`, error);
 
-      // Handle geocoding fallback if initial location acquisition failed partially
-      if (error instanceof Error && error.message.includes('geocoding')) {
+      // Check if it's a location/geocoding error and try fallback
+      if (error instanceof Error && (
+        error.message.includes('geocoding') || 
+        error.message.includes('location') ||
+        error.message.includes('geolocation')
+      )) {
+        console.log('Attempting fallback location method...');
         try {
           const position = await new Promise<GeolocationPosition>((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 300000,
+              enableHighAccuracy: false, // Use less accurate but faster location
+              timeout: 5000,
+              maximumAge: 60000, // Accept 1 minute old location
             });
           });
+          
           const { latitude, longitude } = position.coords;
           const fallbackLocationData = {
             latitude,
             longitude,
             locationName: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
           };
+
+          console.log('Fallback location obtained:', fallbackLocationData);
 
           // Re-evaluate geofencing with fallback coordinates
           const distance = calculateDistanceFromOffice(latitude, longitude);
@@ -391,20 +422,34 @@ export default function AttendanceCard() {
           } else {
             await checkOutMutation.mutateAsync({...fallbackLocationData, reason});
           }
+          
           toast({
-            title: "चेक-इन/चेक-आउट सफल",
-            description: "स्थान निर्देशांकों के साथ पूर्ण (जियोकोडिंग सेवा अनुपलब्ध)।",
+            title: `${action === 'checkin' ? 'चेक-इन' : 'चेक-आउट'} सफल`,
+            description: "स्थान निर्देशांकों के साथ पूर्ण हुआ।",
             variant: "default",
           });
           return;
         } catch (fallbackError) {
-          console.error('Fallback action also failed:', fallbackError);
+          console.error('Fallback location method also failed:', fallbackError);
+        }
+      }
+
+      // Show appropriate error message
+      let errorMessage = "कृपया दोबारा कोशिश करें।";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('permission')) {
+          errorMessage = "कृपया location permission allow करें और दोबारा कोशिश करें।";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = "नेटवर्क कनेक्शन की समस्या है। कृपया दोबारा कोशिश करें।";
+        } else {
+          errorMessage = error.message;
         }
       }
 
       toast({
-        title: "स्थान त्रुटि",
-        description: error instanceof Error ? error.message : "आपका स्थान प्राप्त करने में असमर्थ। कृपया स्थान सेवाएं सक्षम करें।",
+        title: `${action === 'checkin' ? 'चेक-इन' : 'चेक-आउट'} असफल`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
