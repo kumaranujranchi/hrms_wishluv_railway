@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL deps (including dev) so build tools like vite/esbuild are available
+RUN npm ci --include=dev && npm cache clean --force
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -40,6 +41,9 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nodejs:nodejs /app/shared ./shared
 COPY --from=builder --chown=nodejs:nodejs /app/migrations ./migrations
+
+# Prune devDependencies from the final image
+RUN npm prune --omit=dev
 
 # Switch to non-root user
 USER nodejs
