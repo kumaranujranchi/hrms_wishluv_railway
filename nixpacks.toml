@@ -2,7 +2,8 @@
 nixPkgs = ['nodejs_18', 'npm']
 
 [phases.install]
-cmds = ['npm ci']
+# Ensure devDependencies are installed for the build step
+cmds = ['npm ci --include=dev']
 
 [phases.build]
 cmds = ['npm run build']
@@ -11,5 +12,7 @@ cmds = ['npm run build']
 cmd = 'npm start'
 
 [variables]
+# Install all deps (including dev) during build image
+NPM_CONFIG_PRODUCTION = 'false'
 NODE_ENV = 'production'
 PORT = '3000'
