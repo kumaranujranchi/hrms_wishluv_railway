@@ -3,4 +3,11 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
+# Env and local dev
+.env
+.env.*
+!.env.example
+.local
+# Cookies and session artifacts
+*cookies*.txt
 *.tar.gz
